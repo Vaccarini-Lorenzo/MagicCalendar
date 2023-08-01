@@ -12,7 +12,7 @@ export default class Misc {
 
     private static getDateComponents(date: Date): {[key:string]: number}{
         const year = date.getFullYear();
-        const month = date.getMonth() + 1;
+        const month = date.getMonth();
         const day = date.getDate();
         const hour = date.getHours();
         const minutes = date.getMinutes();

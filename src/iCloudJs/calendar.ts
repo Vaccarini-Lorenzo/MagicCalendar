@@ -51,6 +51,7 @@ export interface iCloudCalendarEvent {
   shouldShowJunkUIWhenAppropriate: boolean;
   url: string;
   isJunk: boolean;
+  description: string;
 }
 
 interface iCloudCalendarRecurrence {
@@ -198,14 +199,14 @@ export class iCloudCalendarService {
         return response.Collection || [];
     }
 
-    async postEvent(newEvent: iCloudCalendarEvent, associatedCalendar: iCloudCalendarCollection){
+    async postEvent(newEvent: iCloudCalendarEvent, calendarCTag: string){
         const url = `/events/${newEvent.pGuid}/${newEvent.guid}`;
         const queryParams = this.getQueryParams(newEvent);
         const extraHeaders = {
             "Connection": "keep-alive",
             "Referer": "https://www.icloud.com/"
         }
-        const body = this.getBody(newEvent, associatedCalendar);
+        const body = this.getBody(newEvent, calendarCTag);
 
         await this.executeRequest(url, queryParams, "POST", body, extraHeaders);
     }
@@ -221,14 +222,14 @@ export class iCloudCalendarService {
         }
     }
 
-    private getBody(newEvent: iCloudCalendarEvent, associatedCalendar: iCloudCalendarCollection): object {
+    private getBody(newEvent: iCloudCalendarEvent, calendarCTag: string): object {
         return {
             Event: newEvent,
             ClientState: {
                 Collection: [
                     {
                         guid: newEvent.pGuid,
-                        ctag: associatedCalendar.ctag
+                        ctag: calendarCTag
                     }
                 ],
                 fullState: false,
@@ -239,7 +240,7 @@ export class iCloudCalendarService {
     }
 
     // Minimal version
-    createNewEvent(tz: string, title: string, duration: number, pGuid: string, startDate: Date, endDate: Date): iCloudCalendarEvent {
+    createNewEvent(tz: string, title: string, description:string, duration: number, pGuid: string, startDate: Date, endDate: Date): iCloudCalendarEvent {
         const arrayStartDate = Misc.getArrayDate(startDate);
         const arrayEndDate = Misc.getArrayDate(endDate);
         const guid = this.generateNewUUID();
@@ -248,6 +249,7 @@ export class iCloudCalendarService {
             tz,
             title,
             duration,
+			description,
             pGuid,
             guid,
             startDate: arrayStartDate,
