@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
 import iCloudService from "./index";
+import Misc from "./misc";
 
 export interface iCloudDevices {
     devices: Array<{
@@ -72,7 +72,7 @@ export class iCloudAccountDetailsService {
     private _devices;
     async getDevices(refresh = false): Promise<iCloudDevices> {
         if (!refresh && this._devices) return this._devices;
-        const response = await fetch(this.serviceUri + "/setup/web/device/getDevices", { headers: this.service.authStore.getHeaders() });
+        const response = await Misc.wrapRequest(this.serviceUri + "/setup/web/device/getDevices", { headers: this.service.authStore.getHeaders() });
         const json = await response.json();
         this._devices = json;
         return this._devices;
@@ -81,7 +81,7 @@ export class iCloudAccountDetailsService {
     private _family;
     async getFamily(refresh = false): Promise<iCloudFamilyInfo> {
         if (!refresh && this._family) return this._family;
-        const response = await fetch(this.serviceUri + "/setup/web/family/getFamilyDetails", { headers: this.service.authStore.getHeaders() });
+        const response = await Misc.wrapRequest(this.serviceUri + "/setup/web/family/getFamilyDetails", { headers: this.service.authStore.getHeaders() });
         const json = await response.json();
         this._family = json;
         return this._family;

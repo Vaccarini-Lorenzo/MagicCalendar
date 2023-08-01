@@ -2,11 +2,11 @@
 // This proxy can not be used since it opens a server embedded in the electron app (obsidian) and therefore
 // it's not possible to bypass CORS
 
+/*
 import express, {Express} from "express";
 import {Server} from "http";
 import cors from "cors";
 
-/*
 
 class CORSProxy {
 	private _app: Express;
@@ -22,8 +22,11 @@ class CORSProxy {
 		this._app.options(
 			"*",
 			cors({
-				origin: "*"
-				})
+				allowedHeaders: '*',
+				origin: '*',
+				methods: '*',
+				exposedHeaders: '*'
+			})
 		);
 
 		this._app.use(
@@ -81,6 +84,5 @@ class CORSProxy {
 
 const proxy = new CORSProxy(3000);
 export default proxy;
+*/
 
-
- */

@@ -4,7 +4,6 @@ import path from "path";
 import { Cookie } from "tough-cookie";
 import { iCloudServiceSetupOptions } from "./index";
 import { AUTH_HEADERS, DEFAULT_HEADERS } from "./consts";
-import {Obj} from "tern";
 
 export class iCloudAuthenticationStore {
     /**
@@ -113,9 +112,10 @@ export class iCloudAuthenticationStore {
      * @param cloudSetupResponse The response from the iCloud setup request
      * @returns {boolean} True if cookies were found, false otherwise.
      */
+	// Error here
     processCloudSetupResponse(cloudSetupResponse: Response) {
-        this.icloudCookies = Array.from(cloudSetupResponse.headers.entries())
-            .filter((v) => v[0].toLowerCase() == "set-cookie")
+		this.icloudCookies = Array.from(cloudSetupResponse.headers.entries())
+            .filter((v) => v[0].toLowerCase() == "forward-cookie")
             .map((v) => v[1].split(", "))
             .reduce((a, b) => a.concat(b), [])
             .map((v) => Cookie.parse(v))

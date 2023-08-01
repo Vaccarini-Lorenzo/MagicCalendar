@@ -1,6 +1,6 @@
-import fetch from "node-fetch";
 import { ReadableStream } from "stream/web";
 import iCloudService from "./index";
+import Misc from "./misc";
 
 export type ItemType = "APP_LIBRARY" | "FILE" | "FOLDER";
 
@@ -81,7 +81,7 @@ export class iCloudDriveNode {
     }
 
     async refresh() {
-        const response = await fetch(this.serviceUri + "/retrieveItemDetailsInFolders", {
+        const response = await Misc.wrapRequest(this.serviceUri + "/retrieveItemDetailsInFolders", {
             headers: this.service.service.authStore.getHeaders(),
             method: "POST",
             body: JSON.stringify([{
@@ -135,16 +135,16 @@ export class iCloudDriveService {
                 }
             });
         }
-        const response = await fetch(this.docsServiceUri + `/ws/${item.zone || "com.apple.CloudDocs"}/download/by_id?document_id=` + encodeURIComponent(item.docwsid), { headers: this.service.authStore.getHeaders() });
+        const response = await Misc.wrapRequest(this.docsServiceUri + `/ws/${item.zone || "com.apple.CloudDocs"}/download/by_id?document_id=` + encodeURIComponent(item.docwsid), { headers: this.service.authStore.getHeaders() });
         const json = await response.json();
         if (json.error_code) throw new Error(json.reason);
         const url = json.data_token ? json.data_token.url : json.package_token.url;
-        const fileResponse = await fetch(url, { headers: this.service.authStore.getHeaders() });
+        const fileResponse = await Misc.wrapRequest(url, { headers: this.service.authStore.getHeaders() });
         return fileResponse.body;
     }
     async mkdir(parent: {drivewsid: string } | string, name: string) {
         const parentId = typeof parent === "string" ? parent : parent.drivewsid;
-        const response = await fetch(this.serviceUri + "/createFolders", {
+        const response = await Misc.wrapRequest(this.serviceUri + "/createFolders", {
             headers: this.service.authStore.getHeaders(),
             method: "POST",
             body: JSON.stringify({
@@ -159,7 +159,7 @@ export class iCloudDriveService {
     async del(item: {drivewsid: string, etag: string} | string, etag?: string) {
         const drivewsid = typeof item === "string" ? item : item.drivewsid;
         const itemEtag = typeof item === "string" ? etag : item.etag;
-        const response = await fetch(this.serviceUri + "/moveItemsToTrash", {
+        const response = await Misc.wrapRequest(this.serviceUri + "/moveItemsToTrash", {
             headers: this.service.authStore.getHeaders(),
             method: "POST",
             body: JSON.stringify({

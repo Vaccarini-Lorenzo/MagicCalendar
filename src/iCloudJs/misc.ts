@@ -1,4 +1,5 @@
 import fetch, {RequestInfo, RequestInit, Response} from "node-fetch";
+import {Arr} from "tern";
 
 export default class Misc {
     private static stringifyDateNumber(dateNumber: number): string {
@@ -38,8 +39,8 @@ export default class Misc {
     }
 
 	static async wrapRequest(url: RequestInfo, init?: RequestInit): Promise<Response>{
-		const newUrl = `http://leeward-scalloped-aphid.glitch.me/proxy?url=${url}`;
-		//const newUrl = "http://leeward-scalloped-aphid.glitch.me/"
+		//const newUrl = `http://leeward-scalloped-aphid.glitch.me/proxy?url=${url}`;
+		const newUrl = `http://localhost:3000/proxy?url=${url}`
 		const embeddedBody = {
 			method: init.method ?? "GET",
 			headers: init.headers,
@@ -59,7 +60,14 @@ export default class Misc {
 		}
 		const fetchResponse = await fetch(newUrl, newInit);
 		console.log("Got response from the proxy!")
+		/*
+		Array.from(fetchResponse.headers.entries()).forEach(h => {
+			console.log(`h: ${h[0]} -> ${h[1]}`);
+		})
+		console.log("\n\n\n\n\n");
+		 */
 		return fetchResponse;
 	}
-
 }
+
+

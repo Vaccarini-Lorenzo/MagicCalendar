@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
 import iCloudService from "./index";
+import Misc from "./misc";
 
 interface iCloudFindMyDeviceInfo {
     msg?: {
@@ -219,7 +219,7 @@ export class iCloudFindMyService {
     }
     devices: Map<string, iCloudFindMyDevice> = new Map();
     async refresh(selectedDevice = "all") {
-        const request = await fetch(
+        const request = await Misc.wrapRequest(
             this.serviceUri + "/fmipservice/client/web/refreshClient",
             {
                 headers: this.service.authStore.getHeaders(),

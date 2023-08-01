@@ -1,6 +1,5 @@
 import EventEmitter from "events";
 import fs from "fs";
-import fetch from "node-fetch";
 import os from "os";
 import path from "path";
 import { iCloudAuthenticationStore } from "./authStore";
@@ -314,6 +313,7 @@ export default class iCloudService extends EventEmitter {
             if (response.status == 200) {
                 if (this.authStore.processCloudSetupResponse(response)) {
                     try {
+						console.log("setting accountInfo");
                         this.accountInfo = await response.json();
                     } catch (e) {
                         console.warn("[icloud] Could not get account info:", e);
@@ -351,6 +351,7 @@ export default class iCloudService extends EventEmitter {
     async checkPCS() {
         const pcsTest = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
         if (pcsTest.status == 200) {
+			console.log(JSON.stringify(pcsTest.body));
             const j = await pcsTest.json();
             this.pcsEnabled = typeof j.isDeviceConsentedForPCS == "boolean";
             this.pcsAccess = this.pcsEnabled ? j.isDeviceConsentedForPCS : true;
@@ -451,12 +452,12 @@ export default class iCloudService extends EventEmitter {
     getService(service:string) {
         if (!this.serviceConstructors[service]) throw new TypeError(`getService(service: string): 'service' was ${service.toString()}, must be one of ${Object.keys(this.serviceConstructors).join(", ")}`);
         if (service === "photos") {
-            this._serviceCache[service] = new this.serviceConstructors[service](this, this.accountInfo.webservices.ckdatabasews.url);
+			this._serviceCache[service] = new this.serviceConstructors[service](this, this.accountInfo.webservices.ckdatabasews.url);
         }
-        if (!this._serviceCache[service]) {
-            this._serviceCache[service] = new this.serviceConstructors[service](this, this.accountInfo.webservices[service].url);
+		if (!this._serviceCache[service]) {
+			this._serviceCache[service] = new this.serviceConstructors[service](this, this.accountInfo.webservices[service].url);
         }
-        return this._serviceCache[service];
+		return this._serviceCache[service];
     }
 
 

@@ -30,6 +30,18 @@ export default class ExamplePlugin extends Plugin {
 		await this._iCloud.awaitReady;
 		console.log(this._iCloud.status);
 		if (this._iCloud.status == iCloudServiceStatus.Ready){
+			console.log("Fetching events!");
+			const calendarService = this._iCloud.getService("calendar");
+			const events = await calendarService.events();
+			events.forEach((event) => console.log(JSON.stringify(event)));
+		}
+		return this._iCloud.status;
+	}
+
+	async test(useless: string): Promise<iCloudServiceStatus> {
+		await this._iCloud.awaitReady;
+		if (this._iCloud.status == iCloudServiceStatus.Ready){
+			console.log("Fetching events!");
 			const calendarService = this._iCloud.getService("calendar");
 			const events = await calendarService.events();
 			events.forEach((event) => console.log(JSON.stringify(event)));
@@ -42,7 +54,7 @@ export default class ExamplePlugin extends Plugin {
 			id: "display-modal",
 			name: "Display modal",
 			callback: () => {
-				new ExampleModal(this.app, this.iCloudLogin, this.iCloudMfa).open();
+				new ExampleModal(this.app, this.iCloudLogin, this.test).open();
 			},
 		});
 	}
