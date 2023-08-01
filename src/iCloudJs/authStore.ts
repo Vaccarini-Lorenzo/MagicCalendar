@@ -4,6 +4,7 @@ import path from "path";
 import { Cookie } from "tough-cookie";
 import { iCloudServiceSetupOptions } from "./index";
 import { AUTH_HEADERS, DEFAULT_HEADERS } from "./consts";
+import {Obj} from "tern";
 
 export class iCloudAuthenticationStore {
     /**
@@ -29,12 +30,12 @@ export class iCloudAuthenticationStore {
         this.options = options;
         this.tknFile = path.format({ dir: options.dataDirectory, base: ".trust-token" });
 
-        Object.defineProperty(this, "trustToken", { enumerable: false });
-        Object.defineProperty(this, "sessionId", { enumerable: false });
-        Object.defineProperty(this, "sessionToken", { enumerable: false });
-        Object.defineProperty(this, "scnt", { enumerable: false });
-        Object.defineProperty(this, "aasp", { enumerable: false });
-        Object.defineProperty(this, "icloudCookies", { enumerable: false });
+        Object.defineProperty(this, "trustToken", { enumerable: false, writable: true });
+        Object.defineProperty(this, "sessionId", { enumerable: false, writable: true });
+        Object.defineProperty(this, "sessionToken", { enumerable: false, writable: true });
+        Object.defineProperty(this, "scnt", { enumerable: false, writable: true });
+        Object.defineProperty(this, "aasp", { enumerable: false, writable: true });
+        Object.defineProperty(this, "icloudCookies", { enumerable: false, writable: true });
     }
 
     /**
@@ -61,6 +62,30 @@ export class iCloudAuthenticationStore {
         }
     }
 
+	/*
+	    processAuthSecrets(authResponse: Response) {
+    	try{
+    		const headerMap = {};
+			authResponse.headers.forEach((value, key) => {
+				headerMap[key.toString().toLowerCase()] = value;
+			})
+			console.log(headerMap);
+
+			this.sessionId = headerMap["x-apple-session-token"]
+			console.log(`sessionId = ${this.sessionId}`);
+            this.sessionToken = this.sessionId;
+            //this.scnt = authResponse.headers.get("scnt");
+			this.scnt = headerMap["scnt"];
+
+
+			const headers = Array.from(authResponse.headers.values());
+            const aaspCookie = headers.find((v) => v.includes("aasp="));
+            this.aasp = aaspCookie.split("aasp=")[1].split(";")[0];
+            return this.validateAuthSecrets();
+    	}catch(){
+    	}
+    }
+	 */
 
     /**
      * Processes a successful iCloud sign in response.
@@ -70,7 +95,7 @@ export class iCloudAuthenticationStore {
      */
     processAuthSecrets(authResponse: Response) {
         try {
-            this.sessionId = authResponse.headers.get("X-Apple-Session-Token");
+			this.sessionId = authResponse.headers.get("X-Apple-Session-Token");
             this.sessionToken = this.sessionId;
             this.scnt = authResponse.headers.get("scnt");
 

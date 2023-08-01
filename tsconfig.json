@@ -21,5 +21,6 @@
 	},
 	"include": [
 		"**/*.ts"
-	]
+	],
+	"exclude": ["src/glitchServer.js"]
 }

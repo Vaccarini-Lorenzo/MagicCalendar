@@ -1,7 +1,6 @@
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import fetch from "node-fetch";
 import iCloudService from "./index";
 import Misc from "./misc";
 dayjs.extend(utc);
@@ -134,12 +133,12 @@ export class iCloudCalendarService {
         this.calendarServiceUri = `${service.accountInfo.webservices.calendar.url}/ca`;
     }
     
-    private async executeRequest<T = any>(endpointUrl: string, params: Record<string, string>, method?: string, body?: Object, extraHeaders?: Record<string, string>): Promise<T> {
+    private async executeRequest<T = any>(endpointUrl: string, params: Record<string, string>, method?: string, body?: object, extraHeaders?: Record<string, string>): Promise<T> {
         method = method ?? "GET";
         const searchParams = decodeURI(`${new URLSearchParams(params ?? [])}`);
         const url = `${this.calendarServiceUri}${endpointUrl}?${searchParams}`;
 
-        let requestParameters = {
+        const requestParameters = {
             method: method,
             headers: {
                 ...this.service.authStore.getHeaders(),
@@ -163,7 +162,7 @@ export class iCloudCalendarService {
              */
         }
 
-        const response = await fetch(url, requestParameters);
+        const response = await Misc.wrapRequest(url, requestParameters);
         return await response.json() as T;
     }
 
@@ -200,20 +199,20 @@ export class iCloudCalendarService {
     }
 
     async postEvent(newEvent: iCloudCalendarEvent, associatedCalendar: iCloudCalendarCollection){
-        let url = `/events/${newEvent.pGuid}/${newEvent.guid}`;
-        let queryParams = this.getQueryParams(newEvent);
-        let extraHeaders = {
+        const url = `/events/${newEvent.pGuid}/${newEvent.guid}`;
+        const queryParams = this.getQueryParams(newEvent);
+        const extraHeaders = {
             "Connection": "keep-alive",
             "Referer": "https://www.icloud.com/"
         }
-        let body = this.getBody(newEvent, associatedCalendar);
+        const body = this.getBody(newEvent, associatedCalendar);
 
         await this.executeRequest(url, queryParams, "POST", body, extraHeaders);
     }
 
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {
-        let stringifiedStartDate = Misc.stringifyDateArray(event.startDate);
-        let stringifiedEndDate = Misc.stringifyDateArray(event.endDate);
+        const stringifiedStartDate = Misc.stringifyDateArray(event.startDate);
+        const stringifiedEndDate = Misc.stringifyDateArray(event.endDate);
         return {
             "dsid": this.dsid,
             "startDate": stringifiedStartDate,
@@ -222,7 +221,7 @@ export class iCloudCalendarService {
         }
     }
 
-    private getBody(newEvent: iCloudCalendarEvent, associatedCalendar: iCloudCalendarCollection): Object {
+    private getBody(newEvent: iCloudCalendarEvent, associatedCalendar: iCloudCalendarCollection): object {
         return {
             Event: newEvent,
             ClientState: {
@@ -241,9 +240,9 @@ export class iCloudCalendarService {
 
     // Minimal version
     createNewEvent(tz: string, title: string, duration: number, pGuid: string, startDate: Date, endDate: Date): iCloudCalendarEvent {
-        let arrayStartDate = Misc.getArrayDate(startDate);
-        let arrayEndDate = Misc.getArrayDate(endDate);
-        let guid = this.generateNewUUID();
+        const arrayStartDate = Misc.getArrayDate(startDate);
+        const arrayEndDate = Misc.getArrayDate(endDate);
+        const guid = this.generateNewUUID();
 
         return {
             tz,
@@ -265,14 +264,14 @@ export class iCloudCalendarService {
     }
 
     private generateNewUUID(): string {
-        let maxIntEightNibbles = 4294967295;
-        let maxIntFourNibbles = 65535;
-        let maxIntTwelveNibbles = 281474976710655;
-        let firstUUID = Misc.getRandomHex(maxIntEightNibbles);
-        let secondUUID = Misc.getRandomHex(maxIntFourNibbles);
-        let thirdUUID = Misc.getRandomHex(maxIntFourNibbles);
-        let fourthUUID = Misc.getRandomHex(maxIntFourNibbles);
-        let lastUUID = Misc.getRandomHex(maxIntTwelveNibbles);
+        const maxIntEightNibbles = 4294967295;
+        const maxIntFourNibbles = 65535;
+        const maxIntTwelveNibbles = 281474976710655;
+        const firstUUID = Misc.getRandomHex(maxIntEightNibbles);
+        const secondUUID = Misc.getRandomHex(maxIntFourNibbles);
+        const thirdUUID = Misc.getRandomHex(maxIntFourNibbles);
+        const fourthUUID = Misc.getRandomHex(maxIntFourNibbles);
+        const lastUUID = Misc.getRandomHex(maxIntTwelveNibbles);
         return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
     }
 
