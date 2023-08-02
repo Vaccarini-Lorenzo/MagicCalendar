@@ -1,5 +1,5 @@
 import {App, Modal, Setting} from "obsidian";
-import {iCloudServiceStatus} from "./iCloudJs";
+import {iCloudServiceStatus} from "../iCloudJs";
 
 export class ExampleModal extends Modal {
     submitCredentials: (username: string, pw: string) => Promise<iCloudServiceStatus>;
@@ -31,7 +31,7 @@ export class ExampleModal extends Modal {
                     .setButtonText("Submit")
                     .setCta()
                     .onClick(async () => {
-                        const loginStatus = await this.submitCredentials(username, pw);
+						const loginStatus = await this.submitCredentials(username, pw);
 						console.log("loginStatus = " + loginStatus);
                         this.checkStatus(loginStatus);
                     }));

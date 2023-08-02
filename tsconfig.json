@@ -20,7 +20,9 @@
 		]
 	},
 	"include": [
-		"**/*.ts"
+		"src/**/*.ts"
 	],
-	"exclude": ["src/glitchServer.js"]
+	"exclude": [
+		"src/CORSProxy/proxyServer.js", "src/proxy.ts"
+    ]
 }

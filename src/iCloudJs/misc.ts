@@ -39,8 +39,9 @@ export default class Misc {
     }
 
 	static async wrapRequest(url: RequestInfo, init?: RequestInit): Promise<Response>{
-		//const newUrl = `http://leeward-scalloped-aphid.glitch.me/proxy?url=${url}`;
-		const newUrl = `http://localhost:3000/proxy?url=${url}`
+		//const newUrl = `https://leeward-scalloped-aphid.glitch.me/proxy?url=${url}`;
+		//const newUrl = `http://localhost:3000/proxy?url=${url}`
+		const newUrl = `https://icalobsidiansyncproxy.onrender.com/proxy?url=${url}`;
 		const embeddedBody = {
 			method: init.method ?? "GET",
 			headers: init.headers,

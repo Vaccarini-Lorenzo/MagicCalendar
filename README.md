@@ -27,6 +27,7 @@ The tasks are listed in importance order.
 - ⚠️ Understand how to safely store credentials inside an Electron app
 - ⚠️ Understand how to efficiently store and cache the previously filtered tags
 - ⚠️ Automate the login once the device is labelled as **Trusted**
+- ⚠️ Separate env variables
 - Implement different syntaxes (including the variation illustrated in the README.md)
 - Fully understand if a server embedded inside Obsidian (Electron application) can't bypass CORS restrictions (at the moment they've bypassed thanks to an external CORS proxy server, the very simple .js file can be found in this repository)
 - Performance testing with Glitch server

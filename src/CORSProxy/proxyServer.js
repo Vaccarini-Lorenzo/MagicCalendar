@@ -1,12 +1,22 @@
 import express from 'express'
 import fetch from 'node-fetch'
 import bodyParser from 'body-parser'
+import dotenv from 'dotenv';
 
+/*
+
+		The following simple server is currently hosted on render and acts as a CORS proxy
+		since Obsidian (an electron app) can't bypass its environment CORS policy
+
+ */
+
+dotenv.config();
 const app = express()
+const port = process.env.PORT;
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.listen(3000, () => console.log(`listening to port 3000`));
+app.listen(port, () => console.log(`listening to port ${port}`));
 
 app.use((req, res, next) => {
 	res.append('Access-Control-Allow-Origin', ['*']);
@@ -59,9 +69,15 @@ app.post("/proxy", async (req, res) => {
 		}
 		console.log(`h: ${key} -> ${value}`);
 	})
-	let json = await fetchRes.json();
 	console.log(`request processed with status:${fetchRes.status}\n\n\n\n\n\n`);
-	res.json(json);
+	try{
+		let json = await fetchRes.json();
+		res.json(json);
+	} catch (e){
+		console.log("Error parsing the json: Body not forwarded");
+		res.send();
+	}
+
 });
 
 

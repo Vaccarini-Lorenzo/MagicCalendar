@@ -12,10 +12,8 @@ import { iCloudPhotosService } from "./photos";
 import { iCloudUbiquityService } from "./ubiquity";
 import { AccountInfo } from "./types";
 import Misc from "./misc";
-
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
-
 /**
  * These are the options that can be passed to the iCloud service constructor.
  */
@@ -198,9 +196,10 @@ export default class iCloudService extends EventEmitter {
 
         if (!username) {
             try {
-                const saved = (await require("keytar").findCredentials("https://idmsa.apple.com"))[0];
+                //const saved = keytar.findCredentials("https://idmsa.apple.com")[0];
+				const saved = false;
                 if (!saved) throw new Error("Username was not provided and could not be found in keychain");
-                username = saved.account;
+                //username = saved.account;
                 console.debug("[icloud] Username found in keychain:", username);
             } catch (e) {
                 throw new Error("Username was not provided, and unable to use Keytar to find saved credentials" + e.toString());
@@ -210,7 +209,7 @@ export default class iCloudService extends EventEmitter {
         this.options.username = username;
         if (!password) {
             try {
-                password = await require("keytar").findPassword("https://idmsa.apple.com", username);
+                //password = await keytar.findPassword("https://idmsa.apple.com");
             } catch (e) {
                 throw new Error("Password was not provided, and unable to use Keytar to find saved credentials" + e.toString());
             }
@@ -328,7 +327,7 @@ export default class iCloudService extends EventEmitter {
 
                     this._setState(iCloudServiceStatus.Ready);
                     try {
-                        if (this.options.saveCredentials) require("keytar").setPassword("https://idmsa.apple.com", this.options.username, this.options.password);
+                        //if (this.options.saveCredentials) await keytar.setPassword("https://idmsa.apple.com", this.options.username, this.options.password);
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);
                     }
