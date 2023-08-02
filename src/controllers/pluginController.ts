@@ -17,7 +17,7 @@ export default class PluginController {
 		this._safeController = safeController;
 	}
 
-	async loginCallback(username: string, password: string): Promise<iCloudServiceStatus>{
+	async tryAuthentication(username: string, password: string): Promise<iCloudServiceStatus>{
 		this._iCloud = new iCloudService({
 			username,
 			password,
