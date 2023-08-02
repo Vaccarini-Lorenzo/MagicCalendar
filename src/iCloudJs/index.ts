@@ -12,6 +12,7 @@ import { iCloudPhotosService } from "./photos";
 import { iCloudUbiquityService } from "./ubiquity";
 import { AccountInfo } from "./types";
 import Misc from "./misc";
+import SafeController from "../controllers/safeController";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -161,6 +162,8 @@ export default class iCloudService extends EventEmitter {
 
     accountInfo?: AccountInfo;
 
+	_safeController: SafeController;
+
     /**
      * A promise that can be awaited that resolves when the iCloudService is ready.
      * Will reject if an error occurs during authentication.
@@ -170,9 +173,10 @@ export default class iCloudService extends EventEmitter {
         this.on(iCloudServiceStatus.Error, reject);
     });
 
-    constructor(options: iCloudServiceSetupOptions) {
+    constructor(options: iCloudServiceSetupOptions, safeController: SafeController) {
         super();
         this.options = options;
+		this._safeController = safeController;
         if (!this.options.dataDirectory) this.options.dataDirectory = path.join(os.homedir(), ".icloud");
         this.authStore = new iCloudAuthenticationStore(options);
     }
@@ -196,10 +200,11 @@ export default class iCloudService extends EventEmitter {
 
         if (!username) {
             try {
-                //const saved = keytar.findCredentials("https://idmsa.apple.com")[0];
-				const saved = false;
+                const saved = this._safeController.checkSafe();
                 if (!saved) throw new Error("Username was not provided and could not be found in keychain");
-                //username = saved.account;
+				const credentials = this._safeController.getCredentials();
+                username = credentials.username;
+				password = credentials.password;
                 console.debug("[icloud] Username found in keychain:", username);
             } catch (e) {
                 throw new Error("Username was not provided, and unable to use Keytar to find saved credentials" + e.toString());
@@ -207,14 +212,6 @@ export default class iCloudService extends EventEmitter {
         }
         if (typeof (username as any) !== "string") throw new TypeError("authenticate(username?: string, password?: string): 'username' was " + (username || JSON.stringify(username)).toString());
         this.options.username = username;
-        if (!password) {
-            try {
-                //password = await keytar.findPassword("https://idmsa.apple.com");
-            } catch (e) {
-                throw new Error("Password was not provided, and unable to use Keytar to find saved credentials" + e.toString());
-            }
-        }
-        if (typeof (password as any) !== "string") throw new TypeError("authenticate(username?: string, password?: string): 'password' was " + (password || JSON.stringify(password)).toString());
         // hide password from console.log
         Object.defineProperty(this.options, "password", {
             enumerable: false, // hide it from for..in
@@ -226,7 +223,6 @@ export default class iCloudService extends EventEmitter {
 
         if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
         this.authStore.loadTrustToken(this.options.username);
-
 
 
         this._setState(iCloudServiceStatus.Started);
@@ -327,7 +323,7 @@ export default class iCloudService extends EventEmitter {
 
                     this._setState(iCloudServiceStatus.Ready);
                     try {
-                        //if (this.options.saveCredentials) await keytar.setPassword("https://idmsa.apple.com", this.options.username, this.options.password);
+                        if (this.options.saveCredentials) this._safeController.storeCredentials(this.options.username.toString(), this.options.password.toString());
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);
                     }

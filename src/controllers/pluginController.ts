@@ -2,16 +2,19 @@ import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Tag from "../model/tag";
 import {App, getAllTags} from "obsidian";
 import SimplifiedFile from "../model/simplifiedFile";
+import SafeController from "./safeController";
 
 let tagHash: Map<number, Tag>;
 
 export default class PluginController {
 	private _iCloud: iCloudService;
+	private _safeController: SafeController;
 	tagHash: Map<number, Tag>;
 
-	constructor() {
+	constructor(safeController: SafeController) {
 		console.log("init pluginController");
 		tagHash = new Map<number, Tag>();
+		this._safeController = safeController;
 	}
 
 	async loginCallback(username: string, password: string): Promise<iCloudServiceStatus>{
@@ -20,9 +23,8 @@ export default class PluginController {
 			password,
 			saveCredentials: true,
 			trustDevice: true
-		});
+		}, this._safeController);
 		await this._iCloud.authenticate();
-		console.log(`logincallback ok; tagHash status: ${JSON.stringify(tagHash)}`);
 		return this._iCloud.status;
 	}
 
@@ -40,7 +42,6 @@ export default class PluginController {
 	}
 
 	async testCallback(uselessSignature: string): Promise<iCloudServiceStatus> {
-		console.log(`tagHash status: ${JSON.stringify(tagHash)}`);
 		await this._iCloud.awaitReady;
 		if (this._iCloud.status == iCloudServiceStatus.Ready){
 			console.log("Fetching events!");
@@ -53,7 +54,6 @@ export default class PluginController {
 			console.log(`Let's get first your event detail: ${JSON.stringify(eventDetail)}`);
 
 			console.log("Pushing events!");
-			console.log(`tagHash status: ${JSON.stringify(tagHash)}`);
 			Array.from(tagHash.entries()).forEach((entry) => {
 				const tag = entry[1];
 				let duration = tag.endDate.getTime() - tag.startDate.getTime();
@@ -77,7 +77,6 @@ export default class PluginController {
 				this.updateHashTable(tag);
 			});
 		});
-		console.log(`tagHash status: ${JSON.stringify(Array.from(tagHash.entries()))}`);
 	}
 
 	updateHashTable(tag: Tag){
@@ -86,7 +85,6 @@ export default class PluginController {
 			const oldTag = tagHash.get(hash);
 			tag = this.mergeFiles(tag, oldTag);
 		}
-		console.log("tag:" + tag.title);
 		tagHash.set(hash, tag);
 	}
 
@@ -102,7 +100,6 @@ export default class PluginController {
 	checkRegex(tag): boolean{
 		const pattern = /#ical\/\d{4}-\d{2}-\d{2}\/(\d{2}-\d{2}\/){0,2}[^/]*\//
 		const matchStatus = tag.match(pattern);
-		if(matchStatus) console.log(`match! ${tag}`);
 		return matchStatus;
 	}
 

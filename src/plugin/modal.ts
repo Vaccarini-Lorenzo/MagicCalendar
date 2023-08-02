@@ -33,7 +33,7 @@ export class ExampleModal extends Modal {
                     .onClick(async () => {
 						const loginStatus = await this.submitCredentials(username, pw);
 						console.log("loginStatus = " + loginStatus);
-                        this.checkStatus(loginStatus);
+						this.checkStatus(loginStatus);
                     }));
     }
 

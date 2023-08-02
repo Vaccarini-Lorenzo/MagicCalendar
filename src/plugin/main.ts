@@ -2,6 +2,8 @@ import {Plugin} from 'obsidian';
 import {ExampleModal} from "./modal";
 import iCloudService from "../iCloudJs";
 import PluginController from "../controllers/pluginController";
+import safeController from "../controllers/safeController";
+import SafeController from "../controllers/safeController";
 
 interface Settings {
 	mySetting: string;
@@ -23,11 +25,21 @@ export default class iCalObsidianSync extends Plugin {
 	settings: Settings;
 	_iCloud: iCloudService;
 	_pluginController: PluginController;
+	_safeController: SafeController;
 
 	async onload() {
-		this._pluginController = new PluginController();
+		const basePath = (this.app.vault.adapter as any).basePath
+		this._safeController = new SafeController();
+		this._safeController.injectPath(basePath);
+
+		this._pluginController = new PluginController(this._safeController);
 		console.log("fetching tags...")
 		this._pluginController.fetchTags(this.app);
+
+		if(this._safeController.checkSafe()){
+			this._iCloud = new iCloudService({username:"", password:"", saveCredentials:true, trustDevice:true}, this._safeController);
+			await this._iCloud.authenticate();
+		}
 
 		this.registerEvent(this.app.metadataCache.on('changed', (file, data, cache) => {
 			cache.tags.forEach(t => console.log(t));
