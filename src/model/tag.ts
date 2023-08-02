@@ -2,6 +2,7 @@ import SimplifiedFile from "./simplifiedFile";
 
 export default class Tag {
 	tag: string;
+	hash: number;
 	title: string;
 	startDate: Date;
 	endDate: Date;
@@ -17,6 +18,7 @@ export default class Tag {
 		this.files = [];
 		this.timerDuration = timerDuration;
 		this.timer = setTimeout(callback, timerDuration);
+		this.hash = this.computeHash();
 	}
 
 	private parseDates(){
@@ -67,5 +69,18 @@ export default class Tag {
 		let description = "reference: "
 		this.files.forEach(file => description += `${file.name}, `);
 		return description;
+	}
+
+	private computeHash(): number{
+		const tagProperties = this.tag + this.startDate.toISOString() + this.endDate.toISOString();
+		let hash = 0,
+			i, chr;
+		if (tagProperties.length === 0) return hash;
+		for (i = 0; i < tagProperties.length; i++) {
+			chr = tagProperties.charCodeAt(i);
+			hash = ((hash << 5) - hash) + chr;
+			hash |= 0; // Convert to 32bit integer
+		}
+		return hash;
 	}
 }

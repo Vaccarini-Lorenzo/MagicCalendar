@@ -207,7 +207,7 @@ export default class iCloudService extends EventEmitter {
 				password = credentials.password;
                 console.debug("[icloud] Username found in keychain:", username);
             } catch (e) {
-                throw new Error("Username was not provided, and unable to use Keytar to find saved credentials" + e.toString());
+                throw new Error("Error fetching cred" + e.toString());
             }
         }
         if (typeof (username as any) !== "string") throw new TypeError("authenticate(username?: string, password?: string): 'username' was " + (username || JSON.stringify(username)).toString());
@@ -308,7 +308,6 @@ export default class iCloudService extends EventEmitter {
             if (response.status == 200) {
                 if (this.authStore.processCloudSetupResponse(response)) {
                     try {
-						console.log("setting accountInfo");
                         this.accountInfo = await response.json();
                     } catch (e) {
                         console.warn("[icloud] Could not get account info:", e);
@@ -346,7 +345,6 @@ export default class iCloudService extends EventEmitter {
     async checkPCS() {
         const pcsTest = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
         if (pcsTest.status == 200) {
-			console.log(JSON.stringify(pcsTest.body));
             const j = await pcsTest.json();
             this.pcsEnabled = typeof j.isDeviceConsentedForPCS == "boolean";
             this.pcsAccess = this.pcsEnabled ? j.isDeviceConsentedForPCS : true;

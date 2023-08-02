@@ -3,17 +3,25 @@ import Tag from "../model/tag";
 import {App, getAllTags} from "obsidian";
 import SimplifiedFile from "../model/simplifiedFile";
 import SafeController from "./safeController";
+import {readFileSync, createWriteStream, writeFileSync} from "fs";
 
 let tagHash: Map<number, Tag>;
 
 export default class PluginController {
 	private _iCloud: iCloudService;
 	private _safeController: SafeController;
-	tagHash: Map<number, Tag>;
+	_pluginPath: string;
 
-	constructor(safeController: SafeController) {
+	constructor() {
 		console.log("init pluginController");
 		tagHash = new Map<number, Tag>();
+	}
+
+	injectPath(pluginPath: string){
+		this._pluginPath = pluginPath;
+	}
+
+	injectSafeController(safeController: SafeController){
 		this._safeController = safeController;
 	}
 
@@ -77,15 +85,59 @@ export default class PluginController {
 				this.updateHashTable(tag);
 			});
 		});
+		this.updateLocalTagStorage();
 	}
 
+	// Why a local storage?
+	// I need to keep track of the tags already synced
+	// Periodically the local storage will be checked in order to sync
+	// the remaining tags
+
+	getLocalStorageTags(): Map<number, boolean> {
+		try{
+			const data = readFileSync(this._pluginPath + "/.tags.txt").toString('utf-8')
+			const lines = data.split("\n");
+			const tagMap = new Map<number, boolean>();
+			lines.forEach(line => {
+				const hashSync = line.split(" ");
+				tagMap.set(Number(hashSync[0]), hashSync[1] == "true");
+			})
+			return tagMap;
+		} catch (e) {
+			console.log("No tags file found: Creating one")
+			if (e.code === 'ENOENT') {
+				writeFileSync(this._pluginPath + "/.tags.txt", "");
+			}
+			return new Map<number, boolean>();
+		}
+	}
+
+
+	updateLocalTagStorage(){
+		const tagMap = this.getLocalStorageTags();
+		console.log("Found these tags:")
+		console.log(JSON.stringify(Array.from(tagMap.entries())));
+		const writeStream = createWriteStream(this._pluginPath + "/.tags.txt", {flags: 'a'});
+		Array.from(tagHash.entries()).forEach((entry) => {
+			if(!tagMap.has(entry[0])){
+				console.log("New tag in local store!");
+				const newLine = `${entry[0]} false\n`
+				writeStream.write(newLine);
+			}
+		})
+		writeStream.close();
+	}
+
+	// Why the hash table?
+	// The same iCal tag can be placed among different files and I'd need to travers
+	// the whole tag structure to find if the new tag found is already in the structure (possibly multiple times)
+	// With a hash table I can easily check in O(1)
 	updateHashTable(tag: Tag){
-		const hash = this.hash(tag);
-		if(tagHash.has(hash)){
-			const oldTag = tagHash.get(hash);
+		if(tagHash.has(tag.hash)){
+			const oldTag = tagHash.get(tag.hash);
 			tag = this.mergeFiles(tag, oldTag);
 		}
-		tagHash.set(hash, tag);
+		tagHash.set(tag.hash, tag);
 	}
 
 	mergeFiles(newTag: Tag, oldTag: Tag): Tag {
@@ -101,18 +153,5 @@ export default class PluginController {
 		const pattern = /#ical\/\d{4}-\d{2}-\d{2}\/(\d{2}-\d{2}\/){0,2}[^/]*\//
 		const matchStatus = tag.match(pattern);
 		return matchStatus;
-	}
-
-	hash(tag: Tag): number{
-		const tagProperties = tag.tag + tag.startDate.toISOString() + tag.endDate.toISOString();
-		let hash = 0,
-			i, chr;
-		if (tagProperties.length === 0) return hash;
-		for (i = 0; i < tagProperties.length; i++) {
-			chr = tagProperties.charCodeAt(i);
-			hash = ((hash << 5) - hash) + chr;
-			hash |= 0; // Convert to 32bit integer
-		}
-		return hash;
 	}
 }

@@ -12,28 +12,31 @@ const DEFAULT_SETTINGS: Settings = {
 	mySetting: 'default'
 }
 
+const safeController = new SafeController();
+const pluginController = new PluginController();
+let statusModal: iCloudStatusModal;
+
 export default class iCalObsidianSync extends Plugin {
-	settings: Settings;
-	_iCloud: iCloudService;
-	_pluginController: PluginController;
-	_safeController: SafeController;
-
-	iCloudStatusModal: iCloudStatusModal;
 	iCloudStatus: iCloudServiceStatus;
-
+	settings: Settings;
+	iCloud: iCloudService;
+	
 	async onload() {
 		const basePath = (this.app.vault.adapter as any).basePath
-		this._safeController = new SafeController();
-		this._safeController.injectPath(basePath);
+		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
+		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this.syncCallback, this);
+
+		safeController.injectPath(pluginPath);
+		pluginController.injectPath(pluginPath);
+		pluginController.injectSafeController(safeController);
 		this.registerEvents();
 
-		this._pluginController = new PluginController(this._safeController);
 		console.log("fetching tags...")
-		this._pluginController.fetchTags(this.app);
+		pluginController.fetchTags(this.app);
 
 		this.iCloudStatus = iCloudServiceStatus.NotStarted;
-		if(this._safeController.checkSafe()){
-			const iCloudStatus = await this._pluginController.tryAuthentication("", "");
+		if(safeController.checkSafe()){
+			const iCloudStatus = await pluginController.tryAuthentication("", "");
 			this.updateStatus(iCloudStatus);
 		}
 
@@ -60,28 +63,28 @@ export default class iCalObsidianSync extends Plugin {
 
 	updateStatus(status: iCloudServiceStatus){
 		this.iCloudStatus = status;
-		this.iCloudStatusModal.updateModal(status);
+		statusModal.updateModal(status);
+	}
+	
+	async submitCallback(username: string, pw: string, ref: any){
+		const status = await pluginController.tryAuthentication(username, pw);
+		ref.updateStatus(status);
 	}
 
-	async submitCallback(username: string, pw: string){
-		const status = await this._pluginController.tryAuthentication(username, pw);
-		this.updateStatus(status);
+	async mfaCallback(code: string, ref: any){
+		const status = await pluginController.MFACallback(code);
+		ref.updateStatus(status);
 	}
 
-	async mfaCallback(code: string){
-		const status = await this._pluginController.MFACallback(code);
-		this.updateStatus(status);
+	async syncCallback(ref: any){
+		await pluginController.testCallback("test");
 	}
-
 
 
 	registerEvents(){
 
-		this.iCloudStatusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback);
-
 		this.registerEvent(this.app.metadataCache.on('changed', (file, data, cache) => {
 			cache.tags.forEach(t => console.log(t));
-			console.log(JSON.stringify(cache.blocks));
 		}));
 
 		this.registerEvent(this.app.metadataCache.on('deleted', (file, data) => {
@@ -89,12 +92,11 @@ export default class iCalObsidianSync extends Plugin {
 			console.log(`file = ${file}\n\ndata=${data}\n\n`)
 		}))
 
-
 		this.addCommand({
 			id: "display-modal",
 			name: "Display modal",
 			callback: () => {
-				this.iCloudStatusModal.open();
+				statusModal.open();
 			},
 		});
 	}

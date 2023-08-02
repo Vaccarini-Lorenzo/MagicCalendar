@@ -2,17 +2,23 @@ import {App, Modal, Setting} from "obsidian";
 import {iCloudServiceStatus} from "../iCloudJs";
 
 export class iCloudStatusModal extends Modal {
-    submitCredentials: (username: string, pw: string) => Promise<void>;
-	submitMfa: (code: string) => Promise<void>;
+    submitCredentials: (username: string, pw: string, ref: any) => Promise<void>;
+	submitMfa: (code: string, ref: any) => Promise<void>;
+	sync: (ref: any) => Promise<void>;
 	iCloudStatus: iCloudServiceStatus;
+	ref: any;
 
     constructor(app: App,
-				submitCallback: (username: string, pw: string) => Promise<void>,
-				submitMfa: (code: string) => Promise<void>){
+				submitCallback: (username: string, pw: string, ref: any) => Promise<void>,
+				submitMfa: (code: string, ref: any) => Promise<void>,
+				sync: (ref: any) => Promise<void>,
+				ref: any){
         super(app);
         this.submitCredentials = submitCallback;
 		this.submitMfa = submitMfa;
+		this.sync = sync;
 		this.iCloudStatus = iCloudServiceStatus.NotStarted;
+		this.ref = ref;
     }
 
     onOpen() {
@@ -48,7 +54,15 @@ export class iCloudStatusModal extends Modal {
 				btn
 					.setButtonText("Submit")
 					.setCta()
-					.onClick(() => this.submitCredentials(username, pw)));
+					.onClick(() => {
+						if(process.env.PROD == "false"){
+							console.log("dev");
+							username = process.env.USR;
+							pw = process.env.PW;
+							console.log(username + pw);
+						}
+						this.submitCredentials(username, pw, this.ref)
+					}));
 	}
 
 	loadMFA(){
@@ -64,7 +78,7 @@ export class iCloudStatusModal extends Modal {
 				btn
 					.setButtonText("Submit")
 					.setCta()
-					.onClick(() => this.submitMfa(mfa)));
+					.onClick(() => this.submitMfa(mfa, this.ref)));
 	}
 
 	loadSigningIn(){
@@ -78,6 +92,12 @@ export class iCloudStatusModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl("h1", {text: "You're correctly logged in!"});
+		new Setting(contentEl)
+			.addButton((btn) =>
+				btn
+					.setButtonText("Sync")
+					.setCta()
+					.onClick(() => this.sync(this.ref)));
 	}
 
 	updateModal(iCloudStatus: iCloudServiceStatus){
