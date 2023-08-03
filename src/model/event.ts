@@ -1,40 +1,38 @@
 import SimplifiedFile from "./simplifiedFile";
 
-export default class Tag {
-	tag: string;
+export default class Event {
+	// Meeting with John
+	subject: string;
+	// UUID
 	hash: number;
-	title: string;
+	dateString: string;
 	startDate: Date;
 	endDate: Date;
-	files: SimplifiedFile[];
-	timer: NodeJS.Timer;
-	timerDuration: number;
+	file: SimplifiedFile;
 	calendar?: string;
-	callback: () => void;
 
-	constructor(tag: string, timerDuration: number, callback: () => void) {
-		this.tag = tag;
+	constructor(dateString: string, subject: string) {
+		this.dateString = dateString;
+		this.subject = subject;
 		this.parseDates();
-		this.parseTitle();
-		this.files = [];
-		this.timerDuration = timerDuration;
-		this.timer = setTimeout(callback, timerDuration);
 		this.hash = this.computeHash();
 	}
 
+	// Probably this is deprecated.
+	// When the NPL finds an event it will parse it accordingly to the type (DATE, TIME, customDate etc)
 	private parseDates(){
-		const splitted = this.tag.slice(1).split("/")
+		const splitted = this.subject.slice(1).split("/")
 		const completeDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
 		const halfDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
 		//const onlyDateRegex = /#\d{4}-\d{2}-\d{2}\/(.)*/;
 
 		let startHourComponents = ["00", "00"];
 		let endHourComponents = ["23", "59"];
-		if (this.tag.match(completeDateRegex)){
+		if (this.subject.match(completeDateRegex)){
 			startHourComponents = splitted[1].split("-");
 			endHourComponents = splitted[2].split("-");
 		}
-		else if (this.tag.match(halfDateRegex)){
+		else if (this.subject.match(halfDateRegex)){
 			startHourComponents = splitted[1].split("-");
 			endHourComponents = ["23", "59"];
 		}
@@ -46,32 +44,12 @@ export default class Tag {
 			Number(endHourComponents[0]), Number(endHourComponents[1]));
 	}
 
-	parseTitle(){
-		const splitted = this.tag.split("/")
-		this.title = splitted[splitted.length - 1].replaceAll("_", " ");
-	}
-
-	resetTimer(){
-		clearTimeout(this.timer);
-	}
-
-	updateTimer(duration: number){
-		this.resetTimer();
-		this.timer = setTimeout(this.callback, duration);
-	}
-
-	linkFile(file: SimplifiedFile){
-		this.files.push(file);
-	}
-
 	getDescription(): string {
-		let description = "reference: "
-		this.files.forEach(file => description += `${file.name}, `);
-		return description;
+		return "reference: " + this.file.name;
 	}
 
 	private computeHash(): number{
-		const tagProperties = this.tag + this.startDate.toISOString() + this.endDate.toISOString();
+		const tagProperties = this.subject + this.startDate.toISOString() + this.endDate.toISOString();
 		let hash = 0,
 			i, chr;
 		if (tagProperties.length === 0) return hash;

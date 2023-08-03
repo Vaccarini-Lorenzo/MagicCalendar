@@ -1,6 +1,6 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
-import Tag from "../model/tag";
-import {App, getAllTags, TFile} from "obsidian";
+import Event from "../model/event";
+import {App, getAllTags} from "obsidian";
 import SimplifiedFile from "../model/simplifiedFile";
 import SafeController from "./safeController";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
@@ -14,13 +14,12 @@ export default class PluginController {
 	private _pluginPath: string;
 	private _calendars: iCloudCalendarCollection[];
 	private _calendarService: iCloudCalendarService;
-	private _tagHash: Map<number, Tag>;
+	private _tagHash: Map<number, Event>;
 	private _dataLoadingComplete: boolean;
-	private _nplC: NPLController;
 	private app: App;
 
 	constructor() {
-		this._tagHash = new Map<number, Tag>();
+		this._tagHash = new Map<number, Event>();
 		this._pendingTagsBuffer = [];
 		this._calendars = [];
 		this._dataLoadingComplete = false;
@@ -28,7 +27,6 @@ export default class PluginController {
 
 	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
-		this._nplC = new NPLController(this._pluginPath);
 	}
 
 	injectSafeController(safeController: SafeController){
@@ -74,21 +72,22 @@ export default class PluginController {
 		this._dataLoadingComplete = true;
 	}
 
-	async pushEvent(tag: Tag): Promise<boolean>{
-		console.log("Pushing tag!");
-		let duration = tag.endDate.getTime() - tag.startDate.getTime();
+	async pushEvent(event: Event): Promise<boolean>{
+		console.log("Pushing event!");
+		let duration = event.endDate.getTime() - event.startDate.getTime();
 		// TODO
 		// Implement, all day
 		let calendar: iCloudCalendarCollection;
-		if (tag.calendar == undefined)
+		if (event.calendar == undefined)
 			calendar = this._calendars.first();
 		else
-			calendar = this._calendars.filter(calendar => calendar.guid == tag.calendar)[0];
+			calendar = this._calendars.filter(calendar => calendar.guid == event.calendar)[0];
 		if (duration == 0) duration = 60
-		const newEvent = this._calendarService.createNewEvent("Europe/Rome", tag.title, tag.getDescription(), duration, calendar.guid, tag.startDate, tag.endDate);
+		const newEvent = this._calendarService.createNewEvent("Europe/Rome", event.subject, event.getDescription(), duration, calendar.guid, event.startDate, event.endDate);
 		return await this._calendarService.postEvent(newEvent, calendar.ctag);
 	}
 
+	/*
 	fetchTags(app: App){
 		const files = app.vault.getFiles();
 		files.forEach((file) => {
@@ -97,14 +96,16 @@ export default class PluginController {
 			const filteredTags = fileTags.filter(tag => this.checkRegex(tag));
 			filteredTags.forEach(async filteredTag => {
 				this._nplC.process(await app.vault.read(file));
-				const tag = new Tag(filteredTag.toString(), 10, () => {});
-				tag.linkFile(new SimplifiedFile(file.name, file.path))
-				this.updateHashTable(tag);
+				const event = new Event(filteredTag.toString());
+				event.linkFile(new SimplifiedFile(file.name, file.path))
+				this.updateHashTable(event);
 			});
 		});
 		this.updateLocalTagStorage();
 		//this.manageSync(this);
 	}
+
+	 */
 
 	// Why a local storage?
 	// I need to keep track of the tags already synced
@@ -114,7 +115,7 @@ export default class PluginController {
 	getLocalStorageTags(): Map<number, boolean> {
 		//console.log("getting local storage tags");
 		try{
-			const data = readFileSync(this._pluginPath + "/.tags.txt").toString('utf-8')
+			const data = readFileSync(this._pluginPath + "/.events.txt").toString('utf-8')
 			const lines = data.split("\n");
 			const tagMap = new Map<number, boolean>();
 			lines.forEach(line => {
@@ -156,53 +157,11 @@ export default class PluginController {
 		console.log(this._pendingTagsBuffer);
 	}
 
-	async manageSync(ref: any){
-		console.log("Syncing!");
-		if (ref._iCloud != undefined && ref._dataLoadingComplete){
-			ref.pushPendingTasks();
-		} else {
-			setTimeout(() => ref.manageSync(ref), 5000);
-		}
-	}
-
-	async pushPendingTasks(){
-		this._pendingTagsBuffer.forEach((tagHash) => {
-			const tag = this._tagHash.get(tagHash);
-			this.pushEvent(tag).then((pushed) => {
-				if (pushed){
-					// TODO: Update local storage changing the tag status to true (synced)
-					// I was thinking about generalizing the updateLocalTagStorage method
-					// It can take an array of tags and a method (ADD, UPDATE, DELETE) etc
-				}
-			});
-		})
-	}
-
-
 	// Why the hash table?
 	// The same iCal tag can be placed among different files and I'd need to travers
 	// the whole tag structure to find if the new tag found is already in the structure (possibly multiple times)
 	// With a hash table I can easily check in O(1)
-	updateHashTable(tag: Tag){
-		if(this._tagHash.has(tag.hash)){
-			const oldTag = this._tagHash.get(tag.hash);
-			tag = this.mergeFiles(tag, oldTag);
-		}
+	updateHashTable(tag: Event) {
 		this._tagHash.set(tag.hash, tag);
-	}
-
-	mergeFiles(newTag: Tag, oldTag: Tag): Tag {
-		oldTag.files.forEach((file) => {
-			if (!newTag.files.contains(file)){
-				newTag.files.push(file);
-			}
-		})
-		return newTag;
-	}
-
-	checkRegex(tag): boolean{
-		const pattern = /#\d{4}-\d{2}-\d{2}\/(\d{2}-\d{2}\/){0,2}[^/]*\/[^/]*\//
-		const matchStatus = tag.match(pattern);
-		return matchStatus;
 	}
 }

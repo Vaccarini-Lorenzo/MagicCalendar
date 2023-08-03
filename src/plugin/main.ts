@@ -3,7 +3,7 @@ import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import PluginController from "../controllers/pluginController";
 import SafeController from "../controllers/safeController";
 import {iCloudStatusModal} from "./modal";
-import {emojiListField} from "./testExtension";
+import {NPLStateField} from "./nplExtension";
 
 interface Settings {
 	mySetting: string;
@@ -24,10 +24,12 @@ export default class iCalObsidianSync extends Plugin {
 	iCloud: iCloudService;
 	
 	async onload() {
-		this.registerEditorExtension(emojiListField);
 		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		const basePath = (this.app.vault.adapter as any).basePath
 		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
+
+		const nplStateField = new NPLStateField(pluginPath);
+		this.registerEditorExtension(nplStateField.stateField);
 
 		safeController.injectPath(pluginPath);
 		pluginController.injectPath(pluginPath);
@@ -44,8 +46,6 @@ export default class iCalObsidianSync extends Plugin {
 
 		this.registerEvents();
 
-		console.log("fetching tags...")
-		pluginController.fetchTags(this.app);
 	}
 
 	async onunload() {
