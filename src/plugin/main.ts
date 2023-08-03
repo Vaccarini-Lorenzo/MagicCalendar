@@ -3,6 +3,7 @@ import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import PluginController from "../controllers/pluginController";
 import SafeController from "../controllers/safeController";
 import {iCloudStatusModal} from "./modal";
+import nplController from "../controllers/nplController";
 import {NPLStateField} from "./nplExtension";
 
 interface Settings {
@@ -28,7 +29,8 @@ export default class iCalObsidianSync extends Plugin {
 		const basePath = (this.app.vault.adapter as any).basePath
 		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
 
-		const nplStateField = new NPLStateField(pluginPath);
+		nplController.init(pluginPath);
+		const nplStateField = new NPLStateField();
 		this.registerEditorExtension(nplStateField.stateField);
 
 		safeController.injectPath(pluginPath);

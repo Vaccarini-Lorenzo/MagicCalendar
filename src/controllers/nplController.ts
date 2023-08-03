@@ -1,22 +1,23 @@
 import wink from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
-import {iCloudServiceStatus} from "../iCloudJs";
-import EventEmitter from "events";
 
-export default class NPLController{
+class NPLController{
 	private _customPatterns: {name, patterns}[];
 	private _pluginPath: string;
 	private _nlp;
 	private _ready: boolean;
 
-	constructor(pluginPath: string) {
+	constructor() {
 		this._ready = false;
+		this._nlp = wink( model );
+		this._ready = true;
+	}
+
+	init(pluginPath: string){
 		this._pluginPath = pluginPath;
 		this.loadPatterns();
-		this._nlp = wink( model );
 		this._nlp.learnCustomEntities(this._customPatterns);
-		this._ready = true;
 	}
 
 	loadPatterns(){
@@ -32,14 +33,15 @@ export default class NPLController{
 		this._customPatterns.push({name: "duration", patterns: ["DURATION"]});
 	}
 
-	async process(text: string){
+	process(text: string): string | null {
 		if(!this._ready){
 			console.log("NPL not ready");
 			return;
 		}
-		text = text.replaceAll("\n", ".");
 		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(text);
+		const match = doc.customEntities().out(its.value);
+		return match.length == 0 ? null : match[0];
 		//doc.sentences().each(sentence => sentence.customEntities().each(entity => console.log(entity.out(its.detail))));
 		//doc.customEntities().each(e => e.markup(`<span class='${e.out(its.type)} entity'>`, `</span>`));
 		//console.log(doc.out(its.markedUpText))
@@ -61,3 +63,6 @@ export default class NPLController{
 		//console.log(doc.out(its.markedUpText));
 	}
 }
+
+const nplController = new NPLController();
+export default nplController;

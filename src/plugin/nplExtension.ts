@@ -1,41 +1,48 @@
 import { Extension, RangeSetBuilder, StateField, Transaction, } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
-import NPLController from "../controllers/nplController";
+import nplController from "../controllers/nplController";
+import { syntaxTree } from "@codemirror/language";
 
+//class testWidget
 
 export class NPLStateField {
 	stateField: StateField<DecorationSet>;
-	private _npl: NPLController;
 
-	constructor(pluginPath: string) {
+	constructor() {
 		this.stateField = StateField.define<DecorationSet>({
 			create: this.create,
 			update: this.update,
 			provide: this.provide
 		});
-		this._npl = new NPLController(pluginPath);
-		this._npl.loadPatterns();
 	}
 
 	create(state): DecorationSet {
 		return Decoration.none;
 	}
 
-	builderAdd(builder, listCharFrom, listCharTo){
-		builder.add(
-			listCharFrom,
-			listCharTo,
-			Decoration.mark({
-				tagName: "mark"
-			})
-		);
-	}
 
 	update(oldState: DecorationSet, transaction: Transaction): DecorationSet {
 		const builder = new RangeSetBuilder<Decoration>();
 		const sentences = transaction.state.doc.toJSON();
-		//sentences.forEach()
-		console.log(sentences);
+		sentences.forEach((sentence, i) => {
+			const match = nplController.process(sentence);
+			if(match == null) return;
+			console.log("Match!");
+			let previousChars = 0;
+			for (let j=0; j < i; j++){
+				previousChars += sentences[j].length + 1;
+			}
+			const startsFrom = previousChars + sentence.indexOf(match)
+			const endsTo = startsFrom + match.length;
+			console.log(startsFrom, endsTo);
+			builder.add(
+				startsFrom,
+				endsTo,
+				Decoration.mark({
+					tagName: "mark"
+				})
+			);
+		});
 		return builder.finish();
 	}
 
