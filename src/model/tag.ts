@@ -40,8 +40,6 @@ export default class Tag {
 		}
 		const dateComponents = splitted[0].split("-");
 
-		console.log(dateComponents, startHourComponents, endHourComponents)
-
 		this.startDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]),
 			Number(startHourComponents[0]), Number(startHourComponents[1]));
 		this.endDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]),
@@ -50,7 +48,7 @@ export default class Tag {
 
 	parseTitle(){
 		const splitted = this.tag.split("/")
-		this.title = splitted[splitted.length - 1].replace("_", " ");
+		this.title = splitted[splitted.length - 1].replaceAll("_", " ");
 	}
 
 	resetTimer(){

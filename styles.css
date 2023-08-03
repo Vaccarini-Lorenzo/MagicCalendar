@@ -1,8 +1,10 @@
-/*
+mark {
+	background-image: linear-gradient(#8a3cf5, #6603ee);
+	opacity: 1;
+	color: white;
+	border-radius: 10px; /* Set the border radius to make it rounded */
+	padding: 5px; /* Optional: Add some padding for better visual appearance */
+	box-shadow: 0 0 8px rgba(138, 60, 245, 0.5); /* Add a shadow to the <mark> tag */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/

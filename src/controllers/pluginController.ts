@@ -1,10 +1,11 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Tag from "../model/tag";
-import {App, getAllTags} from "obsidian";
+import {App, getAllTags, TFile} from "obsidian";
 import SimplifiedFile from "../model/simplifiedFile";
 import SafeController from "./safeController";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
+import NPLController from "./nplController";
 
 export default class PluginController {
 	private _iCloud: iCloudService;
@@ -15,9 +16,10 @@ export default class PluginController {
 	private _calendarService: iCloudCalendarService;
 	private _tagHash: Map<number, Tag>;
 	private _dataLoadingComplete: boolean;
+	private _nplC: NPLController;
+	private app: App;
 
 	constructor() {
-		console.log("init pluginController");
 		this._tagHash = new Map<number, Tag>();
 		this._pendingTagsBuffer = [];
 		this._calendars = [];
@@ -26,10 +28,15 @@ export default class PluginController {
 
 	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
+		this._nplC = new NPLController(this._pluginPath);
 	}
 
 	injectSafeController(safeController: SafeController){
 		this._safeController = safeController;
+	}
+
+	injectApp(app: App){
+		this.app = app;
 	}
 
 	async tryAuthentication(username: string, password: string): Promise<iCloudServiceStatus>{
@@ -49,19 +56,19 @@ export default class PluginController {
 		await this._iCloud.awaitReady;
 		console.log(this._iCloud.status);
 		if (this._iCloud.status == iCloudServiceStatus.Ready){
-			console.log("Fetching events!");
+			//console.log("Fetching events!");
 			const calendarService = this._iCloud.getService("calendar");
 			const events = await calendarService.events();
-			events.forEach((event) => console.log(JSON.stringify(event)));
+			//events.forEach((event) => console.log(JSON.stringify(event)));
 		}
 		return this._iCloud.status;
 	}
 
 	async preloadData() {
-		console.log("preloading data: waiting for iCloud status");
+		//console.log("preloading data: waiting for iCloud status");
 		await this._iCloud.awaitReady;
-		console.log("preloading data: Done");
-		console.log("Fetching events!");
+		//console.log("preloading data: Done");
+		//console.log("Fetching events!");
 		this._calendarService = this._iCloud.getService("calendar");
 		this._calendars = await this._calendarService.calendars();
 		this._dataLoadingComplete = true;
@@ -88,14 +95,15 @@ export default class PluginController {
 			const fileCache = app.metadataCache.getFileCache(file)
 			const fileTags = getAllTags(fileCache);
 			const filteredTags = fileTags.filter(tag => this.checkRegex(tag));
-			filteredTags.forEach(filteredTag => {
-				const tag = new Tag(filteredTag.toString(), 10, () => console.log("Timer went off!"));
+			filteredTags.forEach(async filteredTag => {
+				this._nplC.process(await app.vault.read(file));
+				const tag = new Tag(filteredTag.toString(), 10, () => {});
 				tag.linkFile(new SimplifiedFile(file.name, file.path))
 				this.updateHashTable(tag);
 			});
 		});
 		this.updateLocalTagStorage();
-		this.manageSync(this);
+		//this.manageSync(this);
 	}
 
 	// Why a local storage?
@@ -104,13 +112,12 @@ export default class PluginController {
 	// the remaining tags
 
 	getLocalStorageTags(): Map<number, boolean> {
-		console.log("getting local storage tags");
+		//console.log("getting local storage tags");
 		try{
 			const data = readFileSync(this._pluginPath + "/.tags.txt").toString('utf-8')
 			const lines = data.split("\n");
 			const tagMap = new Map<number, boolean>();
 			lines.forEach(line => {
-				console.log(`line = ${line}`);
 				const hashSync = line.split(" ");
 				const hash = hashSync[0];
 				const isSync = hashSync[1];
@@ -122,7 +129,7 @@ export default class PluginController {
 			return tagMap;
 		} catch (e) {
 			if (e.code === 'ENOENT') {
-				console.log("No tags file found: Creating one")
+				//console.log("No tags file found: Creating one")
 				writeFileSync(this._pluginPath + "/.tags.txt", "");
 			}
 			return new Map<number, boolean>();
@@ -132,27 +139,26 @@ export default class PluginController {
 
 	updateLocalTagStorage(){
 		const tagMap = this.getLocalStorageTags();
-		console.log("Found these tags:")
-		console.log(JSON.stringify(Array.from(tagMap.entries())));
+		//console.log("Found these tags:")
+		//console.log(JSON.stringify(Array.from(tagMap.entries())));
 		const writeStream = createWriteStream(this._pluginPath + "/.tags.txt", {flags: 'a'});
 		Array.from(this._tagHash.entries()).forEach((entry) => {
 			const hash = entry[0];
 			if(!tagMap.has(hash)){
 				const newLine = `${hash} false\n`
-				console.log(`New tag in local store!    ${newLine}`);
+				//console.log(`New tag in local store!    ${newLine}`);
 				writeStream.write(newLine);
 				this._pendingTagsBuffer.push(Number(hash));
 			}
 		})
 		writeStream.close();
-		console.log("current buffer status");
+		//console.log("current buffer status");
 		console.log(this._pendingTagsBuffer);
 	}
 
 	async manageSync(ref: any){
 		console.log("Syncing!");
 		if (ref._iCloud != undefined && ref._dataLoadingComplete){
-			console.log("here!");
 			ref.pushPendingTasks();
 		} else {
 			setTimeout(() => ref.manageSync(ref), 5000);
