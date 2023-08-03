@@ -34,6 +34,8 @@ export default class SafeController {
 			if (e.code == 'ENOENT'){
 				console.log("c file not found: creating it");
 				writeFileSync(this.path, "");
+			} else {
+				console.log(e);
 			}
 			return false;
 		}

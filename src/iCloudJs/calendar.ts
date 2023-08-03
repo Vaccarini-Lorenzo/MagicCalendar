@@ -77,7 +77,7 @@ interface iCloudCalendarInvitee {
   cutype: string;
 }
 
-interface iCloudCalendarCollection {
+export interface iCloudCalendarCollection {
   title: string;
   guid: string;
   ctag: string;
@@ -134,7 +134,7 @@ export class iCloudCalendarService {
         this.calendarServiceUri = `${service.accountInfo.webservices.calendar.url}/ca`;
     }
     
-    private async executeRequest<T = any>(endpointUrl: string, params: Record<string, string>, method?: string, body?: object, extraHeaders?: Record<string, string>): Promise<T> {
+    private async executeRequest<T = any>(endpointUrl: string, params: Record<string, string>, method?: string, body?: object, extraHeaders?: Record<string, string>, onlyResponseStatus?: boolean): Promise<any> {
         method = method ?? "GET";
         const searchParams = decodeURI(`${new URLSearchParams(params ?? [])}`);
         const url = `${this.calendarServiceUri}${endpointUrl}?${searchParams}`;
@@ -164,6 +164,7 @@ export class iCloudCalendarService {
         }
 
         const response = await Misc.wrapRequest(url, requestParameters);
+		if (onlyResponseStatus) return response.status;
         return await response.json() as T;
     }
 
@@ -199,7 +200,7 @@ export class iCloudCalendarService {
         return response.Collection || [];
     }
 
-    async postEvent(newEvent: iCloudCalendarEvent, calendarCTag: string){
+    async postEvent(newEvent: iCloudCalendarEvent, calendarCTag: string): Promise<boolean>{
         const url = `/events/${newEvent.pGuid}/${newEvent.guid}`;
         const queryParams = this.getQueryParams(newEvent);
         const extraHeaders = {
@@ -208,7 +209,9 @@ export class iCloudCalendarService {
         }
         const body = this.getBody(newEvent, calendarCTag);
 
-        await this.executeRequest(url, queryParams, "POST", body, extraHeaders);
+        const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
+		return (requestStatus < 300 && requestStatus >= 200);
+
     }
 
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {

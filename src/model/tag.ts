@@ -9,6 +9,7 @@ export default class Tag {
 	files: SimplifiedFile[];
 	timer: NodeJS.Timer;
 	timerDuration: number;
+	calendar?: string;
 	callback: () => void;
 
 	constructor(tag: string, timerDuration: number, callback: () => void) {
@@ -22,24 +23,24 @@ export default class Tag {
 	}
 
 	private parseDates(){
-		const splitted = this.tag.split("/")
-		const dateComponents = splitted[1].split("-");
-		let startHourComponents: string[];
-		let endHourComponents: string[];
+		const splitted = this.tag.slice(1).split("/")
+		const completeDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
+		const halfDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
+		//const onlyDateRegex = /#\d{4}-\d{2}-\d{2}\/(.)*/;
 
-		// No checks, I'm assuming my regex works
-
-		if (splitted.length == 5){
-			startHourComponents = splitted[2].split("-");
-			endHourComponents = splitted[3].split("-");
+		let startHourComponents = ["00", "00"];
+		let endHourComponents = ["23", "59"];
+		if (this.tag.match(completeDateRegex)){
+			startHourComponents = splitted[1].split("-");
+			endHourComponents = splitted[2].split("-");
 		}
-
-		if (dateComponents.length == 3 && (startHourComponents == undefined || endHourComponents == undefined)){
-			// All day event
-			this.startDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]));
-			this.endDate = this.startDate;
-			return;
+		else if (this.tag.match(halfDateRegex)){
+			startHourComponents = splitted[1].split("-");
+			endHourComponents = ["23", "59"];
 		}
+		const dateComponents = splitted[0].split("-");
+
+		console.log(dateComponents, startHourComponents, endHourComponents)
 
 		this.startDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]),
 			Number(startHourComponents[0]), Number(startHourComponents[1]));

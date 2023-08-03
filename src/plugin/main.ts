@@ -22,44 +22,40 @@ export default class iCalObsidianSync extends Plugin {
 	iCloud: iCloudService;
 	
 	async onload() {
+		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		const basePath = (this.app.vault.adapter as any).basePath
 		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
-		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this.syncCallback, this);
 
 		safeController.injectPath(pluginPath);
 		pluginController.injectPath(pluginPath);
 		pluginController.injectSafeController(safeController);
-		this.registerEvents();
 
-		console.log("fetching tags...")
-		pluginController.fetchTags(this.app);
+		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this.syncCallback, this);
 
-		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		if(safeController.checkSafe()){
+			console.log("checking safe");
 			const iCloudStatus = await pluginController.tryAuthentication("", "");
 			this.updateStatus(iCloudStatus);
 		}
 
-	}
+		this.registerEvents();
 
+		console.log("fetching tags...")
+		pluginController.fetchTags(this.app);
+	}
 
 	async onunload() {
 		// Release any resources configured by the plugin.
 		//proxy.stop();
 	}
 
-
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
-
-
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
-
 
 	updateStatus(status: iCloudServiceStatus){
 		this.iCloudStatus = status;
@@ -77,12 +73,11 @@ export default class iCalObsidianSync extends Plugin {
 	}
 
 	async syncCallback(ref: any){
-		await pluginController.testCallback("test");
+		//await pluginController.syncCallback("test");
 	}
 
 
 	registerEvents(){
-
 		this.registerEvent(this.app.metadataCache.on('changed', (file, data, cache) => {
 			cache.tags.forEach(t => console.log(t));
 		}));

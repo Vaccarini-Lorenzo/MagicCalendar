@@ -205,7 +205,6 @@ export default class iCloudService extends EventEmitter {
 				const credentials = this._safeController.getCredentials();
                 username = credentials.username;
 				password = credentials.password;
-                console.debug("[icloud] Username found in keychain:", username);
             } catch (e) {
                 throw new Error("Error fetching cred" + e.toString());
             }
