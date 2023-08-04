@@ -1,9 +1,9 @@
 import { Extension, RangeSetBuilder, StateField, Transaction, } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
-import nplController from "../controllers/nplController";
+import nplController from "../controllers/nlpController";
 import {HighlightWidget} from "./highlightWidget";
 
-export class NPLStateField {
+export class NLPStateField {
 	stateField: StateField<DecorationSet>;
 
 	// We need a cache that maps hashes to status (synced/not synced/ignored)
@@ -21,6 +21,7 @@ export class NPLStateField {
 	}
 
 	update(oldState: DecorationSet, transaction: Transaction): DecorationSet {
+		const rangeMap = new Map<number, number>()
 		const builder = new RangeSetBuilder<Decoration>();
 		const sentences = transaction.state.doc.toJSON();
 		sentences.forEach((sentence, i) => {
@@ -45,17 +46,27 @@ export class NPLStateField {
 				// here we check the match status:
 				// compute hash -> check cacheMap
 				// if not sync, continue.
-				const startsFrom = previousChars + sentence.indexOf(match)
+				const indexOfMatch = sentence.toLowerCase().indexOf(match);
+				const capitalizedMatch = sentence.substring(indexOfMatch, indexOfMatch + match.length)
+				if(indexOfMatch == -1){
+					console.log("Error matching the string in the text");
+					return;
+				}
+				const startsFrom = previousChars + indexOfMatch
 				const endsTo = startsFrom + match.length;
+				if(rangeMap.has(startsFrom)) return;
+				rangeMap.set(startsFrom, endsTo);
 				builder.add(
 					startsFrom,
 					endsTo,
 					Decoration.replace({
-						widget: new HighlightWidget(match, "toDefine", this, this.syncCallback)
+						widget: new HighlightWidget(capitalizedMatch, "toDefine", this, this.syncCallback)
 					})
 				);
+
 			});
 		})
+
 		return builder.finish();
 	}
 

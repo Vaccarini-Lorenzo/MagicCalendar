@@ -5,7 +5,7 @@ import SimplifiedFile from "../model/simplifiedFile";
 import SafeController from "./safeController";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
-import NPLController from "./nplController";
+import NPLController from "./nlpController";
 
 export default class PluginController {
 	private _iCloud: iCloudService;
