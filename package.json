@@ -18,6 +18,7 @@
 		"@typescript-eslint/eslint-plugin": "^5.43.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
+		"chrono-node": "^2.6.4",
 		"codemirror": "^6.0.1",
 		"cors": "^2.8.5",
 		"crypto": "^1.0.1",
@@ -34,8 +35,8 @@
 		"tslib": "2.4.0",
 		"typedoc": "^0.23.21",
 		"typescript": "4.7.4",
-		"wink-eng-lite-web-model": "^1.5.2",
-		"wink-nlp": "^1.14.3"
+		"wink-eng-lite-web-model": "latest",
+		"wink-nlp": "latest"
 	},
 	"devDependencies": {
 		"electron-rebuild": "^3.2.9"

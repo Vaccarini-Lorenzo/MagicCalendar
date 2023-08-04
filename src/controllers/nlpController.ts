@@ -1,6 +1,7 @@
 import wink from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
+import {parse, ParsedResult} from "chrono-node";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -11,34 +12,36 @@ class NlpController {
 	constructor() {
 		this._ready = false;
 		this._nlp = wink( model );
-		this._ready = true;
 	}
 
 	init(pluginPath: string){
 		this._pluginPath = pluginPath;
 		this.loadPatterns();
 		this._nlp.learnCustomEntities(this._customPatterns);
+		this._ready = true;
 	}
 
 	loadPatterns(){
 		// TODO: On the 18th is not recognized!!!
-
-		const datePatternPath = `${this._pluginPath}/.patterns/date_patterns.txt`
-		const hourPatternPath = `${this._pluginPath}/.patterns/hour_patterns.txt`
 		const verbPatternPath = `${this._pluginPath}/.patterns/verb_patterns.txt`
 		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
 
-		const dateData = readFileSync(datePatternPath);
-		const parsedDates = JSON.parse(dateData.toString());
-		const hourData = readFileSync(hourPatternPath);
-		const parsedHours = JSON.parse(hourData.toString());
 		const verbData = readFileSync(verbPatternPath);
 		const parsedVerbs = JSON.parse(verbData.toString());
 		const nounData = readFileSync(nounPatternPath);
 		const parsedNouns = JSON.parse(nounData.toString());
-		this._customPatterns = [{name: "customDate", patterns: parsedDates}, {name: "customHour", patterns: parsedHours}]
-		this._customPatterns.push({name: "date", patterns: ["DATE"]});
-		this._customPatterns.push({name: "time", patterns: ["TIME"]});
+		this._customPatterns = [
+			// All date objects, including "may" and "march", which for some reason are not included (may I do ..., march on the Alps)
+			{name: "date", patterns: ["[|DATE] [|may] [|march]"]},
+			// 12th of Jan 2023, second of may
+			{name: "ordinalDate", patterns: ["[ORDINAL] [|ADP] [DATE|may|march] [|DATE]"]},
+			// July the third
+			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
+		];
+		this._customPatterns.push(
+			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL] [|ADP] [TIME|CARDINAL]"]},
+			{name: "exactTime", patterns: ["[at] [CARDINAL|TIME]"]}
+		)
 		this._customPatterns.push({name: "duration", patterns: ["DURATION"]});
 		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
 		this._customPatterns.push({name: "noun", patterns: parsedNouns});
@@ -116,7 +119,19 @@ class NlpController {
 		matchesSortedByIndex.forEach((m, v) => matchesList.push(v));
 
 		return matchesList;
+	}
 
+	test(sentence: string) {
+		sentence = sentence.toLowerCase();
+		const its = this._nlp.its;
+		const doc = this._nlp.readDoc(sentence);
+		const entities = doc.customEntities().out(its.detail);
+		if (entities.length == 0) return;
+		const timeRelatedString = entities.filter(e => e.type != "verb" && e.type != "noun").map(e => e.value).toString().replaceAll(",", " ");
+		const parsed = parse(timeRelatedString) as ParsedResult[];
+		const date = parsed[0].start.date();
+		console.log(date);
+		console.log(parsed);
 	}
 }
 

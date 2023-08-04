@@ -1,7 +1,6 @@
 import { Extension, RangeSetBuilder, StateField, Transaction, } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
 import nplController from "../controllers/nlpController";
-import {HighlightWidget} from "./highlightWidget";
 
 export class NLPStateField {
 	stateField: StateField<DecorationSet>;
@@ -25,7 +24,9 @@ export class NLPStateField {
 		const builder = new RangeSetBuilder<Decoration>();
 		const sentences = transaction.state.doc.toJSON();
 		sentences.forEach((sentence, i) => {
+			nplController.test(sentence);
 
+			/*
 			// The idea: We can't instantiate an Event object at every match:
 			// Every added letter in a document with 1+ potential event will lead to
 			// (possibly multiple) object instantiation. No bueno.
@@ -65,6 +66,7 @@ export class NLPStateField {
 				);
 
 			});
+			*/
 		})
 
 		return builder.finish();
