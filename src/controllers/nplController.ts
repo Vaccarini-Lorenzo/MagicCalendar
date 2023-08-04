@@ -33,7 +33,7 @@ class NPLController{
 		this._customPatterns.push({name: "duration", patterns: ["DURATION"]});
 	}
 
-	process(text: string): string | null {
+	process(text: string): string[] {
 		if(!this._ready){
 			console.log("NPL not ready");
 			return;
@@ -41,7 +41,7 @@ class NPLController{
 		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(text);
 		const match = doc.customEntities().out(its.value);
-		return match.length == 0 ? null : match[0];
+		return match;
 		//doc.sentences().each(sentence => sentence.customEntities().each(entity => console.log(entity.out(its.detail))));
 		//doc.customEntities().each(e => e.markup(`<span class='${e.out(its.type)} entity'>`, `</span>`));
 		//console.log(doc.out(its.markedUpText))

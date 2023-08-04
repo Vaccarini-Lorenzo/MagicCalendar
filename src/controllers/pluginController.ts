@@ -164,4 +164,8 @@ export default class PluginController {
 	updateHashTable(tag: Event) {
 		this._tagHash.set(tag.hash, tag);
 	}
+
+	getMaterial(material: string) : string {
+		return readFileSync(`${this._pluginPath}/materials/${material}`).toString();
+	}
 }

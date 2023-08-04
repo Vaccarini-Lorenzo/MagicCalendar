@@ -1,4 +1,4 @@
-import {Plugin} from 'obsidian';
+import {addIcon, Plugin, setIcon} from 'obsidian';
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import PluginController from "../controllers/pluginController";
 import SafeController from "../controllers/safeController";

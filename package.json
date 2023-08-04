@@ -4,7 +4,6 @@
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
-		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
@@ -22,6 +21,7 @@
 		"codemirror": "^6.0.1",
 		"cors": "^2.8.5",
 		"crypto": "^1.0.1",
+		"daemon": "^1.1.0",
 		"dayjs": "^1.11.6",
 		"dotenv": "^16.3.1",
 		"electron": "^25.3.2",

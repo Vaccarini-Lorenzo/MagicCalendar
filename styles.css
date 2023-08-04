@@ -1,10 +1,42 @@
-mark {
-	background-image: linear-gradient(#8a3cf5, #6603ee);
-	opacity: 1;
+mark.highlighted-text {
+	background-color: #3c2c54;
+	position: relative;
+	cursor: pointer;
 	color: white;
-	border-radius: 10px; /* Set the border radius to make it rounded */
-	padding: 5px; /* Optional: Add some padding for better visual appearance */
-	box-shadow: 0 0 8px rgba(138, 60, 245, 0.5); /* Add a shadow to the <mark> tag */
-
+	padding: 3px;
 }
 
+body {
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
+	margin: 20px;
+}
+
+.icon-button.icon-button {
+	box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+	color: transparent;
+	background-color: transparent;
+	justify-content: center; /* Center horizontally */
+	align-content: center;
+	align-items: center;
+	padding: 5px;
+	width: 60px;
+	height: 60px;
+}
+
+span.tooltip {
+	box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+	display: none;
+	position: absolute;
+	color: transparent;
+	background-color: transparent;
+	top: -45px; /* Adjust the vertical position of the tooltip */
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+mark.highlighted-text:hover span.tooltip {
+	display: block;
+	border-color: transparent;
+	pointer-events: auto; /* Enable pointer events when the tooltip is visible */
+}
