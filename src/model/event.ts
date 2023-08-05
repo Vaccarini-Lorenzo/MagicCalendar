@@ -1,55 +1,19 @@
-import SimplifiedFile from "./simplifiedFile";
+import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 
 export default class Event {
-	// Meeting with John
-	subject: string;
-	// UUID
+	value: iCloudCalendarEvent;
 	hash: number;
-	dateString: string;
-	startDate: Date;
-	endDate: Date;
-	file: SimplifiedFile;
-	calendar?: string;
+	processed: boolean;
 
-	constructor(dateString: string, subject: string) {
-		this.dateString = dateString;
-		this.subject = subject;
-		this.parseDates();
+	constructor(value: iCloudCalendarEvent) {
+		this.value = value;
 		this.hash = this.computeHash();
-	}
-
-	// Probably this is deprecated.
-	// When the NPL finds an event it will parse it accordingly to the type (DATE, TIME, customDate etc)
-	private parseDates(){
-		const splitted = this.subject.slice(1).split("/")
-		const completeDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
-		const halfDateRegex = /#\d{4}-\d{2}-\d{2}\/\d{2}-\d{2}\/(.)*/;
-		//const onlyDateRegex = /#\d{4}-\d{2}-\d{2}\/(.)*/;
-
-		let startHourComponents = ["00", "00"];
-		let endHourComponents = ["23", "59"];
-		if (this.subject.match(completeDateRegex)){
-			startHourComponents = splitted[1].split("-");
-			endHourComponents = splitted[2].split("-");
-		}
-		else if (this.subject.match(halfDateRegex)){
-			startHourComponents = splitted[1].split("-");
-			endHourComponents = ["23", "59"];
-		}
-		const dateComponents = splitted[0].split("-");
-
-		this.startDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]),
-			Number(startHourComponents[0]), Number(startHourComponents[1]));
-		this.endDate = new Date(Number(dateComponents[0]), Number(dateComponents[1]), Number(dateComponents[2]),
-			Number(endHourComponents[0]), Number(endHourComponents[1]));
-	}
-
-	getDescription(): string {
-		return "reference: " + this.file.name;
+		this.processed = false;
 	}
 
 	private computeHash(): number{
-		const tagProperties = this.subject + this.startDate.toISOString() + this.endDate.toISOString();
+		// startDate is a [] does it work?
+		const tagProperties = this.value.title + this.value.startDate + this.value.endDate;
 		let hash = 0,
 			i, chr;
 		if (tagProperties.length === 0) return hash;

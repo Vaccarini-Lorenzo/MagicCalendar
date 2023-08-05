@@ -242,42 +242,4 @@ export class iCloudCalendarService {
         }
     }
 
-    // Minimal version
-    createNewEvent(tz: string, title: string, description:string, duration: number, pGuid: string, startDate: Date, endDate: Date): iCloudCalendarEvent {
-        const arrayStartDate = Misc.getArrayDate(startDate);
-        const arrayEndDate = Misc.getArrayDate(endDate);
-        const guid = this.generateNewUUID();
-
-        return {
-            tz,
-            title,
-            duration,
-			description,
-            pGuid,
-            guid,
-            startDate: arrayStartDate,
-            endDate: arrayEndDate,
-            localStartDate: arrayStartDate,
-            localEndDate: arrayEndDate,
-            extendedDetailsAreIncluded: true,
-            allDay: false,
-            isJunk: false,
-            recurrenceMaster: false,
-            recurrenceException: false,
-            hasAttachments: false
-        } as iCloudCalendarEvent;
-    }
-
-    private generateNewUUID(): string {
-        const maxIntEightNibbles = 4294967295;
-        const maxIntFourNibbles = 65535;
-        const maxIntTwelveNibbles = 281474976710655;
-        const firstUUID = Misc.getRandomHex(maxIntEightNibbles);
-        const secondUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const thirdUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const fourthUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const lastUUID = Misc.getRandomHex(maxIntTwelveNibbles);
-        return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
-    }
-
 }

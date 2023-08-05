@@ -1,11 +1,9 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Event from "../model/event";
-import {App, getAllTags} from "obsidian";
-import SimplifiedFile from "../model/simplifiedFile";
+import {App} from "obsidian";
 import SafeController from "./safeController";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
-import NPLController from "./nlpController";
 
 export default class PluginController {
 	private _iCloud: iCloudService;
@@ -72,6 +70,11 @@ export default class PluginController {
 		this._dataLoadingComplete = true;
 	}
 
+
+	/*
+
+	// TODO: REFACTOR
+
 	async pushEvent(event: Event): Promise<boolean>{
 		console.log("Pushing event!");
 		let duration = event.endDate.getTime() - event.startDate.getTime();
@@ -86,6 +89,7 @@ export default class PluginController {
 		const newEvent = this._calendarService.createNewEvent("Europe/Rome", event.subject, event.getDescription(), duration, calendar.guid, event.startDate, event.endDate);
 		return await this._calendarService.postEvent(newEvent, calendar.ctag);
 	}
+	 */
 
 	/*
 	fetchTags(app: App){

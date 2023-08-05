@@ -1,15 +1,8 @@
-import { Extension, RangeSetBuilder, StateField, Transaction, Text } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
+import { RangeSetBuilder } from "@codemirror/state";
 import nplController from "../controllers/nlpController";
 import {HighlightWidget} from "./highlightWidget";
-import {
-	PluginSpec,
-	PluginValue,
-	ViewPlugin,
-	ViewUpdate,
-} from "@codemirror/view";
-
-import {SearchCursor} from "@codemirror/search"
+import { Decoration, DecorationSet, EditorView, PluginSpec, PluginValue, ViewPlugin, ViewUpdate,} from "@codemirror/view";
+import {Sentence} from "../controllers/eventController";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -26,14 +19,14 @@ class NLPPlugin implements PluginValue {
 
 	buildDecorations(view: EditorView): DecorationSet {
 
-		//const activeFile = app.workspace.getActiveFile();
-		//if (activeFile != undefined) console.log("path = " + activeFile.path);
+		const activeFile = app.workspace.getActiveFile();
+		const filePath = activeFile == undefined ? "error": activeFile.path;
 		const rangeMap = new Map<number, number>()
 		const builder = new RangeSetBuilder<Decoration>();
 		const sentences = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
-		//const sentences = nplController.splitIntoSentences(state);
 		sentences.forEach((sentence, i) => {
 			//nplController.test(sentence);
+			//const matches = [];
 
 			// The idea: We can't instantiate an Event object at every match:
 			// Every added letter in a document with 1+ potential event will lead to
@@ -43,7 +36,7 @@ class NLPPlugin implements PluginValue {
 
 			// const matches = nplController.process(sentence, ignoreSentences);
 
-			const matches = nplController.process(sentence);
+			const matches = nplController.process(new Sentence(filePath, sentence));
 			if(matches.length == 0) return;
 
 			matches.forEach(match => {
@@ -64,7 +57,7 @@ class NLPPlugin implements PluginValue {
 				}
 				const startsFrom = previousChars + indexOfMatch;
 				const endsTo = startsFrom + match.length;
-				console.log(match)
+				//console.log(match)
 				//console.log(search.value.from, search.value.to);
 				if(rangeMap.has(startsFrom)) return;
 				rangeMap.set(startsFrom, endsTo);
