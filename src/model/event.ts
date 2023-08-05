@@ -11,6 +11,11 @@ export default class Event {
 		this.processed = false;
 	}
 
+	injectICloudComponents({tz, pGuid}){
+		this.value.tz = tz;
+		this.value.pGuid = pGuid;
+	}
+
 	private computeHash(): number{
 		// startDate is a [] does it work?
 		const tagProperties = this.value.title + this.value.startDate + this.value.endDate;

@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import iCloudService from "./index";
-import Misc from "./misc";
+import iCloudMisc from "./iCloudMisc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -163,7 +163,7 @@ export class iCloudCalendarService {
              */
         }
 
-        const response = await Misc.wrapRequest(url, requestParameters);
+        const response = await iCloudMisc.wrapRequest(url, requestParameters);
 		if (onlyResponseStatus) return response.status;
         return await response.json() as T;
     }
@@ -215,8 +215,8 @@ export class iCloudCalendarService {
     }
 
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {
-        const stringifiedStartDate = Misc.stringifyDateArray(event.startDate);
-        const stringifiedEndDate = Misc.stringifyDateArray(event.endDate);
+        const stringifiedStartDate = iCloudMisc.stringifyDateArray(event.startDate);
+        const stringifiedEndDate = iCloudMisc.stringifyDateArray(event.endDate);
         return {
             "dsid": this.dsid,
             "startDate": stringifiedStartDate,

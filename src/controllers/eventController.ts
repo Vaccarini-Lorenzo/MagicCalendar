@@ -1,5 +1,5 @@
 import Event from "../model/event";
-import Misc from "../iCloudJs/misc";
+import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 
 export class Sentence {
@@ -26,17 +26,15 @@ class EventController{
 	}
 
 	// Minimal version
-	createNewEvent(tz: string, title: string, description:string, duration: number, pGuid: string, startDate: Date, endDate: Date): Event {
-		const arrayStartDate = Misc.getArrayDate(startDate);
-		const arrayEndDate = Misc.getArrayDate(endDate);
+	createNewEvent(title: string, description:string, duration: number, startDate: Date, endDate: Date): Event {
+		const arrayStartDate = iCloudMisc.getArrayDate(startDate);
+		const arrayEndDate = iCloudMisc.getArrayDate(endDate);
 		const guid = this.generateNewUUID();
 
 		const value = {
-			tz,
 			title,
 			duration,
 			description,
-			pGuid,
 			guid,
 			startDate: arrayStartDate,
 			endDate: arrayEndDate,
@@ -57,11 +55,11 @@ class EventController{
 		const maxIntEightNibbles = 4294967295;
 		const maxIntFourNibbles = 65535;
 		const maxIntTwelveNibbles = 281474976710655;
-		const firstUUID = Misc.getRandomHex(maxIntEightNibbles);
-		const secondUUID = Misc.getRandomHex(maxIntFourNibbles);
-		const thirdUUID = Misc.getRandomHex(maxIntFourNibbles);
-		const fourthUUID = Misc.getRandomHex(maxIntFourNibbles);
-		const lastUUID = Misc.getRandomHex(maxIntTwelveNibbles);
+		const firstUUID = iCloudMisc.getRandomHex(maxIntEightNibbles);
+		const secondUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const thirdUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const fourthUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const lastUUID = iCloudMisc.getRandomHex(maxIntTwelveNibbles);
 		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
 	}
 }

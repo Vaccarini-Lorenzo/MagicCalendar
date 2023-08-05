@@ -11,7 +11,7 @@ import { iCloudFindMyService } from "./findMy";
 import { iCloudPhotosService } from "./photos";
 import { iCloudUbiquityService } from "./ubiquity";
 import { AccountInfo } from "./types";
-import Misc from "./misc";
+import iCloudMisc from "./iCloudMisc";
 import SafeController from "../controllers/safeController";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
@@ -228,7 +228,7 @@ export default class iCloudService extends EventEmitter {
         try {
             const authData = { accountName: this.options.username, password: this.options.password, trustTokens: [] };
             if (this.authStore.trustToken) authData.trustTokens.push(this.authStore.trustToken);
-            const authResponse = await Misc.wrapRequest(`${AUTH_ENDPOINT}signin?isRememberMeEnabled=true`, { headers: AUTH_HEADERS, method: "POST", body: JSON.stringify(authData) });
+            const authResponse = await iCloudMisc.wrapRequest(`${AUTH_ENDPOINT}signin?isRememberMeEnabled=true`, { headers: AUTH_HEADERS, method: "POST", body: JSON.stringify(authData) });
             if (authResponse.status == 200) {
                 if (this.authStore.processAuthSecrets(authResponse)) {
                     this._setState(iCloudServiceStatus.Trusted);
@@ -267,7 +267,7 @@ export default class iCloudService extends EventEmitter {
             throw new Error("Cannot provide MFA code without calling authenticate first!");
         }
         const authData = { securityCode: { code } };
-        const authResponse = await Misc.wrapRequest(
+        const authResponse = await iCloudMisc.wrapRequest(
             AUTH_ENDPOINT + "verify/trusteddevice/securitycode",
             { headers: this.authStore.getMfaHeaders(), method: "POST", body: JSON.stringify(authData) }
         );
@@ -285,7 +285,7 @@ export default class iCloudService extends EventEmitter {
             throw new Error("Cannot get auth token without calling authenticate first!");
         }
         console.debug("[icloud] Trusting device");
-        const authResponse = await Misc.wrapRequest(
+        const authResponse = await iCloudMisc.wrapRequest(
             AUTH_ENDPOINT + "2sv/trust",
             { headers: this.authStore.getMfaHeaders() }
         );
@@ -303,7 +303,7 @@ export default class iCloudService extends EventEmitter {
                 dsWebAuthToken: this.authStore.sessionToken,
                 trustToken: this.authStore.trustToken
             };
-            const response = await Misc.wrapRequest(SETUP_ENDPOINT, { headers: DEFAULT_HEADERS, method: "POST", body: JSON.stringify(data) });
+            const response = await iCloudMisc.wrapRequest(SETUP_ENDPOINT, { headers: DEFAULT_HEADERS, method: "POST", body: JSON.stringify(data) });
             if (response.status == 200) {
                 if (this.authStore.processCloudSetupResponse(response)) {
                     try {
@@ -342,7 +342,7 @@ export default class iCloudService extends EventEmitter {
      * Updates the PCS state (iCloudService.pcsEnabled, iCloudService.pcsAccess, iCloudService.ICDRSDisabled).
      */
     async checkPCS() {
-        const pcsTest = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
+        const pcsTest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
         if (pcsTest.status == 200) {
             const j = await pcsTest.json();
             this.pcsEnabled = typeof j.isDeviceConsentedForPCS == "boolean";
@@ -366,7 +366,7 @@ export default class iCloudService extends EventEmitter {
             return true;
         }
         if (!this.pcsAccess) {
-            const requestPcs = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/enableDeviceConsentForPCS", { headers: this.authStore.getHeaders(), method: "POST" });
+            const requestPcs = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/enableDeviceConsentForPCS", { headers: this.authStore.getHeaders(), method: "POST" });
             const requestPcsJson = await requestPcs.json();
             if (!requestPcsJson.isDeviceConsentNotificationSent) {
                 throw new Error("Unable to request PCS access!");
@@ -376,7 +376,7 @@ export default class iCloudService extends EventEmitter {
             await sleep(5000);
             await this.checkPCS();
         }
-        let pcsRequest = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: true }) });
+        let pcsRequest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: true }) });
         let pcsJson = await pcsRequest.json();
         while (true) {
             if (pcsJson.status == "success") {
@@ -390,7 +390,7 @@ export default class iCloudService extends EventEmitter {
                 default:
                     console.error("[icloud] unknown PCS request state", pcsJson);
                 }
-                pcsRequest = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: false }) });
+                pcsRequest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: false }) });
                 pcsJson = await pcsRequest.json();
             }
         }
@@ -461,7 +461,7 @@ export default class iCloudService extends EventEmitter {
      */
     async getStorageUsage(refresh = false): Promise<iCloudStorageUsage> {
         if (!refresh && this._storage) return this._storage;
-        const response = await Misc.wrapRequest("https://setup.icloud.com/setup/ws/1/storageUsageInfo", { headers: this.authStore.getHeaders() });
+        const response = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/storageUsageInfo", { headers: this.authStore.getHeaders() });
         const json = await response.json();
         this._storage = json;
         return this._storage;

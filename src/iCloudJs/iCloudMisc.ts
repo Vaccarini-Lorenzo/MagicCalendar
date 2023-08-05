@@ -1,13 +1,12 @@
 import fetch, {RequestInfo, RequestInit, Response} from "node-fetch";
-import {Arr} from "tern";
 
-export default class Misc {
+export default class iCloudMisc {
     private static stringifyDateNumber(dateNumber: number): string {
         return dateNumber.toString().length == 1 ? "0" + dateNumber.toString() : dateNumber.toString()
     }
 
     static stringifyDateArray(dateArray: number[]){
-        return `${Misc.stringifyDateNumber(dateArray[0])}-${Misc.stringifyDateNumber(dateArray[1])}-${Misc.stringifyDateNumber(dateArray[2])}`;
+        return `${iCloudMisc.stringifyDateNumber(dateArray[0])}-${iCloudMisc.stringifyDateNumber(dateArray[1])}-${iCloudMisc.stringifyDateNumber(dateArray[2])}`;
     }
 
     private static getDateComponents(date: Date): {[key:string]: number}{
@@ -26,7 +25,7 @@ export default class Misc {
     }
 
     static getArrayDate(date: Date) {
-        const dateComponents = Misc.getDateComponents(date);
+        const dateComponents = iCloudMisc.getDateComponents(date);
         // TODO: Understand wtf is this
         const arbitrary = 240;
         const monthString = dateComponents.month.toString().length == 1 ? "0" + dateComponents.month.toString() : dateComponents.month.toString();

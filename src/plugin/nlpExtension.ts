@@ -37,14 +37,6 @@ class NLPPlugin implements PluginValue {
 			//nplController.test(sentence);
 			//const matches = [];
 
-			// The idea: We can't instantiate an Event object at every match:
-			// Every added letter in a document with 1+ potential event will lead to
-			// (possibly multiple) object instantiation. No bueno.
-			// What we could do is to keep a map of sentences to ignore (either synced or ignored)
-			// and pass this list to the NPL controller.
-
-			// const matches = nplController.process(sentence, ignoreSentences);
-
 			const matches = nplController.process(new Sentence(filePath, sentence));
 			if(matches.length == 0) return;
 

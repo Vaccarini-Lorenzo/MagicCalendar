@@ -1,7 +1,7 @@
 import wink, {Detail} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
-import {ParsedResult} from "chrono-node";
+import {parse, ParsedResult} from "chrono-node";
 import eventController, {Sentence} from "./eventController";
 import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
@@ -25,7 +25,6 @@ class NlpController {
 	}
 
 	loadPatterns(){
-		// TODO: On the 18th is not recognized!!!
 		console.log("loading patterns...");
 		const verbPatternPath = `${this._pluginPath}/.patterns/verb_patterns.txt`
 		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
@@ -47,7 +46,7 @@ class NlpController {
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		];
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL] [|ADP] [TIME|CARDINAL]"]},
+			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL] [|ADP] [TIME|CARDINAL]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
 			{name: "exactTime", patterns: ["[at] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
@@ -56,7 +55,6 @@ class NlpController {
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._customPatterns.push({name: "commonNouns", patterns: ["NOUN"]})
 	}
-
 
 	process(sentence: Sentence): {value, type}[] {
 
@@ -111,13 +109,13 @@ class NlpController {
 		const selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedVerb.index );
 		// Find possible proper names (John)
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun.index);
+		// TODO: commonNouns
 
-		//commonNouns.indexOf(selectedEventNoun);
-
+		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
-		const selection = this.getSelectionArray(caseInsensitiveText, dates, selectedEventNoun, selectedProperName);
-		const startDateEndDate = this.parseDates(dates);
-		
+		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, selectedProperName);
+		const startDateEndDate = this.parseDates(cleanDates);
+		console.log(startDateEndDate);
 		//console.log(startEndDate.start, startEndDate.end);
 
 		// Here we should parse the date and interact with an EventController (ec).
@@ -215,14 +213,16 @@ class NlpController {
 			index: 0,
 			type: ""
 		};
-		let properNameDistance = 200;
+		let properNameDistance = 1000;
 		properNames.forEach(properName => {
 			const pIndex = text.toLowerCase().indexOf(properName.value);
 			let caseSensitiveFirstChar = text[pIndex];
 			// Checking ad-positions
-			const adp = text.split(" ").length == 1 ? undefined : text.split(" ")[0];
+			const adp = properName.value.split(" ").length == 1 ? undefined : text.split(" ")[0];
+			//console.log("adp = " + adp);
 			if (adp != undefined) caseSensitiveFirstChar = text[pIndex + adp.length + 1];
-			console.log(caseSensitiveFirstChar);
+			//console.log("proper name = " + properName.value)
+			//console.log("caseSensitiveFirstChar = " + caseSensitiveFirstChar);
 			// Excluding lower case proper names to confuse words like "amber" and "Amber"
 			if (Misc.isLowerCase(caseSensitiveFirstChar)) return;
 			const distanceFromEventNoun = Math.abs(pIndex - selectedEventNoun);
@@ -252,9 +252,39 @@ class NlpController {
 		return sorted;
 	}
 
+	// There can be just one date (2023/01/01, The second of August ...) and/or one time (at 2, from 10 to 12);
+	// I'm assuming that the first date (syntactically) is the correct one
+	private cleanJunkDates(dates){
+		const dateComponentPatterns = ["date", "ordinalDate", "ordinalDateReverse"];
+		const timePatterns = ["exactTime", "timeRange"];
+		// array.indexOf(element) > -1 is the same as array.contains(element)
+		const dateComponents = dates.filter(d => dateComponentPatterns.indexOf(d.type) > -1);
+		const times = dates.filter(t => timePatterns.indexOf(t.type) > -1);
+		let cleanDates = dates;
+		//console.log("Before cleaning");
+		//console.log(cleanDates);
+		if(dateComponents.length > 1){
+			//console.log("Found multiple dates");
+			// Filtering: Either it's a date or it's the very first value
+			cleanDates = cleanDates.filter(d => ((timePatterns.indexOf(d.type) > -1) || (d.value == dateComponents[0].value)));
+			//console.log("After dates cleaning");
+			//console.log(cleanDates);
+		}
+		if(times.length > 1){
+			//console.log("Found multiple times");
+			// Filtering: Either it's a time or it's the very first value
+			cleanDates = cleanDates.filter(d =>  ((dateComponentPatterns.indexOf(d.type) > -1) || (d.value == times[0].value)));
+			//console.log("After times cleaning");
+			//console.log(cleanDates);
+		}
+		return cleanDates;
+	}
+
 	private parseDates(dates) {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
+		console.log(timeRelatedString);
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
+		console.log(parsed);
 		return smartDateParser.getDates(parsed);
 	}
 
@@ -268,8 +298,17 @@ class NlpController {
 		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(sentence);
 		const entities = doc.tokens().out(its.pos);
-		console.log(entities);
-		if (entities.length == 0) return;
+		//console.log(entities);
+		//if (entities.length == 0) return;
+		const parsed = parse("The third of August 2023 I'll have a meeting with Giacomo at 2 or maybe I'll have lunch with Marco at 10") as ParsedResult[];
+		console.log(parsed[0]);
+		console.log(parsed[1]);
+		console.log(parsed[0].start.isCertain("year"))
+		console.log(parsed[0].start.isCertain("month"))
+		console.log(parsed[0].start.isCertain("day"))
+		console.log(parsed[0].start.isCertain("hour"))
+		console.log(parsed[0].start.isCertain("minute"))
+
 		/*
 		const timeRelatedString = entities.filter(e => e.type != "verb" && e.type != "noun").map(e => e.value).toString().replaceAll(",", " ");
 		const parsed = parse(timeRelatedString) as ParsedResult[];
