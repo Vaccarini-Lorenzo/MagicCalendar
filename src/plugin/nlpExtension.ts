@@ -1,32 +1,40 @@
-import { Extension, RangeSetBuilder, StateField, Transaction, } from "@codemirror/state";
+import { Extension, RangeSetBuilder, StateField, Transaction, Text } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
 import nplController from "../controllers/nlpController";
+import {HighlightWidget} from "./highlightWidget";
+import {
+	PluginSpec,
+	PluginValue,
+	ViewPlugin,
+	ViewUpdate,
+} from "@codemirror/view";
 
-export class NLPStateField {
-	stateField: StateField<DecorationSet>;
+import {SearchCursor} from "@codemirror/search"
 
-	// We need a cache that maps hashes to status (synced/not synced/ignored)
-	// We also need a list of sentences to ignore
-	constructor() {
-		this.stateField = StateField.define<DecorationSet>({
-			create: this.create,
-			update: this.update,
-			provide: this.provide
-		});
+class NLPPlugin implements PluginValue {
+	decorations: DecorationSet;
+
+	constructor(view: EditorView) {
+		this.decorations = this.buildDecorations(view);
 	}
 
-	create(state): DecorationSet {
-		return Decoration.none;
+	update(update: ViewUpdate) {
+		if (update.docChanged || update.viewportChanged) {
+			this.decorations = this.buildDecorations(update.view);
+		}
 	}
 
-	update(oldState: DecorationSet, transaction: Transaction): DecorationSet {
+	buildDecorations(view: EditorView): DecorationSet {
+
+		//const activeFile = app.workspace.getActiveFile();
+		//if (activeFile != undefined) console.log("path = " + activeFile.path);
 		const rangeMap = new Map<number, number>()
 		const builder = new RangeSetBuilder<Decoration>();
-		const sentences = transaction.state.doc.toJSON();
+		const sentences = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
+		//const sentences = nplController.splitIntoSentences(state);
 		sentences.forEach((sentence, i) => {
-			nplController.test(sentence);
+			//nplController.test(sentence);
 
-			/*
 			// The idea: We can't instantiate an Event object at every match:
 			// Every added letter in a document with 1+ potential event will lead to
 			// (possibly multiple) object instantiation. No bueno.
@@ -39,7 +47,8 @@ export class NLPStateField {
 			if(matches.length == 0) return;
 
 			matches.forEach(match => {
-				let previousChars = 0;
+				//let search = new SearchCursor(Text.of([sentence]), match).next();
+				let previousChars = view.viewport.from;
 				for (let j=0; j < i; j++){
 					previousChars += sentences[j].length + 1;
 				}
@@ -53,30 +62,36 @@ export class NLPStateField {
 					console.log("Error matching the string in the text");
 					return;
 				}
-				const startsFrom = previousChars + indexOfMatch
+				const startsFrom = previousChars + indexOfMatch;
 				const endsTo = startsFrom + match.length;
+				console.log(match)
+				//console.log(search.value.from, search.value.to);
 				if(rangeMap.has(startsFrom)) return;
 				rangeMap.set(startsFrom, endsTo);
 				builder.add(
 					startsFrom,
 					endsTo,
 					Decoration.replace({
-						widget: new HighlightWidget(capitalizedMatch, "toDefine", this, this.syncCallback)
+						widget: new HighlightWidget(capitalizedMatch, "toDefine", this, () => {})
 					})
 				);
 
 			});
-			*/
 		})
 
 		return builder.finish();
 	}
 
-	provide(field: StateField<DecorationSet>): Extension {
-		return EditorView.decorations.from(field);
-	}
-
-	syncCallback(){
+	destroy() {
+		// ...
 	}
 }
 
+const pluginSpec: PluginSpec<NLPPlugin> = {
+	decorations: (value: NLPPlugin) => value.decorations,
+};
+
+export const nlpPlugin = ViewPlugin.fromClass(
+	NLPPlugin,
+	pluginSpec
+);

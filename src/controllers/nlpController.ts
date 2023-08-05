@@ -23,6 +23,7 @@ class NlpController {
 
 	loadPatterns(){
 		// TODO: On the 18th is not recognized!!!
+		console.log("loading patterns...");
 		const verbPatternPath = `${this._pluginPath}/.patterns/verb_patterns.txt`
 		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
 
@@ -66,20 +67,26 @@ class NlpController {
 		const lemmaDoc = this._nlp.readDoc(lemmaText);
 		const customEntities = doc.customEntities();
 		const customVerbEntities = lemmaDoc.customEntities();
-		const dates = customEntities.out(its.detail).filter(pos => (pos.type == "date") || (pos.type == "duration") || (pos.type == "time"));
+		const dates = customEntities.out(its.detail).filter(pos => {
+			return (pos.type == "date") || (pos.type == "ordinalDate") ||
+				(pos.type == "ordinalDateReverse") || (pos.type == "timeRange") ||
+				(pos.type == "exactTime") || (pos.type == "duration")
+		});
 		const nouns = customEntities.out(its.detail).filter(pos => (pos.type == "noun"));
 		const lemmaVerbs = customVerbEntities.out(its.detail).filter(pos => (pos.type == "verb"));
 
 		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${nouns.length} nouns,`)
 		if (dates.length == 0 || lemmaVerbs.length == 0 || nouns.length == 0) return [];
 
-		const selectedDate = dates[0].value;
-		const selectedDateIndex = text.indexOf(dates[0].value);
 		let selectedVerb = lemmaVerbs[0].value;
 		let selectedMainNoun = nouns[0].value;
 		let selectedSecondaryNoun = nouns[0].value;
-		let matchIndexMap = new Map<string, number>();
-		matchIndexMap.set(selectedDate, selectedDateIndex);
+		const matchIndexMap = new Map<string, number>();
+		dates.slice(0).forEach(date => {
+			const dateIndex = text.indexOf(date.value);
+			matchIndexMap.set(date.value, dateIndex);
+		})
+		const selectedDateIndex = text.indexOf(dates[0].value);
 		matchIndexMap.set(selectedMainNoun, 0);
 		matchIndexMap.set(selectedSecondaryNoun, 0);
 		let verbDistance = 1000;
@@ -132,6 +139,12 @@ class NlpController {
 		const date = parsed[0].start.date();
 		console.log(date);
 		console.log(parsed);
+	}
+
+	splitIntoSentences(text: string[]): string[] {
+		const joinText = text.join(". ");
+		const doc = this._nlp.readDoc(joinText);
+		return doc.sentences().out();
 	}
 }
 
