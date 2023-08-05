@@ -1,8 +1,18 @@
 import { RangeSetBuilder } from "@codemirror/state";
 import nplController from "../controllers/nlpController";
 import {HighlightWidget} from "./highlightWidget";
-import { Decoration, DecorationSet, EditorView, PluginSpec, PluginValue, ViewPlugin, ViewUpdate,} from "@codemirror/view";
+import {
+	Decoration,
+	DecorationSet,
+	EditorView,
+	PluginSpec,
+	PluginValue,
+	ViewPlugin,
+	ViewUpdate,
+	WidgetType,
+} from "@codemirror/view";
 import {Sentence} from "../controllers/eventController";
+import {UnderlineWidget} from "./underLineWidget";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -18,7 +28,6 @@ class NLPPlugin implements PluginValue {
 	}
 
 	buildDecorations(view: EditorView): DecorationSet {
-
 		const activeFile = app.workspace.getActiveFile();
 		const filePath = activeFile == undefined ? "error": activeFile.path;
 		const rangeMap = new Map<number, number>()
@@ -49,26 +58,33 @@ class NLPPlugin implements PluginValue {
 				// here we check the match status:
 				// compute hash -> check cacheMap
 				// if not sync, continue.
-				const indexOfMatch = sentence.toLowerCase().indexOf(match);
-				const capitalizedMatch = sentence.substring(indexOfMatch, indexOfMatch + match.length)
+				const indexOfMatch = sentence.toLowerCase().indexOf(match.value);
+				const capitalizedMatch = sentence.substring(indexOfMatch, indexOfMatch + match.value.length)
 				if(indexOfMatch == -1){
 					console.log("Error matching the string in the text");
 					return;
 				}
 				const startsFrom = previousChars + indexOfMatch;
-				const endsTo = startsFrom + match.length;
+				const endsTo = startsFrom + match.value.length;
 				//console.log(match)
 				//console.log(search.value.from, search.value.to);
 				if(rangeMap.has(startsFrom)) return;
 				rangeMap.set(startsFrom, endsTo);
+				let widget: WidgetType;
+				widget = new HighlightWidget(capitalizedMatch, "toDefine", this, () => {});
+				console.log(match);
+				if (match.type == "properName" || match.type == "eventNoun"
+					|| match.type == "commonNoun" || match.type == "exactTime"
+					|| match.type == "timeRange"){
+					widget = new UnderlineWidget(capitalizedMatch);
+				}
 				builder.add(
 					startsFrom,
 					endsTo,
 					Decoration.replace({
-						widget: new HighlightWidget(capitalizedMatch, "toDefine", this, () => {})
+						widget
 					})
 				);
-
 			});
 		})
 

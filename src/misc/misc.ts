@@ -1,8 +1,6 @@
 export class Misc {
-	pluginPath: string;
-	setPath(pluginPath: string){
-		this.pluginPath = pluginPath;
+	static isLowerCase(str) {
+		return str === str.toLowerCase() &&
+			str !== str.toUpperCase();
 	}
 }
-const misc = new Misc();
-export default misc;

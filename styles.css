@@ -1,9 +1,46 @@
 mark.highlighted-text {
-	background-color: #3c2c54;
 	position: relative;
-	cursor: pointer;
 	color: white;
 	padding: 3px;
+	-webkit-animation: 0.5s highlight 0s 1 normal forwards;
+	background: linear-gradient(90deg, #3c2c54 50%, rgba(255, 255, 255, 0) 50%);
+	background-size: 200% 100%;
+	background-position: 100% 0;
+	z-index: unset;
+}
+
+.underlined-text {
+	-webkit-animation: 0.5s underline 0s 1 normal forwards;
+	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
+	background-size: 200% 15%;
+	padding: 2px;
+	background-position: 200% 135%;
+	background-repeat: no-repeat;
+	pointer-events: none;
+}
+
+@-webkit-keyframes underline {
+	to {
+		background-position: 0 100%;
+	}
+}
+
+@keyframes underline {
+	to {
+		background-position: 0 100%;
+	}
+}
+
+@-webkit-keyframes highlight {
+	to {
+		background-position: 0 0;
+	}
+}
+
+@keyframes highlight {
+	to {
+		background-position: 0 0;
+	}
 }
 
 body {
@@ -39,4 +76,9 @@ mark.highlighted-text:hover span.tooltip {
 	display: block;
 	border-color: transparent;
 	pointer-events: auto; /* Enable pointer events when the tooltip is visible */
+}
+
+@keyframes fadein {
+	from { opacity: 0}
+	to   { opacity: 1}
 }
