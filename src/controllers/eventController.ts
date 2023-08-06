@@ -44,10 +44,18 @@ class EventController{
 	// Minimal version
 	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
 		//console.log("Creating an event!");
+
+		//console.log("startDate");
+		//console.log(startDate);
+		//console.log("endDate");
+		//console.log(endDate);
 		const arrayStartDate = iCloudMisc.getArrayDate(startDate);
+		//console.log("arrayStartDate");
+		//console.log(arrayStartDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(endDate);
 		const guid = this.generateNewUUID();
 		const duration = this.computeDuration(startDate, endDate)
+
 
 		const value = {
 			title: eventNoun,

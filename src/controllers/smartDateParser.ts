@@ -50,20 +50,21 @@ class SmartDateParser {
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
-		const now = new Date();
+		// TODO: Double check this logic
+		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
 
 		const start = new Date(
-			startYear[0] ?? now.getFullYear(),
-			startMonth[0] ?? now.getMonth(),
-			startDay[0] ?? now.getDate(),
+			startYear[0] ?? firstValidStartParser.start.get("year"),
+			startMonth[0] ?? firstValidStartParser.start.get("month"),
+			startDay[0] ?? firstValidStartParser.start.get("day"),
 			startHour ?? 0,
 			startMin ?? 0,
 		);
 
 		const end = new Date(
-			endYear[0] ??  now.getFullYear(),
-			endMonth[0] ?? now.getMonth(),
-			endDay[0] ?? now.getDate(),
+			endYear[0] ??  firstValidStartParser.start.get("year"),
+			endMonth[0] ?? firstValidStartParser.start.get("month"),
+			endDay[0] ?? firstValidStartParser.start.get("day"),
 			endHour[0] ?? 0,
 			endMin[0] ?? 0,
 		);

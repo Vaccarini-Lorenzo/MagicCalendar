@@ -1,4 +1,4 @@
-import { RangeSetBuilder } from "@codemirror/state";
+import {RangeSetBuilder} from "@codemirror/state";
 import nplController from "../controllers/nlpController";
 import {HighlightWidget} from "./highlightWidget";
 import {
@@ -14,6 +14,7 @@ import {
 import {UnderlineWidget} from "./underLineWidget";
 import {Sentence} from "../model/sentence";
 import eventController from "../controllers/eventController";
+import Event from "../model/event";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -41,14 +42,15 @@ class NLPPlugin implements PluginValue {
 			//const matches = [];
 			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
+			const eventDetailString = this.getEventDetailString(matches.event);
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
 				const widget = this.getWidget(matches.selection, match, matchMetadata, () => {
-					eventController.processEvent(matches.eventUUID);
+					eventController.processEvent(matches.event.value.guid);
 					this.widgetFirstLoad = true;
 					view.setState(view.state);
-				});
+				}, eventDetailString);
 
 				setTimeout((ref) => {
 					if (ref.widgetFirstLoad) ref.widgetFirstLoad = false;
@@ -98,8 +100,8 @@ class NLPPlugin implements PluginValue {
 	}
 
 
-	private getWidget(matches: any, match: any, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: () => void): WidgetType {
-		let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, highlightWidgetCallback , this.widgetFirstLoad);
+	private getWidget(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: () => void, eventDetailString): WidgetType {
+		let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
 		const isExplicitDatePresent = matches.filter(match => match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse").length > 0;
 		if (match.type == "properName" || match.type == "eventNoun" || match.type == "commonNoun") {
 			widget = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
@@ -110,6 +112,26 @@ class NLPPlugin implements PluginValue {
 			widget = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
 		}
 		return widget;
+	}
+
+	private getEventDetailString(event: Event) {
+		const title = event.value.title;
+		const startDate = event.value.startDate;
+		const endDate = event.value.endDate;
+		console.log(JSON.stringify(event.value));
+		// startDate, exactly like endDate is an array as the following [yearmonthdaystring, year, month, day, hour, min ...]
+		const startDateString = `${startDate[1].toString()}/${startDate[2].toString()}/${startDate[3].toString()}`
+		console.log(startDateString);
+		const endDateString = `${endDate[1]}/${endDate[2]}/${endDate[3]}`;
+		const startTimeString = `${startDate[4]}:${startDate[5]}`;
+		const endTimeString = `${endDate[4]}:${endDate[5]}`
+		let dateString = startDateString;
+		if (startDateString != endDateString) dateString = startDateString + " - " + endDateString;
+		const timeString = startTimeString + " - " + endTimeString;
+		let eventDetailString = `📕 ${title}<br/>📅 ${dateString}`;
+		// TODO: FIX SPACING WHEN NEWLINE + WHEN THERE IS JUST ONE TIME (E.G. AT 2) ENDTIME SHOULD NOT BE ZERO!
+		if (startTimeString != endTimeString) eventDetailString += `<br/>🕑 ${timeString}`;
+		return eventDetailString;
 	}
 }
 

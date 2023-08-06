@@ -60,48 +60,112 @@
 	}
 }
 
-body {
+html, body {
 	font-family: Arial, sans-serif;
 	line-height: 1.6;
 	margin: 20px;
 }
 
-.icon-button.icon-button {
-	box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
-	color: transparent;
-	background-color: transparent;
-	justify-content: center; /* Center horizontally */
-	align-content: center;
-	align-items: center;
+/* Main container */
+.navWrapOuter {
+	display: flex;
+}
+
+.navWrapInner {
+	display: flex;
+}
+
+/* Navigation list */
+ul.navUL {
+	margin: 0;
+	padding: 0;
+	display: inline-block;
+}
+
+ul.navUL span {
+	display: block;
+	position: relative;
+	text-decoration: none;
+}
+
+/* Bubble styles */
+/* CHANGE BACKGROUND HERE */
+.hoverBubble {
+	font-size: 80%;
+	width: 100%;
+	background: #d5d5d5;
+	color: #1c1c1c;
+	cursor: pointer;
+	opacity: 0;
 	padding: 5px;
-	width: 60px;
-	height: 60px;
-}
-
-span.tooltip {
-	box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
-	display: none;
 	position: absolute;
-	color: transparent;
-	background-color: transparent;
-	top: -45px; /* Adjust the vertical position of the tooltip */
-	left: 50%;
-	transform: translateX(-50%);
+	visibility: hidden;
+	border-radius: 3px;
+	transition: all 0.25s;
+	display: flex; /* Add this line */
+	flex-direction: column; /* Add this line */
+	align-items: center; /* Add this line */
+	justify-content: center;
 }
 
-.highlighted-text-dynamic:hover span.tooltip {
+.hoverBubble p {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	padding: 5px;
+}
+
+.hoverBubble button {
 	display: block;
-	border-color: transparent;
-	pointer-events: auto; /* Enable pointer events when the tooltip is visible */
+	margin: 0 auto; /* Centers the button horizontally */
+	text-align: center;
 }
 
-.highlighted-text-static:hover span.tooltip {
-	display: block;
-	border-color: transparent;
-	pointer-events: auto; /* Enable pointer events when the tooltip is visible */
+.bubblePosition {
+	bottom: 115%;
+	height: inherit;
+	left: 0;
+	top: auto;
 }
 
-@keyframes fadein {
-	from { opacity: 0}
-	to   { opacity: 1}
+.hoverBubble:after,
+	/* Change border top color here */
+.bubblePosition:after {
+	border: 8px solid transparent;
+	border-top-color: #d5d5d5;
+	bottom: -15px;
+	content: '';
+	height: 0px;
+	left: 0;
+	margin: 0 auto;
+	position: absolute;
+	right: 0;
+	width: 0px;
 }
+
+/* Bubble hover */
+ul.navUL span:hover .hoverBubble {
+	opacity: 1;
+	visibility: visible;
+	transition: all 0.25s;
+}
+
+.row {
+	padding: 5px 0 0 20px;
+	bottom: 15px;
+	display: flex;
+}
+
+.icon-button.icon-button {
+	color: white;
+	background-color: white;
+	padding: 5px;
+	width: 20%;
+	display: inline-block;
+}
+
+
+.hr.solid {
+	border-top: 3px solid #bbb;
+}
+

@@ -6,6 +6,7 @@ import eventController from "./eventController";
 import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
+import Event from "../model/event";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -57,7 +58,7 @@ class NlpController {
 	}
 
 
-	process(sentence: Sentence): {selection: {value, index, type}[], eventUUID: string} | null{
+	process(sentence: Sentence): {selection: {value, index, type}[], event: Event} | null{
 
 		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
 		// Then the nearest noun (related to the event category) to the verb.
@@ -137,13 +138,13 @@ class NlpController {
 			const event = eventController.createNewEvent(sentence.filePath, sentence.value, selectedEventNoun.value, startDateEndDate.start, startDateEndDate.end);
 			return {
 				selection,
-				eventUUID: event.value.guid
+				event
 			};
 		}
 
 		return {
 			selection,
-			eventUUID: matchedEvent.value.guid
+			event: matchedEvent
 		}
 
 	}
