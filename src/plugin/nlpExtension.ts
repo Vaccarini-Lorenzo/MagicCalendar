@@ -118,7 +118,6 @@ class NLPPlugin implements PluginValue {
 		const title = event.value.title;
 		const startDate = event.value.startDate;
 		const endDate = event.value.endDate;
-		console.log(JSON.stringify(event.value));
 		// startDate, exactly like endDate is an array as the following [yearmonthdaystring, year, month, day, hour, min ...]
 		const startDateString = `${startDate[1].toString()}/${startDate[2].toString()}/${startDate[3].toString()}`
 		console.log(startDateString);
@@ -128,9 +127,9 @@ class NLPPlugin implements PluginValue {
 		let dateString = startDateString;
 		if (startDateString != endDateString) dateString = startDateString + " - " + endDateString;
 		const timeString = startTimeString + " - " + endTimeString;
-		let eventDetailString = `📕 ${title}<br/>📅 ${dateString}`;
+		let eventDetailString = `<span class="sidebar"> 📕 </span> <span class="content"> ${title} </span> <span class="sidebar"> 📅 </span> <span class="content"> ${dateString} </span>`;
 		// TODO: FIX SPACING WHEN NEWLINE + WHEN THERE IS JUST ONE TIME (E.G. AT 2) ENDTIME SHOULD NOT BE ZERO!
-		if (startTimeString != endTimeString) eventDetailString += `<br/>🕑 ${timeString}`;
+		if (startTimeString != endTimeString) eventDetailString += ` <span class="sidebar"> 🕑 </span><span class="content"> ${timeString} </span>`;
 		return eventDetailString;
 	}
 }

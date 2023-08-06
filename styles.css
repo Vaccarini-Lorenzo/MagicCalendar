@@ -91,7 +91,7 @@ ul.navUL span {
 /* Bubble styles */
 /* CHANGE BACKGROUND HERE */
 .hoverBubble {
-	font-size: 80%;
+	font-size: 70%;
 	width: 100%;
 	background: #d5d5d5;
 	color: #1c1c1c;
@@ -102,9 +102,9 @@ ul.navUL span {
 	visibility: hidden;
 	border-radius: 3px;
 	transition: all 0.25s;
-	display: flex; /* Add this line */
-	flex-direction: column; /* Add this line */
-	align-items: center; /* Add this line */
+	/*display: flex;*/
+	flex-direction: column;
+	align-items: center;
 	justify-content: center;
 }
 
@@ -122,25 +122,26 @@ ul.navUL span {
 }
 
 .bubblePosition {
-	bottom: 115%;
+	top: 115%;
 	height: inherit;
 	left: 0;
-	top: auto;
+	bottom: auto;
 }
 
 .hoverBubble:after,
 	/* Change border top color here */
 .bubblePosition:after {
-	border: 8px solid transparent;
+	border: 9px solid transparent;
 	border-top-color: #d5d5d5;
-	bottom: -15px;
+	top: -15px;
 	content: '';
-	height: 0px;
+	height: 0;
 	left: 0;
 	margin: 0 auto;
 	position: absolute;
 	right: 0;
-	width: 0px;
+	width: 0;
+	rotate: 180deg;
 }
 
 /* Bubble hover */
@@ -151,21 +152,34 @@ ul.navUL span:hover .hoverBubble {
 }
 
 .row {
-	padding: 5px 0 0 20px;
-	bottom: 15px;
-	display: flex;
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-gap: 5%;
+	padding: 5%;
 }
 
-.icon-button.icon-button {
-	color: white;
-	background-color: white;
-	padding: 5px;
-	width: 20%;
-	display: inline-block;
+.syncButton.syncButton {
+	background-color: #1c1c1c;
+	color: #d5d5d5;
 }
 
-
-.hr.solid {
-	border-top: 3px solid #bbb;
+.sidebar {
+	/*border:1px solid #000;*/
+	font-size: 170%;
+	align-self: center;
 }
+
+.content {
+	font-size: 85%;
+	/*border:1px solid #000;*/
+	align-self: center;
+	white-space: initial;
+}
+
+.gridContainer {
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-gap: 10px;
+}
+
 
