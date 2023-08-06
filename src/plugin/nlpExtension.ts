@@ -73,7 +73,7 @@ class NLPPlugin implements PluginValue {
 	}
 
 	// TODO: fix any
-	private getMatchTextMetadata(documentLines: string[], viewPortFrom: number, currentIndex: number, line: string, match: any): {startsFrom, endsTo, capitalizedMatch} | null {
+	private getMatchTextMetadata(documentLines: string[], viewPortFrom: number, currentIndex: number, line: string, match: {value, index, type}): {startsFrom, endsTo, capitalizedMatch} | null {
 		let previousChars = viewPortFrom;
 		for (let j=0; j < currentIndex; j++){
 			previousChars += documentLines[j].length + 1;

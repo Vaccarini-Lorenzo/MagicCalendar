@@ -1,4 +1,4 @@
-import wink, {Detail} from "wink-nlp";
+import wink, {CustomEntities, Detail} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -57,7 +57,7 @@ class NlpController {
 	}
 
 
-	process(sentence: Sentence): {selection, eventUUID} | null{
+	process(sentence: Sentence): {selection: {value, index, type}[], eventUUID: string} | null{
 
 		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
 		// Then the nearest noun (related to the event category) to the verb.
@@ -148,7 +148,7 @@ class NlpController {
 
 	}
 
-	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText, customEntities, customVerbEntities, lemmaMap} {
+	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, customVerbEntities: CustomEntities, lemmaMap: Map<string, string>} {
 		const caseInsensitiveText = sentence.value.toLowerCase();
 		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(caseInsensitiveText);
@@ -183,33 +183,34 @@ class NlpController {
 	}
 
 	// TODO: Fix anys
-	private filterDates(customEntities: any): Detail[] {
+	private filterDates(customEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
 		return customEntities.out(its.detail).filter(pos => {
-			return (pos.type == "date") || (pos.type == "ordinalDate") ||
-				(pos.type == "ordinalDateReverse") || (pos.type == "timeRange") ||
-				(pos.type == "exactTime") || (pos.type == "duration")
-		});
+			const p = pos as unknown as Detail;
+			return (p.type == "date") || (p.type == "ordinalDate") ||
+				(p.type == "ordinalDateReverse") || (p.type == "timeRange") ||
+				(p.type == "exactTime") || (p.type == "duration")
+		}) as Detail[];
 	}
 
-	private filterProperNames(customEntities: any): Detail[] {
+	private filterProperNames(customEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
-		return customEntities.out(its.detail).filter(pos => pos.type == "properName");
+		return customEntities.out(its.detail).filter(pos => (pos as unknown as Detail).type == "properName") as Detail[];
 	}
 
-	private filterEventNoun(customEntities: any): Detail[] {
+	private filterEventNoun(customEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
-		return customEntities.out(its.detail).filter(pos => (pos.type == "eventNoun"));
+		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "eventNoun")) as Detail[];
 	}
 
-	private filterCommonNoun(customEntities: any) {
+	private filterCommonNoun(customEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
-		return customEntities.out(its.detail).filter(pos => (pos.type == "commonNoun"));
+		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "commonNoun")) as Detail[];
 	}
 
-	private filterLemmaVerbs(customVerbEntities: any) {
+	private filterLemmaVerbs(customVerbEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
-		return customVerbEntities.out(its.detail).filter(pos => (pos.type == "verb"));
+		return customVerbEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "verb")) as Detail[];
 	}
 
 	private findVerb(text, lemmaVerbs, lemmaMap, selectedDateIndex): {value: string, index: number, type: string} {
@@ -286,7 +287,7 @@ class NlpController {
 		return selectedProperName.index == -1 ? null : selectedProperName;
 	}
 
-	private getSelectionArray(text, dates, selectedEventNoun, selectedProperName) {
+	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, selectedProperName: {value, index, type}): {value, index, type}[] {
 		const selection = []
 		dates.forEach(date => {
 			const dateIndex = text.indexOf(date.value);
