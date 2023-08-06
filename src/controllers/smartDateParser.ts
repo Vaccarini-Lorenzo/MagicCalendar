@@ -6,24 +6,6 @@ class SmartDateParser {
 
 	constructor() {
 		this._chrono = casual.clone();
-		this._chrono.refiners.push({
-			refine: (context, results) => {
-				// If there is no AM/PM (meridiem) specified
-				results.forEach((result) => {
-					if (!result.start.isCertain('meridiem') &&
-						result.start.get('hour') >= 1 && result.start.get('hour') <= 12) {
-						result.start.assign('meridiem', 1);
-						result.start.assign('hour', result.start.get('hour') + 12);
-					}
-					if (!result.end.isCertain('meridiem') &&
-						result.end.get('hour') >= 1 && result.end.get('hour') <= 12) {
-						result.end.assign('meridiem', 1);
-						result.end.assign('hour', result.end.get('hour') + 12);
-					}
-				});
-				return results;
-			}
-		});
 	}
 
 	parse(text: string){
@@ -32,11 +14,6 @@ class SmartDateParser {
 
 
 	getDates(parsed: ParsedResult[]): {start?: Date, end?: Date} {
-		if (parsed.length == 1){
-			const start = parsed[0].start == null ? null : parsed[0].start.date();
-			const end = parsed[0].end == null ? null : parsed[0].end.date();
-			return {start, end};
-		}
 		let startYear, startMonth, startDay, startHour, startMin;
 		startYear = [];
 		startMonth = [];
@@ -55,14 +32,14 @@ class SmartDateParser {
 		parsed.forEach(p => {
 			if(p.start != undefined){
 				startYear.push(this.getOnlyIfCertain(p.start, 'year'));
-				startMonth.push(this.getOnlyIfCertain(p.start, 'month'));
+				startMonth.push(this.getOnlyIfCertain(p.start, 'month') == null ? null : this.getOnlyIfCertain(p.start, 'month') - 1);
 				startDay.push(this.getOnlyIfCertain(p.start, 'day'));
 				startHour.push(this.getOnlyIfCertain(p.start, 'hour'));
 				startMin.push(this.getOnlyIfCertain(p.start, 'minute'));
 			}
 			if (p.end != undefined){
 				endYear.push(this.getOnlyIfCertain(p.end, 'year'));
-				endMonth.push(this.getOnlyIfCertain(p.end, 'month'));
+				endMonth.push(this.getOnlyIfCertain(p.end, 'month') == null ? null : this.getOnlyIfCertain(p.end, 'month') - 1);
 				startDay.push(this.getOnlyIfCertain(p.end, 'day'));
 				endHour.push(this.getOnlyIfCertain(p.end, 'hour'));
 				endMin.push(this.getOnlyIfCertain(p.end, 'minute'));
@@ -76,7 +53,7 @@ class SmartDateParser {
 		const now = new Date();
 
 		const start = new Date(
-			startYear[0] ?? parsed[0].start.get("year"),
+			startYear[0] ?? now.getFullYear(),
 			startMonth[0] ?? now.getMonth(),
 			startDay[0] ?? now.getDate(),
 			startHour ?? 0,
@@ -84,7 +61,7 @@ class SmartDateParser {
 		);
 
 		const end = new Date(
-			endYear[0] ?? parsed[0].start.get("year"),
+			endYear[0] ??  now.getFullYear(),
 			endMonth[0] ?? now.getMonth(),
 			endDay[0] ?? now.getDate(),
 			endHour[0] ?? 0,

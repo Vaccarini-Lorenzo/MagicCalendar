@@ -1,10 +1,12 @@
 import wink, {Detail} from "wink-nlp";
+import similarity from "wink-nlp/utilities/similarity";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {parse, ParsedResult} from "chrono-node";
-import eventController, {Sentence} from "./eventController";
+import eventController from "./eventController";
 import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
+import {Sentence} from "../model/sentence";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -46,17 +48,21 @@ class NlpController {
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		];
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL] [|ADP] [TIME|CARDINAL]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
+			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL|NUM] [|am|pm] [|ADP] [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
 			{name: "exactTime", patterns: ["[at] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
-		this._customPatterns.push({name: "duration", patterns: ["DURATION"]});
 		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._customPatterns.push({name: "commonNouns", patterns: ["NOUN"]})
 	}
 
-	process(sentence: Sentence): {value, type}[] {
+
+
+	// TODO: MODULARIZE
+
+	// Any is a lazy solution, fix
+	process(sentence: Sentence): any {
 
 		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
 		// Then the nearest noun (related to the event category) to the verb.
@@ -71,7 +77,8 @@ class NlpController {
 			return;
 		}
 
-		if (eventController.isSentenceProcessed(sentence)) return [];
+		let matchedEvent = eventController.matchSentenceValue(sentence);
+		if (matchedEvent != null && matchedEvent.processed == true) return [];
 
 		const caseInsensitiveText = sentence.value.toLowerCase();
 		const its = this._nlp.its;
@@ -115,14 +122,26 @@ class NlpController {
 		// Fill selection array
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, selectedProperName);
 		const startDateEndDate = this.parseDates(cleanDates);
-		console.log(startDateEndDate);
-		//console.log(startEndDate.start, startEndDate.end);
 
-		// Here we should parse the date and interact with an EventController (ec).
-		// We will need the file path (key of the map of the ec)
-		//
+		if(matchedEvent == null){
+			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
+			matchedEvent = eventController.checkEntities(sentence);
+		}
+		if (matchedEvent != null && matchedEvent.processed == true) return [];
 
-		return selection;
+		if (matchedEvent == null){
+			const event = eventController.createNewEvent(sentence.filePath, sentence.value, selectedEventNoun.value, startDateEndDate.start, startDateEndDate.end);
+			return {
+				selection,
+				eventUUID: event.value.guid
+			};
+		}
+
+		return {
+			selection,
+			eventUUID: matchedEvent.value.guid
+		}
+
 	}
 
 
@@ -217,8 +236,9 @@ class NlpController {
 		properNames.forEach(properName => {
 			const pIndex = text.toLowerCase().indexOf(properName.value);
 			let caseSensitiveFirstChar = text[pIndex];
+			//console.log("properName = " + properName.value);
 			// Checking ad-positions
-			const adp = properName.value.split(" ").length == 1 ? undefined : text.split(" ")[0];
+			const adp = properName.value.split(" ").length == 1 ? undefined : properName.value.split(" ")[0];
 			//console.log("adp = " + adp);
 			if (adp != undefined) caseSensitiveFirstChar = text[pIndex + adp.length + 1];
 			//console.log("proper name = " + properName.value)
@@ -282,9 +302,7 @@ class NlpController {
 
 	private parseDates(dates) {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
-		console.log(timeRelatedString);
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
-		console.log(parsed);
 		return smartDateParser.getDates(parsed);
 	}
 
@@ -293,30 +311,12 @@ class NlpController {
 
 
 
-	test(sentence: string) {
+	testPOS(sentence: string) {
 		sentence = sentence.toLowerCase();
 		const its = this._nlp.its;
-		const doc = this._nlp.readDoc(sentence);
-		const entities = doc.tokens().out(its.pos);
-		//console.log(entities);
-		//if (entities.length == 0) return;
-		const parsed = parse("The third of August 2023 I'll have a meeting with Giacomo at 2 or maybe I'll have lunch with Marco at 10") as ParsedResult[];
-		console.log(parsed[0]);
-		console.log(parsed[1]);
-		console.log(parsed[0].start.isCertain("year"))
-		console.log(parsed[0].start.isCertain("month"))
-		console.log(parsed[0].start.isCertain("day"))
-		console.log(parsed[0].start.isCertain("hour"))
-		console.log(parsed[0].start.isCertain("minute"))
-
-		/*
-		const timeRelatedString = entities.filter(e => e.type != "verb" && e.type != "noun").map(e => e.value).toString().replaceAll(",", " ");
-		const parsed = parse(timeRelatedString) as ParsedResult[];
-		const date = parsed[0].start.date();
-		console.log(date);
-		console.log(parsed);
-
-		 */
+		const as = this._nlp.as;
+		const doc1 = this._nlp.readDoc(sentence);
+		console.log(doc1.tokens().out(its.pos));
 	}
 }
 

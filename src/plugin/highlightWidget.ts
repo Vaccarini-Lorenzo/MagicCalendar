@@ -3,14 +3,12 @@ import {EditorView, WidgetType} from "@codemirror/view";
 export class HighlightWidget extends WidgetType {
 	innerText: string;
 	eventUUID: string;
-	ref: any;
-	syncCallback: (ref: any) => void;
+	syncCallback: () => void;
 
-	constructor(innerText: string, eventUUID: string, ref:any, syncCallback: (ref: any) => void) {
+	constructor(innerText: string, eventUUID: string, syncCallback: () => void) {
 		super();
 		this.innerText = innerText;
 		this.eventUUID = eventUUID;
-		this.ref = ref;
 		this.syncCallback = syncCallback;
 	}
 
@@ -127,7 +125,7 @@ export class HighlightWidget extends WidgetType {
 		*/
 
 		button.onClickEvent((mouseEvent) => {
-			console.log("CLICK!");
+			this.syncCallback.call(this);
 		})
 		/*
 		const mark = document.createElement("mark");

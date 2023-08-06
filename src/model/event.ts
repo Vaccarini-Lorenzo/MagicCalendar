@@ -1,12 +1,15 @@
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
+import {Sentence} from "./sentence";
 
 export default class Event {
 	value: iCloudCalendarEvent;
+	sentence: Sentence;
 	hash: number;
 	processed: boolean;
 
-	constructor(value: iCloudCalendarEvent) {
+	constructor(value: iCloudCalendarEvent, sentence: Sentence) {
 		this.value = value;
+		this.sentence = sentence;
 		this.hash = this.computeHash();
 		this.processed = false;
 	}
@@ -18,7 +21,7 @@ export default class Event {
 
 	private computeHash(): number{
 		// startDate is a [] does it work?
-		const tagProperties = this.value.title + this.value.startDate + this.value.endDate;
+		const tagProperties = this.sentence.toString();
 		let hash = 0,
 			i, chr;
 		if (tagProperties.length === 0) return hash;

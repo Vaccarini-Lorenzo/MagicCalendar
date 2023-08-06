@@ -1,40 +1,56 @@
 import Event from "../model/event";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
-
-export class Sentence {
-	filePath: string;
-	value: string;
-
-	constructor(filePath: string, value: string) {
-		this.filePath = filePath;
-		this.value = value;
-	}
-}
+import {Sentence} from "../model/sentence";
 
 class EventController{
-	sentenceEventMap: Map<Sentence, Event>;
+	pathEventMap: Map<string, Event[]>;
+	uuidEventMap: Map<string, Event>;
 
 	constructor() {
-		this.sentenceEventMap = new Map<Sentence, Event>();
+		this.pathEventMap = new Map<string, Event[]>();
+		this.uuidEventMap = new Map<string, Event>();
 	}
 
-	isSentenceProcessed(sentence: Sentence) {
-		const event = this.sentenceEventMap.get(sentence);
-		if (event == undefined) return false;
-		return event.processed;
+	// First bland check on whole sentence (if nobody modified it, this should match)
+	matchSentenceValue(sentence: Sentence): Event | null {
+		console.log("[matchSentenceValue]: "+ sentence);
+		const events = this.pathEventMap.get(sentence.filePath);
+		if (events == undefined) return null;
+		console.log("[matchSentenceValue]: Found something");
+		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
+		if (filteredEvents.length == 0) return null;
+		console.log("[matchSentenceValue]" + filteredEvents[0]);
+		return filteredEvents[0];
 	}
 
+	// If the first check fails (event == undefined), check the entities (dates, eventNoun)
+	checkEntities(sentence: Sentence): Event | null {
+		const events = this.pathEventMap.get(sentence.filePath);
+		if (events == undefined) return null;
+		const filteredEvents = events.filter(event =>
+			sentence.eventNoun == event.sentence.eventNoun &&
+			sentence.startDate.getTime() == event.sentence.startDate.getTime() &&
+			sentence.endDate.getTime() == event.sentence.endDate.getTime());
+		if (filteredEvents.length == 0) return null;
+		// Update the sentence associated to the event (it has been modified)
+		filteredEvents[0].sentence.value = sentence.value;
+		return filteredEvents[0];
+	}
+
+	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
 	// Minimal version
-	createNewEvent(title: string, description:string, duration: number, startDate: Date, endDate: Date): Event {
+	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
+		console.log("Creating an event!");
 		const arrayStartDate = iCloudMisc.getArrayDate(startDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(endDate);
 		const guid = this.generateNewUUID();
+		const duration = this.computeDuration(startDate, endDate)
 
 		const value = {
-			title,
+			title: eventNoun,
 			duration,
-			description,
+			description : "",
 			guid,
 			startDate: arrayStartDate,
 			endDate: arrayEndDate,
@@ -48,7 +64,28 @@ class EventController{
 			hasAttachments: false
 		} as iCloudCalendarEvent;
 
-		return new Event(value);
+		const newSentence =  new Sentence(filePath, sentenceValue);
+		newSentence.injectEntityFields(startDate, endDate, eventNoun);
+		const fileEvents = this.pathEventMap.get(filePath);
+		const newEvent = new Event(value, newSentence);
+		if (fileEvents == undefined){
+			this.pathEventMap.set(filePath, [newEvent])
+		} else {
+			fileEvents.push(newEvent);
+			this.pathEventMap.set(filePath, fileEvents)
+		}
+		this.uuidEventMap.set(newEvent.value.guid, newEvent);
+		return newEvent;
+	}
+
+	processEvent(UUID: string){
+		console.log("Processing event!");
+		const event = this.uuidEventMap.get(UUID);
+		if(event == undefined){
+			console.log("Error retrieving the event from UUID");
+			return;
+		}
+		event.processed = true;
 	}
 
 	private generateNewUUID(): string {
@@ -61,6 +98,11 @@ class EventController{
 		const fourthUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
 		const lastUUID = iCloudMisc.getRandomHex(maxIntTwelveNibbles);
 		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
+	}
+
+	private computeDuration(startDate: Date, endDate: Date) {
+		const diffMilli = endDate.getTime() - startDate.getTime();
+		return diffMilli / (1000 * 60);
 	}
 }
 

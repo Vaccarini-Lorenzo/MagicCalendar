@@ -11,8 +11,9 @@ import {
 	ViewUpdate,
 	WidgetType,
 } from "@codemirror/view";
-import {Sentence} from "../controllers/eventController";
 import {UnderlineWidget} from "./underLineWidget";
+import {Sentence} from "../model/sentence";
+import eventController from "../controllers/eventController";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -30,41 +31,37 @@ class NLPPlugin implements PluginValue {
 	buildDecorations(view: EditorView): DecorationSet {
 		const activeFile = app.workspace.getActiveFile();
 		const filePath = activeFile == undefined ? "error": activeFile.path;
-		const rangeMap = new Map<number, number>()
 		const builder = new RangeSetBuilder<Decoration>();
-		const sentences = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
-		sentences.forEach((sentence, i) => {
-			//nplController.test(sentence);
+		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
+		documentLines.some((line, i) => {
+			//nplController.testPOS(line);
 			//const matches = [];
-
-			const matches = nplController.process(new Sentence(filePath, sentence));
-			if(matches.length == 0) return;
-
-			matches.forEach(match => {
-				//let search = new SearchCursor(Text.of([sentence]), match).next();
+			const matches = nplController.process(new Sentence(filePath, line));
+			if(matches.length == 0) return false;
+			matches.selection.forEach(match => {
+				//let search = new SearchCursor(Text.of([line]), match).next();
 				let previousChars = view.viewport.from;
 				for (let j=0; j < i; j++){
-					previousChars += sentences[j].length + 1;
+					previousChars += documentLines[j].length + 1;
 				}
 
 				// here we check the match status:
 				// compute hash -> check cacheMap
 				// if not sync, continue.
-				const indexOfMatch = sentence.toLowerCase().indexOf(match.value);
-				const capitalizedMatch = sentence.substring(indexOfMatch, indexOfMatch + match.value.length)
+				const indexOfMatch = line.toLowerCase().indexOf(match.value);
+				const capitalizedMatch = line.substring(indexOfMatch, indexOfMatch + match.value.length)
 				if(indexOfMatch == -1){
 					console.log("Error matching the string in the text");
-					return;
+					return false;
 				}
 				const startsFrom = previousChars + indexOfMatch;
 				const endsTo = startsFrom + match.value.length;
 				//console.log(match)
 				//console.log(search.value.from, search.value.to);
-				if(rangeMap.has(startsFrom)) return;
-				rangeMap.set(startsFrom, endsTo);
 				let widget: WidgetType;
-				widget = new HighlightWidget(capitalizedMatch, "toDefine", this, () => {});
-				console.log(match);
+				widget = new HighlightWidget(capitalizedMatch, "toDefine", () => {
+					eventController.processEvent(matches.eventUUID)
+				});
 				if (match.type == "properName" || match.type == "eventNoun"
 					|| match.type == "commonNoun" || match.type == "exactTime"
 					|| match.type == "timeRange"){
@@ -78,6 +75,7 @@ class NLPPlugin implements PluginValue {
 					})
 				);
 			});
+			return true;
 		})
 
 		return builder.finish();
