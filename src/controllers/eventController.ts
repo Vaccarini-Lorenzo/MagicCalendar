@@ -14,18 +14,18 @@ class EventController{
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	matchSentenceValue(sentence: Sentence): Event | null {
-		console.log("[matchSentenceValue]: "+ sentence);
+		//console.log("[syntax check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
-		console.log("[matchSentenceValue]: Found something");
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
-		console.log("[matchSentenceValue]" + filteredEvents[0]);
+		//console.log("[syntax check]: Match found!");
 		return filteredEvents[0];
 	}
 
 	// If the first check fails (event == undefined), check the entities (dates, eventNoun)
 	checkEntities(sentence: Sentence): Event | null {
+		//console.log("[semantic check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event =>
@@ -33,15 +33,17 @@ class EventController{
 			sentence.startDate.getTime() == event.sentence.startDate.getTime() &&
 			sentence.endDate.getTime() == event.sentence.endDate.getTime());
 		if (filteredEvents.length == 0) return null;
+		//console.log("[semantic check]: Match found!");
 		// Update the sentence associated to the event (it has been modified)
 		filteredEvents[0].sentence.value = sentence.value;
+		//console.log("[semantic check]: Updating associated sentence value");
 		return filteredEvents[0];
 	}
 
 	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
 	// Minimal version
 	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
-		console.log("Creating an event!");
+		//console.log("Creating an event!");
 		const arrayStartDate = iCloudMisc.getArrayDate(startDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(endDate);
 		const guid = this.generateNewUUID();

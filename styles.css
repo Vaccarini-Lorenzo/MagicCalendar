@@ -1,16 +1,33 @@
-mark.highlighted-text {
+.highlighted-text-dynamic {
 	position: relative;
 	color: white;
 	padding: 3px;
-	-webkit-animation: 0.5s highlight 0s 1 normal forwards;
+	-webkit-animation: 0.7s highlight 0s 1 normal forwards;
 	background: linear-gradient(90deg, #3c2c54 50%, rgba(255, 255, 255, 0) 50%);
 	background-size: 200% 100%;
 	background-position: 100% 0;
 	z-index: unset;
 }
 
-.underlined-text {
-	-webkit-animation: 0.5s underline 0s 1 normal forwards;
+.highlighted-text-static {
+	background-color: #3c2c54;
+	position: relative;
+	cursor: pointer;
+	color: white;
+	padding: 3px;
+}
+
+.underlined-text-static {
+	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
+	background-size: 200% 15%;
+	padding: 2px;
+	background-position: 0 100%;
+	background-repeat: no-repeat;
+	pointer-events: none;
+}
+
+.underlined-text-dynamic {
+	-webkit-animation: 0.6s underline 0.3s 1 normal forwards;
 	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
 	background-size: 200% 15%;
 	padding: 2px;
@@ -50,7 +67,7 @@ body {
 }
 
 .icon-button.icon-button {
-	box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
 	color: transparent;
 	background-color: transparent;
 	justify-content: center; /* Center horizontally */
@@ -62,7 +79,7 @@ body {
 }
 
 span.tooltip {
-	box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
 	display: none;
 	position: absolute;
 	color: transparent;
@@ -72,7 +89,13 @@ span.tooltip {
 	transform: translateX(-50%);
 }
 
-mark.highlighted-text:hover span.tooltip {
+.highlighted-text-dynamic:hover span.tooltip {
+	display: block;
+	border-color: transparent;
+	pointer-events: auto; /* Enable pointer events when the tooltip is visible */
+}
+
+.highlighted-text-static:hover span.tooltip {
 	display: block;
 	border-color: transparent;
 	pointer-events: auto; /* Enable pointer events when the tooltip is visible */

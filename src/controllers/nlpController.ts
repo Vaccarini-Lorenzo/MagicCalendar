@@ -1,8 +1,7 @@
 import wink, {Detail} from "wink-nlp";
-import similarity from "wink-nlp/utilities/similarity";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
-import {parse, ParsedResult} from "chrono-node";
+import {ParsedResult} from "chrono-node";
 import eventController from "./eventController";
 import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
@@ -49,7 +48,7 @@ class NlpController {
 		];
 		this._customPatterns.push(
 			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL|NUM] [|am|pm] [|ADP] [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
-			{name: "exactTime", patterns: ["[at] [CARDINAL|TIME]"]}
+			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
 		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
@@ -58,11 +57,7 @@ class NlpController {
 	}
 
 
-
-	// TODO: MODULARIZE
-
-	// Any is a lazy solution, fix
-	process(sentence: Sentence): any {
+	process(sentence: Sentence): {selection, eventUUID} | null{
 
 		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
 		// Then the nearest noun (related to the event category) to the verb.
@@ -74,41 +69,48 @@ class NlpController {
 
 		if(!this._ready){
 			console.log("NPL not ready");
-			return;
+			return null;
 		}
 
-		let matchedEvent = eventController.matchSentenceValue(sentence);
-		if (matchedEvent != null && matchedEvent.processed == true) return [];
+		// How can I uniquely identify a string as an event?
+		// If the string was immutable, it could be easy, but since its structure can be modified
+		// it's necessary do define three scenarios.
+		// 1. The string has not been modified in any way, not syntactically nor semantically:
+		//	  This mean that I can match an event with the string value - easy
+		// 2. The string has been modified but just syntactically:
+		//    I shouldn't create a new event just because the syntax changed, but to associate
+		//	  an event to the modified string it's necessary to compute the event-related objects
+		//	  from the new string (eventNoun, dates etc...)
+		// 3. The string has been modified semantically (and/or syntactically):
+		//	  This mean that we can not assume that the modified string is associated to an event
+		//	  and therefore we need to create one.
 
-		const caseInsensitiveText = sentence.value.toLowerCase();
-		const its = this._nlp.its;
-		const doc = this._nlp.readDoc(caseInsensitiveText);
-		// "I'll have a meeting" -> "I", "'ll", "have" ...
-		const tokens = doc.tokens().out(its.value);
-		const customEntities = doc.customEntities();
-		// "I'll have a meeting" -> "I", "will", "have" ...
-		const lemmas = doc.tokens().out(its.lemma);
-		// Associates lemma to token
-		const lemmaMap = this.generateLemmaMap(tokens, lemmas);
-		// "I'll have a meeting" -> ""I will have a meeting"
-		const lemmaText = doc.tokens().out(its.lemma).toString();
-		const lemmaDoc = this._nlp.readDoc(lemmaText);
-		// Verbs in pattern are in lemma format
-		const customVerbEntities = lemmaDoc.customEntities();
+		// First match - Syntax check
+		let matchedEvent = eventController.matchSentenceValue(sentence);
+		if (matchedEvent != null && matchedEvent.processed == true) return null;
+
+		// If the syntax check fails we'll need to compute the semantic check, once
+		// all the sentence elements are defined
+
+		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
+		const customEntities = auxiliaryStructures.customEntities;
+		const customVerbEntities = auxiliaryStructures.customVerbEntities;
+		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
+		const lemmaMap = auxiliaryStructures.lemmaMap;
 
 		// Filter customEntities (or customVerbEntities) to find the entity of the right type
 		// The following structures are [{value, type}]
 		const dates = this.filterDates(customEntities);
 		const properNames = this.filterProperNames(customEntities);
 		const eventNouns = this.filterEventNoun(customEntities);
+		// TODO: commonNouns
 		const commonNouns = this.filterCommonNoun(customEntities);
 		const lemmaVerbs = this.filterLemmaVerbs(customVerbEntities);
 
 		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
-		if (dates.length == 0 || lemmaVerbs.length == 0 || eventNouns.length == 0) return [];
+		if (dates.length == 0 || lemmaVerbs.length == 0 || eventNouns.length == 0) return null;
 
 		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
-		//dates.forEach(d => console.log(`Found date: ${d.value}`))
 
 		// Find the nearest verb
 		const selectedVerb = this.findVerb(caseInsensitiveText, lemmaVerbs, lemmaMap, selectedDateIndex)
@@ -116,19 +118,21 @@ class NlpController {
 		const selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedVerb.index );
 		// Find possible proper names (John)
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun.index);
-		// TODO: commonNouns
 
 		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, selectedProperName);
 		const startDateEndDate = this.parseDates(cleanDates);
 
+		// Semantic check
 		if(matchedEvent == null){
 			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
 			matchedEvent = eventController.checkEntities(sentence);
 		}
-		if (matchedEvent != null && matchedEvent.processed == true) return [];
+		// Semantic check successful
+		if (matchedEvent != null && matchedEvent.processed == true) return null;
 
+		// Semantic check unsuccessful -> new event
 		if (matchedEvent == null){
 			const event = eventController.createNewEvent(sentence.filePath, sentence.value, selectedEventNoun.value, startDateEndDate.start, startDateEndDate.end);
 			return {
@@ -144,9 +148,33 @@ class NlpController {
 
 	}
 
+	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText, customEntities, customVerbEntities, lemmaMap} {
+		const caseInsensitiveText = sentence.value.toLowerCase();
+		const its = this._nlp.its;
+		const doc = this._nlp.readDoc(caseInsensitiveText);
+		// "I'll have a meeting" -> "I", "'ll", "have" ...
+		const tokens = doc.tokens().out(its.value);
+		const customEntities = doc.customEntities();
+		// "I'll have a meeting" -> "I", "will", "have" ...
+		const lemmas = doc.tokens().out(its.lemma);
+		// Associates lemma to token
+		const lemmaMap = this.generateLemmaMap(tokens, lemmas);
+		// "I'll have a meeting" -> ""I will have a meeting"
+		const lemmaText = doc.tokens().out(its.lemma).toString();
+		const lemmaDoc = this._nlp.readDoc(lemmaText);
+		// Verbs in pattern are in lemma format
+		const customVerbEntities = lemmaDoc.customEntities();
+		return {caseInsensitiveText, customEntities, customVerbEntities, lemmaMap};
+	}
 
 
-
+	/*
+	********************************************************************************************************************************
+	*******************************************************					 *******************************************************
+	******************************************************* PRIVATE METHODS  *******************************************************
+	*******************************************************					 *******************************************************
+	********************************************************************************************************************************
+	 */
 
 	private generateLemmaMap(tokens: string[], lemmas: string[]){
 		const lemmaMap = new Map<string, string>();
@@ -154,6 +182,7 @@ class NlpController {
 		return lemmaMap;
 	}
 
+	// TODO: Fix anys
 	private filterDates(customEntities: any): Detail[] {
 		const its = this._nlp.its;
 		return customEntities.out(its.detail).filter(pos => {
@@ -186,7 +215,7 @@ class NlpController {
 	private findVerb(text, lemmaVerbs, lemmaMap, selectedDateIndex): {value: string, index: number, type: string} {
 		const selectedVerb = {
 			value: "",
-			index: 0,
+			index: -1,
 			type: ""
 		};
 		let verbDistance = 1000;
@@ -208,7 +237,7 @@ class NlpController {
 	private findEventNoun(text, eventNouns, selectedVerbIndex): {value: string, index: number, type: string} {
 		const selectedEventNoun = {
 			value: "",
-			index: 0,
+			index: -1,
 			type: ""
 		};
 		let nounDistance = 1000;
@@ -229,7 +258,7 @@ class NlpController {
 	private findProperName(text, properNames, selectedEventNoun) : {value: string, index: number, type: string} | null {
 		const selectedProperName = {
 			value: "",
-			index: 0,
+			index: -1,
 			type: ""
 		};
 		let properNameDistance = 1000;
@@ -260,7 +289,6 @@ class NlpController {
 	private getSelectionArray(text, dates, selectedEventNoun, selectedProperName) {
 		const selection = []
 		dates.forEach(date => {
-			//console.log(date);
 			const dateIndex = text.indexOf(date.value);
 			selection.push({value: date.value, index: dateIndex, type: date.type});
 		})
@@ -314,7 +342,7 @@ class NlpController {
 	testPOS(sentence: string) {
 		sentence = sentence.toLowerCase();
 		const its = this._nlp.its;
-		const as = this._nlp.as;
+		//const as = this._nlp.as;
 		const doc1 = this._nlp.readDoc(sentence);
 		console.log(doc1.tokens().out(its.pos));
 	}
