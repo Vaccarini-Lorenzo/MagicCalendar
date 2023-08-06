@@ -7,6 +7,7 @@ import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
 import Event from "../model/event";
+import {title} from "process";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -135,7 +136,9 @@ class NlpController {
 
 		// Semantic check unsuccessful -> new event
 		if (matchedEvent == null){
-			const event = eventController.createNewEvent(sentence.filePath, sentence.value, selectedEventNoun.value, startDateEndDate.start, startDateEndDate.end);
+			let eventTitle = selectedEventNoun.value;
+			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
+			const event = eventController.createNewEvent(sentence.filePath, sentence.value, eventTitle, startDateEndDate.start, startDateEndDate.end);
 			return {
 				selection,
 				event
@@ -341,12 +344,14 @@ class NlpController {
 
 
 
-	testPOS(sentence: string) {
-		sentence = sentence.toLowerCase();
-		const its = this._nlp.its;
-		//const as = this._nlp.as;
-		const doc1 = this._nlp.readDoc(sentence);
-		console.log(doc1.tokens().out(its.pos));
+	testPOS(sentence: Sentence) {
+		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
+		const customEntities = auxiliaryStructures.customEntities;
+		const customVerbEntities = auxiliaryStructures.customVerbEntities;
+		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
+		const lemmaMap = auxiliaryStructures.lemmaMap;
+
+		console.log(customEntities.out(this._nlp.its.detail));
 	}
 }
 

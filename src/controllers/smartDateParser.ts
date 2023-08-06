@@ -55,7 +55,7 @@ class SmartDateParser {
 
 		const start = new Date(
 			startYear[0] ?? firstValidStartParser.start.get("year"),
-			startMonth[0] ?? firstValidStartParser.start.get("month"),
+			startMonth[0] ?? (firstValidStartParser.start.get("month") - 1),
 			startDay[0] ?? firstValidStartParser.start.get("day"),
 			startHour ?? 0,
 			startMin ?? 0,
@@ -63,10 +63,10 @@ class SmartDateParser {
 
 		const end = new Date(
 			endYear[0] ??  firstValidStartParser.start.get("year"),
-			endMonth[0] ?? firstValidStartParser.start.get("month"),
+			endMonth[0] ?? (firstValidStartParser.start.get("month") - 1),
 			endDay[0] ?? firstValidStartParser.start.get("day"),
-			endHour[0] ?? 0,
-			endMin[0] ?? 0,
+			endHour[0] ?? start.getHours(),
+			endMin[0] ?? start.getMinutes(),
 		);
 
 		return {start, end};

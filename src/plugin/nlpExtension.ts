@@ -15,6 +15,7 @@ import {UnderlineWidget} from "./underLineWidget";
 import {Sentence} from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
+import {Misc} from "../misc/misc";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -38,9 +39,9 @@ class NLPPlugin implements PluginValue {
 		const builder = new RangeSetBuilder<Decoration>();
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
-			//nplController.testPOS(line);
-			//const matches = [];
-			const matches = nplController.process(new Sentence(filePath, line));
+			nplController.testPOS(new Sentence(filePath, line));
+			const matches = null;
+			//const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
 			const eventDetailString = this.getEventDetailString(matches.event);
 			matches.selection.forEach(match => {
@@ -118,18 +119,22 @@ class NLPPlugin implements PluginValue {
 		const title = event.value.title;
 		const startDate = event.value.startDate;
 		const endDate = event.value.endDate;
+
 		// startDate, exactly like endDate is an array as the following [yearmonthdaystring, year, month, day, hour, min ...]
-		const startDateString = `${startDate[1].toString()}/${startDate[2].toString()}/${startDate[3].toString()}`
-		console.log(startDateString);
-		const endDateString = `${endDate[1]}/${endDate[2]}/${endDate[3]}`;
-		const startTimeString = `${startDate[4]}:${startDate[5]}`;
-		const endTimeString = `${endDate[4]}:${endDate[5]}`
+		const startDateString = `${startDate[1]}/${Misc.fromSingleToDoubleDigit(startDate[2])}/${Misc.fromSingleToDoubleDigit(startDate[3])}`
+		const endDateString = `${endDate[1]}/${Misc.fromSingleToDoubleDigit(endDate[2])}/${Misc.fromSingleToDoubleDigit(endDate[3])}`;
+		const startTimeString = `${Misc.fromSingleToDoubleDigit(startDate[4])}:${Misc.fromSingleToDoubleDigit(startDate[5])}`;
+		const endTimeString = `${Misc.fromSingleToDoubleDigit(endDate[4])}:${Misc.fromSingleToDoubleDigit(endDate[5])}`
+
 		let dateString = startDateString;
-		if (startDateString != endDateString) dateString = startDateString + " - " + endDateString;
-		const timeString = startTimeString + " - " + endTimeString;
+		if (startDateString != endDateString) dateString += ` -  ${endDateString}`;
+
+		let timeString = startTimeString;
+		if(startTimeString != endTimeString) timeString += ` - ${endTimeString}`;
+
 		let eventDetailString = `<span class="sidebar"> 📕 </span> <span class="content"> ${title} </span> <span class="sidebar"> 📅 </span> <span class="content"> ${dateString} </span>`;
-		// TODO: FIX SPACING WHEN NEWLINE + WHEN THERE IS JUST ONE TIME (E.G. AT 2) ENDTIME SHOULD NOT BE ZERO!
-		if (startTimeString != endTimeString) eventDetailString += ` <span class="sidebar"> 🕑 </span><span class="content"> ${timeString} </span>`;
+
+		if (startTimeString != "00:00") eventDetailString += ` <span class="sidebar"> 🕑 </span><span class="content"> ${timeString} </span>`;
 		return eventDetailString;
 	}
 }

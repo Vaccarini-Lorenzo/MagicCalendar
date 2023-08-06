@@ -84,15 +84,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 
 	registerEvents(){
-		this.registerEvent(this.app.metadataCache.on('changed', (file, data, cache) => {
-			//cache.tags.forEach(t => console.log(t));
-		}));
-
-		this.registerEvent(this.app.metadataCache.on('deleted', (file, data) => {
-			//console.log("DELETED!");
-			//console.log(`file = ${file}\n\ndata=${data}\n\n`)
-		}))
-
 		this.addCommand({
 			id: "display-modal",
 			name: "Display modal",

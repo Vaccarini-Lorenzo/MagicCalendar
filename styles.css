@@ -64,6 +64,7 @@ html, body {
 	font-family: Arial, sans-serif;
 	line-height: 1.6;
 	margin: 20px;
+	cursor: text;
 }
 
 /* Main container */
@@ -92,12 +93,12 @@ ul.navUL span {
 /* CHANGE BACKGROUND HERE */
 .hoverBubble {
 	font-size: 70%;
-	width: 100%;
+	width: max-content;
 	background: #d5d5d5;
 	color: #1c1c1c;
-	cursor: pointer;
+	cursor: auto;
 	opacity: 0;
-	padding: 5px;
+	padding: 10px;
 	position: absolute;
 	visibility: hidden;
 	border-radius: 3px;
@@ -122,7 +123,7 @@ ul.navUL span {
 }
 
 .bubblePosition {
-	top: 115%;
+	top: 100%;
 	height: inherit;
 	left: 0;
 	bottom: auto;
@@ -149,34 +150,40 @@ ul.navUL span:hover .hoverBubble {
 	opacity: 1;
 	visibility: visible;
 	transition: all 0.25s;
+	z-index: 5;
 }
 
 .row {
+	/*	border:1px solid #000; */
 	display: grid;
 	grid-template-columns: auto auto;
-	grid-gap: 5%;
-	padding: 5%;
+	padding: 10px 0 0 0;
 }
 
 .syncButton.syncButton {
+	padding: 0;
+	text-align: center;
 	background-color: #1c1c1c;
 	color: #d5d5d5;
+	margin: 5%;
 }
 
 .sidebar {
 	/*border:1px solid #000;*/
 	font-size: 170%;
+	margin: -5px;
 	align-self: center;
 }
 
 .content {
+	/*	border:1px solid #000; */
 	font-size: 85%;
-	/*border:1px solid #000;*/
 	align-self: center;
 	white-space: initial;
 }
 
 .gridContainer {
+	/*border:1px solid #000;*/
 	display: grid;
 	grid-template-columns: auto auto;
 	grid-gap: 10px;
