@@ -8,6 +8,7 @@ import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
 import Event from "../model/event";
 import {title} from "process";
+import {it} from "node:test";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -54,6 +55,7 @@ class NlpController {
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
 		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
+		this._customPatterns.push({name: "intentionalVerb", patterns: ["[VERB] [ADP] [|DET] [NOUN]"]});
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._customPatterns.push({name: "commonNouns", patterns: ["NOUN"]})
 	}
@@ -109,15 +111,30 @@ class NlpController {
 		const commonNouns = this.filterCommonNoun(customEntities);
 		const lemmaVerbs = this.filterLemmaVerbs(customVerbEntities);
 
-		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
-		if (dates.length == 0 || lemmaVerbs.length == 0 || eventNouns.length == 0) return null;
+		console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
+		if (dates.length == 0) return null;
 
 		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
+		let selectedVerb: {value, index, type}
 
-		// Find the nearest verb
-		const selectedVerb = this.findVerb(caseInsensitiveText, lemmaVerbs, lemmaMap, selectedDateIndex)
+		const selectedIntentionalVerb: {value, index, type, noun} = this.findIntentionalVerb(auxiliaryStructures.customEntities, caseInsensitiveText, selectedDateIndex);
+		if (selectedIntentionalVerb.index == -1){
+			// Find the nearest verb
+			selectedVerb = this.findVerb(caseInsensitiveText, lemmaVerbs, lemmaMap, selectedDateIndex)
+			if (selectedVerb.index == -1) return;
+		}
+
 		// Find the nearest event related noun
-		const selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedVerb.index );
+		let selectedEventNoun = {
+			value: selectedIntentionalVerb.noun,
+			index: auxiliaryStructures.caseInsensitiveText.indexOf(selectedIntentionalVerb.noun),
+			type: "eventNoun"
+		};
+
+		if (selectedIntentionalVerb.index == -1) selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedVerb.index );
+
+		if (selectedEventNoun.index == -1) return;
+
 		// Find possible proper names (John)
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun.index);
 
@@ -125,6 +142,8 @@ class NlpController {
 		// Fill selection array
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, selectedProperName);
 		const startDateEndDate = this.parseDates(cleanDates);
+
+		if (startDateEndDate == undefined) return;
 
 		// Semantic check
 		if(matchedEvent == null){
@@ -154,6 +173,8 @@ class NlpController {
 
 	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, customVerbEntities: CustomEntities, lemmaMap: Map<string, string>} {
 		const caseInsensitiveText = sentence.value.toLowerCase();
+		//const singularizedText = this.singularize(sentence.value);
+		//console.log(singularizedText);
 		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(caseInsensitiveText);
 		// "I'll have a meeting" -> "I", "'ll", "have" ...
@@ -239,6 +260,31 @@ class NlpController {
 		return selectedVerb;
 	}
 
+
+	private findIntentionalVerb(customEntities: CustomEntities, text: string, selectedDateIndex: number): {value, index, type, noun} {
+		const selectedIntentionalVerb = {
+			value: "",
+			index: -1,
+			type: "",
+			noun: ""
+		};
+		const intentionalVerbs = customEntities.out(this._nlp.its.detail).filter(pos => ((pos as unknown as Detail).type == "intentionalVerb")) as Detail[];
+		if (intentionalVerbs.length == 0) return selectedIntentionalVerb;
+		let verbDistance = 1000;
+		intentionalVerbs.forEach(intentionalVerb => {
+			const vIndex = text.indexOf(intentionalVerb.value);
+			const distanceFromDate = Math.abs(vIndex - selectedDateIndex);
+			if (distanceFromDate < verbDistance){
+				verbDistance = distanceFromDate;
+				selectedIntentionalVerb.value = intentionalVerb.value;
+				selectedIntentionalVerb.index = vIndex;
+				selectedIntentionalVerb.type = intentionalVerb.type;
+			}
+		})
+		selectedIntentionalVerb.noun = selectedIntentionalVerb.value.split(" ").last();
+		return selectedIntentionalVerb;
+	}
+
 	private findEventNoun(text, eventNouns, selectedVerbIndex): {value: string, index: number, type: string} {
 		const selectedEventNoun = {
 			value: "",
@@ -267,6 +313,7 @@ class NlpController {
 			type: ""
 		};
 		let properNameDistance = 1000;
+		console.log(properNames);
 		properNames.forEach(properName => {
 			const pIndex = text.toLowerCase().indexOf(properName.value);
 			let caseSensitiveFirstChar = text[pIndex];
@@ -275,8 +322,8 @@ class NlpController {
 			const adp = properName.value.split(" ").length == 1 ? undefined : properName.value.split(" ")[0];
 			//console.log("adp = " + adp);
 			if (adp != undefined) caseSensitiveFirstChar = text[pIndex + adp.length + 1];
-			//console.log("proper name = " + properName.value)
-			//console.log("caseSensitiveFirstChar = " + caseSensitiveFirstChar);
+			console.log("proper name = " + properName.value)
+			console.log("caseSensitiveFirstChar = " + caseSensitiveFirstChar);
 			// Excluding lower case proper names to confuse words like "amber" and "Amber"
 			if (Misc.isLowerCase(caseSensitiveFirstChar)) return;
 			const distanceFromEventNoun = Math.abs(pIndex - selectedEventNoun);
@@ -339,6 +386,27 @@ class NlpController {
 		return smartDateParser.getDates(parsed);
 	}
 
+	/*
+	private singularize(text: string){
+		const pluralEndings = {
+			ves: 'fe ',
+			ies: 'y ',
+			i: 'us ',
+			zes: 'ze ',
+			ses: 's ',
+			es: 'e ',
+			"\\ws": ' '
+		};
+		return text.replace(
+			new RegExp(`(${Object.keys(pluralEndings).join('|')}) `),
+			plural => {
+				const key = plural.replace(" ", "");
+				console.log("key " + key);
+				return(pluralEndings[key]);
+			}
+		);
+	}
+*/
 
 
 
@@ -350,7 +418,8 @@ class NlpController {
 		const customVerbEntities = auxiliaryStructures.customVerbEntities;
 		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
 		const lemmaMap = auxiliaryStructures.lemmaMap;
-
+		let doc1 = this._nlp.readDoc(sentence.value);
+		console.log(doc1.tokens().out(this._nlp.its.pos));
 		console.log(customEntities.out(this._nlp.its.detail));
 	}
 }

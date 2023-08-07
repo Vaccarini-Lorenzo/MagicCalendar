@@ -5,10 +5,14 @@ class SmartDateParser {
 	private _chrono: Chrono;
 
 	constructor() {
+
+		//TODO: Chrono doesn't parse correctly 10th of this month: implement refiner
+		//TODO: On saturday but saturday has already passed by -> last saturday
 		this._chrono = casual.clone();
 	}
 
 	parse(text: string){
+		console.log(text);
 		return this._chrono.parse(text);
 	}
 
@@ -27,6 +31,8 @@ class SmartDateParser {
 		endDay = [];
 		endHour = [];
 		endMin = [];
+
+		if (parsed.length  == 0) return;
 
 		// Pushing either null or a value
 		parsed.forEach(p => {
@@ -49,6 +55,8 @@ class SmartDateParser {
 		// Cleaning the nulls
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
+
+		console.log(components);
 
 		// TODO: Double check this logic
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
@@ -73,6 +81,11 @@ class SmartDateParser {
 	}
 
 	getOnlyIfCertain(parsedComponent: ParsedComponents, component: Component){
+		if(component == "day"){
+			console.log("certain " + parsedComponent.isCertain(component));
+			console.log(parsedComponent.get(component));
+		}
+
 		if (parsedComponent.isCertain(component))
 			return parsedComponent.get(component);
 		return null;

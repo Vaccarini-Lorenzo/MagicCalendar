@@ -39,9 +39,9 @@ class NLPPlugin implements PluginValue {
 		const builder = new RangeSetBuilder<Decoration>();
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
-			nplController.testPOS(new Sentence(filePath, line));
-			const matches = null;
-			//const matches = nplController.process(new Sentence(filePath, line));
+			//nplController.testPOS(new Sentence(filePath, line));
+			//const matches = null;
+			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
 			const eventDetailString = this.getEventDetailString(matches.event);
 			matches.selection.forEach(match => {
@@ -85,11 +85,11 @@ class NLPPlugin implements PluginValue {
 		// compute hash -> check cacheMap
 		// if not sync, continue.
 		const indexOfMatch = line.toLowerCase().indexOf(match.value);
-		const capitalizedMatch = line.substring(indexOfMatch, indexOfMatch + match.value.length)
 		if(indexOfMatch == -1){
 			console.log("Error matching the string in the text");
 			return null;
 		}
+		const capitalizedMatch = line.substring(indexOfMatch, indexOfMatch + match.value.length)
 		const startsFrom = previousChars + indexOfMatch;
 		const endsTo = startsFrom + match.value.length;
 

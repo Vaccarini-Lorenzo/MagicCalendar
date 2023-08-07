@@ -1,3 +1,8 @@
+html, body {
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
+}
+
 .highlighted-text-dynamic {
 	position: relative;
 	color: white;
@@ -12,7 +17,6 @@
 .highlighted-text-static {
 	background-color: #3c2c54;
 	position: relative;
-	cursor: pointer;
 	color: white;
 	padding: 3px;
 }
@@ -60,13 +64,6 @@
 	}
 }
 
-html, body {
-	font-family: Arial, sans-serif;
-	line-height: 1.6;
-	margin: 20px;
-	cursor: text;
-}
-
 /* Main container */
 .navWrapOuter {
 	display: flex;
@@ -96,7 +93,6 @@ ul.navUL span {
 	width: max-content;
 	background: #d5d5d5;
 	color: #1c1c1c;
-	cursor: auto;
 	opacity: 0;
 	padding: 10px;
 	position: absolute;
