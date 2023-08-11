@@ -16,11 +16,13 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 export class AppSetting extends PluginSettingTab {
 	plugin: iCalObsidianSync;
 	calendarNames: string[]
+	updateCallback: () => void;
 
-	constructor(app: App, plugin: iCalObsidianSync) {
+	constructor(app: App, plugin: iCalObsidianSync, updateCallback: () => void) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.calendarNames = []
+		this.updateCallback = updateCallback;
 	}
 
 	updateCalendarDropdown(calendarNames: string[]){
@@ -42,6 +44,7 @@ export class AppSetting extends PluginSettingTab {
 				tz.onChange(async value => {
 					this.plugin.settings.tz = value;
 					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
 
@@ -54,10 +57,11 @@ export class AppSetting extends PluginSettingTab {
 		else new Setting(containerEl)
 			.setName("Calendar")
 			.addDropdown(dropdown => {
-				this.calendarNames.forEach((calendarName, i) => dropdown.addOption(`${i}`, calendarName))
+				this.calendarNames.forEach((calendarName, i) => dropdown.addOption(calendarName, calendarName))
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
 					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
 
@@ -70,6 +74,7 @@ export class AppSetting extends PluginSettingTab {
 				proxyServerURL.onChange(async value => {
 					this.plugin.settings.proxyEndpoint = value;
 					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
 	}

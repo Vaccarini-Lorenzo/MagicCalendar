@@ -2,7 +2,7 @@ import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Event from "../model/event";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
-import {SettingInterface} from "../plugin/AppSetting";
+import {SettingInterface} from "../plugin/appSetting";
 
 class ICloudController {
 	private _iCloud: iCloudService;

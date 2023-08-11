@@ -52,6 +52,8 @@ export interface iCloudCalendarEvent {
   url: string;
   isJunk: boolean;
   description: string;
+  location: string;
+  changeRecurring: string | null;
 }
 
 interface iCloudCalendarRecurrence {
@@ -217,6 +219,7 @@ export class iCloudCalendarService {
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {
         const stringifiedStartDate = iCloudMisc.stringifyDateArray(event.startDate);
         const stringifiedEndDate = iCloudMisc.stringifyDateArray(event.endDate);
+		console.log("DSID = ", this.dsid);
         return {
             "dsid": this.dsid,
             "startDate": stringifiedStartDate,

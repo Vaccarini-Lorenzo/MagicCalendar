@@ -5,7 +5,7 @@ import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
 import {nlpPlugin} from "./nlpExtension";
 import {PluginValue} from "@codemirror/view";
-import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./AppSetting";
+import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
@@ -105,9 +105,14 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	private async initSettings() {
-		this.appSetting = new AppSetting(this.app, this);
+		this.appSetting = new AppSetting(this.app, this, this.updateSettings);
 		await this.loadSettings();
 		this.addSettingTab(this.appSetting);
+	}
+
+	updateSettings(){
+		console.log(this.settings);
+		iCloudController.injectSettings(this.settings);
 	}
 }
 

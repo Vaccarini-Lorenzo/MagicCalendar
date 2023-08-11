@@ -48,12 +48,12 @@ class EventController{
 		normalizedMonthStartDate.setMonth(startDate.getMonth() + 1);
 		const normalizedMonthEndDate = endDate;
 		normalizedMonthEndDate.setMonth(endDate.getMonth() + 1);
+		const duration = this.computeDuration(normalizedMonthStartDate, normalizedMonthEndDate)
 		const arrayStartDate = iCloudMisc.getArrayDate(normalizedMonthStartDate);
 		//console.log("arrayStartDate");
 		//console.log(arrayStartDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(normalizedMonthEndDate);
 		const guid = this.generateNewUUID();
-		const duration = this.computeDuration(normalizedMonthStartDate, normalizedMonthEndDate)
 		const allDay = normalizedMonthStartDate.getTime() == normalizedMonthEndDate.getTime()
 
 		const value = {
@@ -61,6 +61,7 @@ class EventController{
 			duration,
 			description : "",
 			guid,
+			location: "",
 			startDate: arrayStartDate,
 			endDate: arrayEndDate,
 			localStartDate: arrayStartDate,
@@ -70,7 +71,9 @@ class EventController{
 			isJunk: false,
 			recurrenceMaster: false,
 			recurrenceException: false,
-			hasAttachments: false
+			hasAttachments: false,
+			icon: 0,
+			changeRecurring: null
 		} as iCloudCalendarEvent;
 
 		const newSentence =  new Sentence(filePath, sentenceValue);
@@ -112,7 +115,12 @@ class EventController{
 
 	private computeDuration(startDate: Date, endDate: Date) {
 		const diffMilli = endDate.getTime() - startDate.getTime();
-		const diffMins = diffMilli / (1000 * 60);
+		let diffMins = diffMilli / (1000 * 60);
+		if (diffMins == 0){
+			if (startDate.getHours() == 0 && startDate.getMinutes() == 0) return diffMins;
+			diffMins = 60;
+			endDate.setMinutes(startDate.getHours() + 1);
+		}
 		return diffMins;
 	}
 }

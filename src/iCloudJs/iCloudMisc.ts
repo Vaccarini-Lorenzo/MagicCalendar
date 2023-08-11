@@ -12,7 +12,7 @@ class ICloudMisc {
     }
 
     stringifyDateArray(dateArray: number[]){
-        return `${this.stringifyDateNumber(dateArray[0])}-${this.stringifyDateNumber(dateArray[1])}-${this.stringifyDateNumber(dateArray[2])}`;
+        return `${this.stringifyDateNumber(dateArray[1])}-${this.stringifyDateNumber(dateArray[2])}-${this.stringifyDateNumber(dateArray[3])}`;
     }
 
     private getDateComponents(date: Date): {[key:string]: number}{
