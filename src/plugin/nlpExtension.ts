@@ -61,7 +61,7 @@ class NLPPlugin implements PluginValue {
 					matchMetadata.startsFrom,
 					matchMetadata.endsTo,
 					Decoration.replace({
-						widget
+						widget,
 					})
 				);
 			});

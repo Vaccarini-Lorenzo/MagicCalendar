@@ -111,7 +111,7 @@ class NlpController {
 		const commonNouns = this.filterCommonNoun(customEntities);
 		const lemmaVerbs = this.filterLemmaVerbs(customVerbEntities);
 
-		console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
+		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
 		if (dates.length == 0) return null;
 
 		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
@@ -313,7 +313,6 @@ class NlpController {
 			type: ""
 		};
 		let properNameDistance = 1000;
-		console.log(properNames);
 		properNames.forEach(properName => {
 			const pIndex = text.toLowerCase().indexOf(properName.value);
 			let caseSensitiveFirstChar = text[pIndex];

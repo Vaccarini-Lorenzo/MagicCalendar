@@ -5,14 +5,22 @@ class SmartDateParser {
 	private _chrono: Chrono;
 
 	constructor() {
-
-		//TODO: Chrono doesn't parse correctly 10th of this month: implement refiner
-		//TODO: On saturday but saturday has already passed by -> last saturday
 		this._chrono = casual.clone();
+		this._chrono.parsers.push({
+			pattern: (context) => { return /\d{1,2}(th|nd|rd)/},
+			extract: (context, match) => {
+				let parsedDay = match[0].replaceAll("th", "");
+				parsedDay = parsedDay.replaceAll("nd", "");
+				parsedDay = parsedDay.replaceAll("rd", "");
+				return {
+					day: Number(parsedDay),
+					hour: 0
+				}
+			}
+		})
 	}
 
 	parse(text: string){
-		console.log(text);
 		return this._chrono.parse(text);
 	}
 
@@ -56,8 +64,6 @@ class SmartDateParser {
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
-		console.log(components);
-
 		// TODO: Double check this logic
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
 
@@ -77,15 +83,13 @@ class SmartDateParser {
 			endMin[0] ?? start.getMinutes(),
 		);
 
+		//if (start.getTime() == end.getTime()) end.setMinutes(end.getMinutes() + 30)
+
 		return {start, end};
 	}
 
 	getOnlyIfCertain(parsedComponent: ParsedComponents, component: Component){
-		if(component == "day"){
-			console.log("certain " + parsedComponent.isCertain(component));
-			console.log(parsedComponent.get(component));
-		}
-
+		// TODO: Filter out hours == now.getHours();
 		if (parsedComponent.isCertain(component))
 			return parsedComponent.get(component);
 		return null;

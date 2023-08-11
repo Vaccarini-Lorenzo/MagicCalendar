@@ -2,6 +2,7 @@ import Event from "../model/event";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
+import {iCloudController} from "../plugin/main";
 
 class EventController{
 	pathEventMap: Map<string, Event[]>;
@@ -43,19 +44,17 @@ class EventController{
 	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
 	// Minimal version
 	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
-		//console.log("Creating an event!");
-
-		//console.log("startDate");
-		//console.log(startDate);
-		//console.log("endDate");
-		//console.log(endDate);
-		const arrayStartDate = iCloudMisc.getArrayDate(startDate);
+		const normalizedMonthStartDate = startDate;
+		normalizedMonthStartDate.setMonth(startDate.getMonth() + 1);
+		const normalizedMonthEndDate = endDate;
+		normalizedMonthEndDate.setMonth(endDate.getMonth() + 1);
+		const arrayStartDate = iCloudMisc.getArrayDate(normalizedMonthStartDate);
 		//console.log("arrayStartDate");
 		//console.log(arrayStartDate);
-		const arrayEndDate = iCloudMisc.getArrayDate(endDate);
+		const arrayEndDate = iCloudMisc.getArrayDate(normalizedMonthEndDate);
 		const guid = this.generateNewUUID();
-		const duration = this.computeDuration(startDate, endDate)
-
+		const duration = this.computeDuration(normalizedMonthStartDate, normalizedMonthEndDate)
+		const allDay = normalizedMonthStartDate.getTime() == normalizedMonthEndDate.getTime()
 
 		const value = {
 			title: eventNoun,
@@ -67,7 +66,7 @@ class EventController{
 			localStartDate: arrayStartDate,
 			localEndDate: arrayEndDate,
 			extendedDetailsAreIncluded: true,
-			allDay: false,
+			allDay: allDay,
 			isJunk: false,
 			recurrenceMaster: false,
 			recurrenceException: false,
@@ -96,6 +95,7 @@ class EventController{
 			return;
 		}
 		event.processed = true;
+		iCloudController.pushEvent(event);
 	}
 
 	private generateNewUUID(): string {
@@ -112,7 +112,8 @@ class EventController{
 
 	private computeDuration(startDate: Date, endDate: Date) {
 		const diffMilli = endDate.getTime() - startDate.getTime();
-		return diffMilli / (1000 * 60);
+		const diffMins = diffMilli / (1000 * 60);
+		return diffMins;
 	}
 }
 

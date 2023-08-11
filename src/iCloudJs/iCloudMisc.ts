@@ -59,7 +59,6 @@ export default class iCloudMisc {
 			body: JSON.stringify(embeddedBody)
 		}
 		const fetchResponse = await fetch(newUrl, newInit);
-		console.log("Got response from the proxy!")
 		/*
 		Array.from(fetchResponse.headers.entries()).forEach(h => {
 			console.log(`h: ${h[0]} -> ${h[1]}`);

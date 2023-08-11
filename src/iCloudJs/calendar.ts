@@ -208,7 +208,7 @@ export class iCloudCalendarService {
             "Referer": "https://www.icloud.com/"
         }
         const body = this.getBody(newEvent, calendarCTag);
-
+		console.log(body);
         const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
 		return (requestStatus < 300 && requestStatus >= 200);
 

@@ -5,7 +5,7 @@ import SafeController from "./safeController";
 import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
 
-export default class PluginController {
+export default class ICloudController {
 	private _iCloud: iCloudService;
 	private _safeController: SafeController;
 	private _pendingTagsBuffer: number[];
@@ -51,45 +51,34 @@ export default class PluginController {
 		await this._iCloud.provideMfaCode(mfa);
 		await this._iCloud.awaitReady;
 		console.log(this._iCloud.status);
-		if (this._iCloud.status == iCloudServiceStatus.Ready){
-			//console.log("Fetching events!");
-			const calendarService = this._iCloud.getService("calendar");
-			const events = await calendarService.events();
-			//events.forEach((event) => console.log(JSON.stringify(event)));
-		}
 		return this._iCloud.status;
 	}
 
 	async preloadData() {
 		//console.log("preloading data: waiting for iCloud status");
 		await this._iCloud.awaitReady;
-		//console.log("preloading data: Done");
+		console.log("preloading data...");
 		//console.log("Fetching events!");
 		this._calendarService = this._iCloud.getService("calendar");
 		this._calendars = await this._calendarService.calendars();
 		this._dataLoadingComplete = true;
+		console.log("preloading data: Done");
+		console.log(this._calendars);
 	}
-
-
-	/*
-
-	// TODO: REFACTOR
 
 	async pushEvent(event: Event): Promise<boolean>{
 		console.log("Pushing event!");
-		let duration = event.endDate.getTime() - event.startDate.getTime();
 		// TODO
 		// Implement, all day
-		let calendar: iCloudCalendarCollection;
-		if (event.calendar == undefined)
-			calendar = this._calendars.first();
-		else
-			calendar = this._calendars.filter(calendar => calendar.guid == event.calendar)[0];
-		if (duration == 0) duration = 60
-		const newEvent = this._calendarService.createNewEvent("Europe/Rome", event.subject, event.getDescription(), duration, calendar.guid, event.startDate, event.endDate);
-		return await this._calendarService.postEvent(newEvent, calendar.ctag);
+		const calendar = this._calendars.first();
+		event.injectICloudComponents({
+			tz: "Europe/Rome",
+			pGuid: calendar.guid
+		})
+		const postStatus = await this._calendarService.postEvent(event.value, calendar.ctag);
+		console.log(postStatus);
+		return postStatus;
 	}
-	 */
 
 	/*
 	fetchTags(app: App){

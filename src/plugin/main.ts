@@ -1,6 +1,6 @@
 import {Plugin} from 'obsidian';
-import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
-import PluginController from "../controllers/pluginController";
+import {iCloudServiceStatus} from "../iCloudJs";
+import ICloudController from "../controllers/iCloudController";
 import SafeController from "../controllers/safeController";
 import {iCloudStatusModal} from "./modal";
 import nplController from "../controllers/nlpController";
@@ -17,33 +17,34 @@ const DEFAULT_SETTINGS: Settings = {
 
 // TODO: Put these fields back in the class and pass a reference in case the method is called from outside the class
 const safeController = new SafeController();
-const pluginController = new PluginController();
+export const iCloudController = new ICloudController();
 let statusModal: iCloudStatusModal;
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
 	iCloudStatus: iCloudServiceStatus;
 	settings: Settings;
-	iCloud: iCloudService;
-	
+
 	async onload() {
 		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		const basePath = (this.app.vault.adapter as any).basePath
 		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
 
+		console.log("Path = ", pluginPath);
+
 		nplController.init(pluginPath);
 		this.registerEditorExtension(nlpPlugin)
 
 		safeController.injectPath(pluginPath);
-		pluginController.injectPath(pluginPath);
-		pluginController.injectSafeController(safeController);
-		pluginController.injectApp(this.app);
+		iCloudController.injectPath(pluginPath);
+		iCloudController.injectSafeController(safeController);
+		iCloudController.injectApp(this.app);
 
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this.syncCallback, this);
 
 		if(safeController.checkSafe()){
 			console.log("checking safe");
-			//const iCloudStatus = await pluginController.tryAuthentication("", "");
-			//this.updateStatus(iCloudStatus);
+			const iCloudStatus = await iCloudController.tryAuthentication("", "");
+			this.updateStatus(iCloudStatus);
 		}
 
 		this.registerEvents();
@@ -69,12 +70,12 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 	
 	async submitCallback(username: string, pw: string, ref: any){
-		const status = await pluginController.tryAuthentication(username, pw);
+		const status = await iCloudController.tryAuthentication(username, pw);
 		ref.updateStatus(status);
 	}
 
 	async mfaCallback(code: string, ref: any){
-		const status = await pluginController.MFACallback(code);
+		const status = await iCloudController.MFACallback(code);
 		ref.updateStatus(status);
 	}
 
