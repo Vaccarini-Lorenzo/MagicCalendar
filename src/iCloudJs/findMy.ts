@@ -1,5 +1,5 @@
 import iCloudService from "./index";
-import Misc from "./misc";
+import iCloudMisc from "./iCloudMisc";
 
 interface iCloudFindMyDeviceInfo {
     msg?: {
@@ -219,7 +219,7 @@ export class iCloudFindMyService {
     }
     devices: Map<string, iCloudFindMyDevice> = new Map();
     async refresh(selectedDevice = "all") {
-        const request = await Misc.wrapRequest(
+        const request = await iCloudMisc.wrapRequest(
             this.serviceUri + "/fmipservice/client/web/refreshClient",
             {
                 headers: this.service.authStore.getHeaders(),

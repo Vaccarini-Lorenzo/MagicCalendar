@@ -2,7 +2,7 @@ import {readFileSync, writeFile, writeFileSync} from "fs";
 import crypto from "crypto";
 import dotenv from "dotenv"
 
-export default class SafeController {
+class SafeController {
 	path: string;
 	_username: { encryptedData: string };
 	_pw: { encryptedData: string };
@@ -76,3 +76,6 @@ export default class SafeController {
 		return decrypted.toString();
 	}
 }
+
+const safeController = new SafeController();
+export default safeController;

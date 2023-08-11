@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import iCloudService from "./index";
-import Misc from "./misc";
+import iCloudMisc from "./iCloudMisc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -52,6 +52,8 @@ export interface iCloudCalendarEvent {
   url: string;
   isJunk: boolean;
   description: string;
+  location: string;
+  changeRecurring: string | null;
 }
 
 interface iCloudCalendarRecurrence {
@@ -163,7 +165,7 @@ export class iCloudCalendarService {
              */
         }
 
-        const response = await Misc.wrapRequest(url, requestParameters);
+        const response = await iCloudMisc.wrapRequest(url, requestParameters);
 		if (onlyResponseStatus) return response.status;
         return await response.json() as T;
     }
@@ -208,15 +210,16 @@ export class iCloudCalendarService {
             "Referer": "https://www.icloud.com/"
         }
         const body = this.getBody(newEvent, calendarCTag);
-
+		console.log(body);
         const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
 		return (requestStatus < 300 && requestStatus >= 200);
 
     }
 
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {
-        const stringifiedStartDate = Misc.stringifyDateArray(event.startDate);
-        const stringifiedEndDate = Misc.stringifyDateArray(event.endDate);
+        const stringifiedStartDate = iCloudMisc.stringifyDateArray(event.startDate);
+        const stringifiedEndDate = iCloudMisc.stringifyDateArray(event.endDate);
+		console.log("DSID = ", this.dsid);
         return {
             "dsid": this.dsid,
             "startDate": stringifiedStartDate,
@@ -240,44 +243,6 @@ export class iCloudCalendarService {
                 alarmRange: 60
             }
         }
-    }
-
-    // Minimal version
-    createNewEvent(tz: string, title: string, description:string, duration: number, pGuid: string, startDate: Date, endDate: Date): iCloudCalendarEvent {
-        const arrayStartDate = Misc.getArrayDate(startDate);
-        const arrayEndDate = Misc.getArrayDate(endDate);
-        const guid = this.generateNewUUID();
-
-        return {
-            tz,
-            title,
-            duration,
-			description,
-            pGuid,
-            guid,
-            startDate: arrayStartDate,
-            endDate: arrayEndDate,
-            localStartDate: arrayStartDate,
-            localEndDate: arrayEndDate,
-            extendedDetailsAreIncluded: true,
-            allDay: false,
-            isJunk: false,
-            recurrenceMaster: false,
-            recurrenceException: false,
-            hasAttachments: false
-        } as iCloudCalendarEvent;
-    }
-
-    private generateNewUUID(): string {
-        const maxIntEightNibbles = 4294967295;
-        const maxIntFourNibbles = 65535;
-        const maxIntTwelveNibbles = 281474976710655;
-        const firstUUID = Misc.getRandomHex(maxIntEightNibbles);
-        const secondUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const thirdUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const fourthUUID = Misc.getRandomHex(maxIntFourNibbles);
-        const lastUUID = Misc.getRandomHex(maxIntTwelveNibbles);
-        return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
     }
 
 }
