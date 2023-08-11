@@ -67,7 +67,6 @@ class NLPPlugin implements PluginValue {
 			});
 			return true;
 		})
-
 		return builder.finish();
 	}
 

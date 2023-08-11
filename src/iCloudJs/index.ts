@@ -13,6 +13,7 @@ import { iCloudUbiquityService } from "./ubiquity";
 import { AccountInfo } from "./types";
 import iCloudMisc from "./iCloudMisc";
 import SafeController from "../controllers/safeController";
+import safeController from "../controllers/safeController";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -161,9 +162,7 @@ export default class iCloudService extends EventEmitter {
     ICDRSDisabled?: boolean;
 
     accountInfo?: AccountInfo;
-
-	_safeController: SafeController;
-
+	
     /**
      * A promise that can be awaited that resolves when the iCloudService is ready.
      * Will reject if an error occurs during authentication.
@@ -173,10 +172,9 @@ export default class iCloudService extends EventEmitter {
         this.on(iCloudServiceStatus.Error, reject);
     });
 
-    constructor(options: iCloudServiceSetupOptions, safeController: SafeController) {
+    constructor(options: iCloudServiceSetupOptions,) {
         super();
         this.options = options;
-		this._safeController = safeController;
         if (!this.options.dataDirectory) this.options.dataDirectory = path.join(os.homedir(), ".icloud");
         this.authStore = new iCloudAuthenticationStore(options);
     }
@@ -200,9 +198,9 @@ export default class iCloudService extends EventEmitter {
 
         if (!username) {
             try {
-                const saved = this._safeController.checkSafe();
+                const saved = safeController.checkSafe();
                 if (!saved) throw new Error("Username was not provided and could not be found in keychain");
-				const credentials = this._safeController.getCredentials();
+				const credentials = safeController.getCredentials();
                 username = credentials.username;
 				password = credentials.password;
             } catch (e) {
@@ -321,7 +319,7 @@ export default class iCloudService extends EventEmitter {
 
                     this._setState(iCloudServiceStatus.Ready);
                     try {
-                        if (this.options.saveCredentials) this._safeController.storeCredentials(this.options.username.toString(), this.options.password.toString());
+                        if (this.options.saveCredentials) safeController.storeCredentials(this.options.username.toString(), this.options.password.toString());
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);
                     }

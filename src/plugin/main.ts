@@ -1,51 +1,33 @@
 import {Plugin} from 'obsidian';
 import {iCloudServiceStatus} from "../iCloudJs";
-import ICloudController from "../controllers/iCloudController";
-import SafeController from "../controllers/safeController";
 import {iCloudStatusModal} from "./modal";
 import nplController from "../controllers/nlpController";
+import nlpController from "../controllers/nlpController";
 import {nlpPlugin} from "./nlpExtension";
 import {PluginValue} from "@codemirror/view";
+import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./AppSetting";
+import iCloudMisc from "../iCloudJs/iCloudMisc";
+import iCloudController from "../controllers/iCloudController";
+import safeController from "../controllers/safeController";
 
-interface Settings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: Settings = {
-	mySetting: 'default'
-}
-
-// TODO: Put these fields back in the class and pass a reference in case the method is called from outside the class
-const safeController = new SafeController();
-export const iCloudController = new ICloudController();
 let statusModal: iCloudStatusModal;
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
 	iCloudStatus: iCloudServiceStatus;
-	settings: Settings;
+	appSetting: AppSetting;
+	settings: SettingInterface;
 
 	async onload() {
-		this.iCloudStatus = iCloudServiceStatus.NotStarted;
-		const basePath = (this.app.vault.adapter as any).basePath
-		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
 
-		console.log("Path = ", pluginPath);
+		await this.initSettings();
 
-		nplController.init(pluginPath);
+		this.injectDependencies();
+
+		this.initState();
+
 		this.registerEditorExtension(nlpPlugin)
 
-		safeController.injectPath(pluginPath);
-		iCloudController.injectPath(pluginPath);
-		iCloudController.injectSafeController(safeController);
-		iCloudController.injectApp(this.app);
-
-		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this.syncCallback, this);
-
-		if(safeController.checkSafe()){
-			console.log("checking safe");
-			const iCloudStatus = await iCloudController.tryAuthentication("", "");
-			this.updateStatus(iCloudStatus);
-		}
+		await this.checkLogin();
 
 		this.registerEvents();
 
@@ -67,6 +49,11 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	updateStatus(status: iCloudServiceStatus){
 		this.iCloudStatus = status;
 		statusModal.updateModal(status);
+		if (this.iCloudStatus == iCloudServiceStatus.Trusted){
+			iCloudController.preloadData().then(() => {
+				this.appSetting.updateCalendarDropdown(iCloudController.getCalendarNames());
+			});
+		}
 	}
 	
 	async submitCallback(username: string, pw: string, ref: any){
@@ -79,11 +66,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		ref.updateStatus(status);
 	}
 
-	async syncCallback(ref: any){
-		//await pluginController.syncCallback("test");
-	}
-
-
 	registerEvents(){
 		this.addCommand({
 			id: "display-modal",
@@ -95,6 +77,38 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 
+	private injectDependencies() {
+		const basePath = (this.app.vault.adapter as any).basePath
+		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
+		nlpController.injectPath(pluginPath)
+		safeController.injectPath(pluginPath);
+		iCloudController.injectPath(pluginPath);
+		iCloudController.injectSettings(this.settings);
+		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
+	}
+
+	private initState() {
+
+		// TODO: Maybe ping the proxy server to avoid cold starts?
+
+		this.iCloudStatus = iCloudServiceStatus.NotStarted;
+		nplController.init();
+		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
+	}
+
+	private async checkLogin() {
+		if(safeController.checkSafe()){
+			console.log("checking safe");
+			const iCloudStatus = await iCloudController.tryAuthentication("", "");
+			this.updateStatus(iCloudStatus);
+		}
+	}
+
+	private async initSettings() {
+		this.appSetting = new AppSetting(this.app, this);
+		await this.loadSettings();
+		this.addSettingTab(this.appSetting);
+	}
 }
 
 

@@ -45,7 +45,6 @@ app.post("/proxy", async (req, res) => {
 		options["body"] = JSON.stringify(body)
 	}
 
-	let testUrl = `https://leeward-scalloped-aphid.glitch.me/test`
 	let fetchRes = await fetch(url, options);
 	res.status(fetchRes.status);
 	fetchRes.headers.forEach((value, key) => {
@@ -69,7 +68,7 @@ app.post("/proxy", async (req, res) => {
 		}
 		console.log(`h: ${key} -> ${value}`);
 	})
-	console.log(`request processed with status:${fetchRes.status}\n\n\n\n\n\n`);
+	console.log(`request processed with status:${fetchRes.status}\n\n`);
 	try{
 		let json = await fetchRes.json();
 		res.json(json);

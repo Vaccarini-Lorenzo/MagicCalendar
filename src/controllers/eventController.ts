@@ -2,7 +2,7 @@ import Event from "../model/event";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
-import {iCloudController} from "../plugin/main";
+import iCloudController from "./iCloudController";
 
 class EventController{
 	pathEventMap: Map<string, Event[]>;

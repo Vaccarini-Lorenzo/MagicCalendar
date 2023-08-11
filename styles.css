@@ -64,15 +64,6 @@ html, body {
 	}
 }
 
-/* Main container */
-.navWrapOuter {
-	display: flex;
-}
-
-.navWrapInner {
-	display: flex;
-}
-
 /* Navigation list */
 ul.navUL {
 	margin: 0;
@@ -86,8 +77,6 @@ ul.navUL span {
 	text-decoration: none;
 }
 
-/* Bubble styles */
-/* CHANGE BACKGROUND HERE */
 .hoverBubble {
 	font-size: 70%;
 	width: max-content;
@@ -114,7 +103,7 @@ ul.navUL span {
 
 .hoverBubble button {
 	display: block;
-	margin: 0 auto; /* Centers the button horizontally */
+	margin: 0 auto;
 	text-align: center;
 }
 
@@ -126,7 +115,6 @@ ul.navUL span {
 }
 
 .hoverBubble:after,
-	/* Change border top color here */
 .bubblePosition:after {
 	border: 9px solid transparent;
 	border-top-color: #d5d5d5;

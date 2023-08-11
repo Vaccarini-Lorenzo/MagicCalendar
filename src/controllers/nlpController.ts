@@ -21,8 +21,11 @@ class NlpController {
 		this._nlp = wink( model );
 	}
 
-	init(pluginPath: string){
+	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
+	}
+
+	init(){
 		this.loadPatterns();
 		this._nlp.learnCustomEntities(this._customPatterns);
 		this._ready = true;
