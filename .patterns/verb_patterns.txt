@@ -1,7 +1,4 @@
 [
-"be",
-"have",
-"do",
 "can",
 "could",
 "may",
@@ -11,7 +8,6 @@
 "see",
 "start",
 "watch",
-"will",
 "would",
 "must",
 "ought",

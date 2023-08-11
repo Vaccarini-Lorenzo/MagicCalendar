@@ -57,8 +57,8 @@ class NlpController {
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
+		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
 		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
-		this._customPatterns.push({name: "intentionalVerb", patterns: ["[VERB] [ADP] [|DET] [NOUN]"]});
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._customPatterns.push({name: "commonNouns", patterns: ["NOUN"]})
 	}
