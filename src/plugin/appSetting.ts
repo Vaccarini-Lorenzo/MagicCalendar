@@ -15,14 +15,14 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 
 export class AppSetting extends PluginSettingTab {
 	plugin: iCalObsidianSync;
+	retryLogin: boolean;
 	calendarNames: string[]
-	updateCallback: () => void;
 
-	constructor(app: App, plugin: iCalObsidianSync, updateCallback: () => void) {
+	constructor(app: App, plugin: iCalObsidianSync) {
 		super(app, plugin);
 		this.plugin = plugin;
-		this.calendarNames = []
-		this.updateCallback = updateCallback;
+		this.calendarNames = [];
+		this.retryLogin = false;
 	}
 
 	updateCalendarDropdown(calendarNames: string[]){
@@ -43,8 +43,6 @@ export class AppSetting extends PluginSettingTab {
 				tz.setValue((this.plugin.settings.tz));
 				tz.onChange(async value => {
 					this.plugin.settings.tz = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
 				})
 			})
 
@@ -60,8 +58,6 @@ export class AppSetting extends PluginSettingTab {
 				this.calendarNames.forEach((calendarName, i) => dropdown.addOption(calendarName, calendarName))
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
 				})
 			})
 
@@ -73,9 +69,20 @@ export class AppSetting extends PluginSettingTab {
 				proxyServerURL.setValue((this.plugin.settings.proxyEndpoint));
 				proxyServerURL.onChange(async value => {
 					this.plugin.settings.proxyEndpoint = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
+					this.retryLogin = true;
 				})
 			})
+
+		new Setting(containerEl)
+			.setName("Submit changes")
+			.addButton(value => {
+				value.onClick(async () => {
+					this.plugin.updateSettings();
+					await this.plugin.saveSettings();
+
+					await this.plugin.checkLogin();
+				})
+			})
+
 	}
 }

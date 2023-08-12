@@ -3,6 +3,7 @@ import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
 import iCloudController from "./iCloudController";
+import {Notice} from "obsidian";
 
 class EventController{
 	pathEventMap: Map<string, Event[]>;
@@ -101,7 +102,10 @@ class EventController{
 		this.uuidEventMap.set(this.currentEvent.value.guid, this.currentEvent);
 
 		this.currentEvent.processed = true;
-		iCloudController.pushEvent(this.currentEvent);
+		iCloudController.pushEvent(this.currentEvent).then((status => {
+			if (status) new Notice("📅 The event has been synchronized!")
+			else new Notice("🤷 There has been an error synchronizing the event...")
+		}));
 	}
 
 	private generateNewUUID(): string {

@@ -16,6 +16,7 @@ import {Sentence} from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
 import {Misc} from "../misc/misc";
+import {App, Notice, Workspace} from "obsidian";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -34,6 +35,7 @@ class NLPPlugin implements PluginValue {
 	}
 
 	buildDecorations(view: EditorView): DecorationSet {
+		// TODO: Do not use global app variable
 		const activeFile = app.workspace.getActiveFile();
 		const filePath = activeFile == undefined ? "error": activeFile.path;
 		const builder = new RangeSetBuilder<Decoration>();

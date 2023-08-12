@@ -96,7 +96,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
 	}
 
-	private async checkLogin() {
+	async checkLogin() {
 		if(safeController.checkSafe()){
 			console.log("checking safe");
 			const iCloudStatus = await iCloudController.tryAuthentication("", "");
@@ -105,7 +105,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	private async initSettings() {
-		this.appSetting = new AppSetting(this.app, this, this.updateSettings);
+		this.appSetting = new AppSetting(this.app, this);
 		await this.loadSettings();
 		this.addSettingTab(this.appSetting);
 	}
