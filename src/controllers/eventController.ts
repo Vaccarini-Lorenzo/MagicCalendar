@@ -7,6 +7,7 @@ import iCloudController from "./iCloudController";
 class EventController{
 	pathEventMap: Map<string, Event[]>;
 	uuidEventMap: Map<string, Event>;
+	currentEvent : Event;
 
 	constructor() {
 		this.pathEventMap = new Map<string, Event[]>();
@@ -24,24 +25,29 @@ class EventController{
 		return filteredEvents[0];
 	}
 
-	// If the first check fails (event == undefined), check the entities (dates, eventNoun)
 	checkEntities(sentence: Sentence): Event | null {
-		//console.log("[semantic check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
-		const filteredEvents = events.filter(event =>
-			sentence.eventNoun == event.sentence.eventNoun &&
-			sentence.startDate.getTime() == event.sentence.startDate.getTime() &&
-			sentence.endDate.getTime() == event.sentence.endDate.getTime());
+		// NodeJS months start from 0 (0: jan, 11: dec) and iCal months start from 1 (1:jan, 12: dec)
+		// When saving the event the month variable is increased by one for simplicity
+		// In the entity check it's needed to take into account this difference
+		const filteredEvents = events.filter(event => {
+			const iCalParsedStartDate = sentence.startDate;
+			iCalParsedStartDate.setMonth(sentence.startDate.getMonth() + 1);
+			const iCalParsedEndDate = sentence.endDate;
+			iCalParsedEndDate.setMonth(sentence.endDate.getMonth() + 1);
+			return sentence.eventNoun == event.sentence.eventNoun &&
+				iCalParsedStartDate.getTime() == event.sentence.startDate.getTime() &&
+				iCalParsedEndDate.getTime() == event.sentence.endDate.getTime()
+		});
 		if (filteredEvents.length == 0) return null;
-		//console.log("[semantic check]: Match found!");
 		// Update the sentence associated to the event (it has been modified)
 		filteredEvents[0].sentence.value = sentence.value;
-		//console.log("[semantic check]: Updating associated sentence value");
 		return filteredEvents[0];
 	}
 
 	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
+	// TODO: FIX - Aux structure with one single tmp event. The event map is updated ONLY when an event is processed or ignored
 	// Minimal version
 	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
 		const normalizedMonthStartDate = startDate;
@@ -78,27 +84,24 @@ class EventController{
 
 		const newSentence =  new Sentence(filePath, sentenceValue);
 		newSentence.injectEntityFields(startDate, endDate, eventNoun);
-		const fileEvents = this.pathEventMap.get(filePath);
 		const newEvent = new Event(value, newSentence);
-		if (fileEvents == undefined){
-			this.pathEventMap.set(filePath, [newEvent])
-		} else {
-			fileEvents.push(newEvent);
-			this.pathEventMap.set(filePath, fileEvents)
-		}
-		this.uuidEventMap.set(newEvent.value.guid, newEvent);
+		this.currentEvent = newEvent;
 		return newEvent;
 	}
 
-	processEvent(UUID: string){
+	processEvent(filePath: string){
 		console.log("Processing event!");
-		const event = this.uuidEventMap.get(UUID);
-		if(event == undefined){
-			console.log("Error retrieving the event from UUID");
-			return;
+		const fileEvents = this.pathEventMap.get(filePath);
+		if (fileEvents == undefined){
+			this.pathEventMap.set(filePath, [this.currentEvent])
+		} else {
+			fileEvents.push(this.currentEvent);
+			this.pathEventMap.set(filePath, fileEvents)
 		}
-		event.processed = true;
-		iCloudController.pushEvent(event);
+		this.uuidEventMap.set(this.currentEvent.value.guid, this.currentEvent);
+
+		this.currentEvent.processed = true;
+		iCloudController.pushEvent(this.currentEvent);
 	}
 
 	private generateNewUUID(): string {

@@ -48,7 +48,7 @@ class NLPPlugin implements PluginValue {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
 				const widget = this.getWidget(matches.selection, match, matchMetadata, () => {
-					eventController.processEvent(matches.event.value.guid);
+					eventController.processEvent(filePath);
 					this.widgetFirstLoad = true;
 					view.setState(view.state);
 				}, eventDetailString);
