@@ -16,12 +16,10 @@ class EventController{
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	matchSentenceValue(sentence: Sentence): Event | null {
-		console.log("[syntax check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
-		console.log("[syntax check]: Match found!");
 		return filteredEvents[0];
 	}
 
@@ -29,15 +27,12 @@ class EventController{
 	// TODO: Fix different event noun between sentence found and event saved
 	// If the first check fails (event == undefined), check the entities (dates, eventNoun)
 	checkEntities(sentence: Sentence): Event | null {
-		console.log("[semantic check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		// NodeJS months start from 0 (0: jan, 11: dec) and iCal months start from 1 (1:jan, 12: dec)
 		// When saving the event the month variable is increased by one for simplicity
 		// In the entity check it's needed to take into account this difference
 		const filteredEvents = events.filter(event => {
-			console.log(event);
-			console.log("sentence", sentence);
 			const iCalParsedStartDate = sentence.startDate;
 			iCalParsedStartDate.setMonth(sentence.startDate.getMonth() + 1);
 			const iCalParsedEndDate = sentence.endDate;
@@ -47,10 +42,8 @@ class EventController{
 				iCalParsedEndDate.getTime() == event.sentence.endDate.getTime()
 		});
 		if (filteredEvents.length == 0) return null;
-		console.log("[semantic check]: Match found!");
 		// Update the sentence associated to the event (it has been modified)
 		filteredEvents[0].sentence.value = sentence.value;
-		console.log("[semantic check]: Updating associated sentence value");
 		return filteredEvents[0];
 	}
 

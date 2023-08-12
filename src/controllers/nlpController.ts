@@ -1,4 +1,4 @@
-import wink, {CustomEntities, Detail} from "wink-nlp";
+import wink, {CustomEntities, Detail, Entities, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -7,8 +7,6 @@ import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
 import Event from "../model/event";
-import {title} from "process";
-import {it} from "node:test";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -33,12 +31,9 @@ class NlpController {
 
 	loadPatterns(){
 		console.log("loading patterns...");
-		const verbPatternPath = `${this._pluginPath}/.patterns/verb_patterns.txt`
 		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
 		const properNamePatternPath = `${this._pluginPath}/.patterns/proper_name_patterns.txt`
 
-		const verbData = readFileSync(verbPatternPath);
-		const parsedVerbs = JSON.parse(verbData.toString());
 		const nounData = readFileSync(nounPatternPath);
 		const parsedNouns = JSON.parse(nounData.toString());
 		const properNameData = readFileSync(properNamePatternPath);
@@ -58,9 +53,7 @@ class NlpController {
 		)
 		this._customPatterns.push({name: "properName", patterns: parsedProperNames});
 		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
-		this._customPatterns.push({name: "verb", patterns: parsedVerbs});
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
-		this._customPatterns.push({name: "commonNouns", patterns: ["NOUN"]})
 	}
 
 
@@ -101,49 +94,40 @@ class NlpController {
 
 		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
 		const customEntities = auxiliaryStructures.customEntities;
-		const customVerbEntities = auxiliaryStructures.customVerbEntities;
 		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
-		const lemmaMap = auxiliaryStructures.lemmaMap;
+		const pos = auxiliaryStructures.pos;
 
 		// Filter customEntities (or customVerbEntities) to find the entity of the right type
 		// The following structures are [{value, type}]
 		const dates = this.filterDates(customEntities);
 		const properNames = this.filterProperNames(customEntities);
 		const eventNouns = this.filterEventNoun(customEntities);
-		// TODO: commonNouns
-		const commonNouns = this.filterCommonNoun(customEntities);
-		const lemmaVerbs = this.filterLemmaVerbs(customVerbEntities);
 
 		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
 		if (dates.length == 0) return null;
 
 		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
-		let selectedVerb: {value, index, type}
-
-		const selectedIntentionalVerb: {value, index, type, noun} = this.findIntentionalVerb(auxiliaryStructures.customEntities, caseInsensitiveText, selectedDateIndex);
-		if (selectedIntentionalVerb.index == -1){
-			// Find the nearest verb
-			selectedVerb = this.findVerb(caseInsensitiveText, lemmaVerbs, lemmaMap, selectedDateIndex)
-			if (selectedVerb.index == -1) return;
+		let selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedDateIndex );
+		if (selectedEventNoun.index == -1){
+			const selectedIntentionalVerb: {value, index, type, noun} = this.findIntentionalVerb(auxiliaryStructures.customEntities, caseInsensitiveText, selectedDateIndex);
+			selectedEventNoun = {
+				value: selectedIntentionalVerb.noun,
+				index: auxiliaryStructures.caseInsensitiveText.indexOf(selectedIntentionalVerb.noun),
+				type: "eventNoun"
+			};
 		}
 
-		// Find the nearest event related noun
-		let selectedEventNoun = {
-			value: selectedIntentionalVerb.noun,
-			index: auxiliaryStructures.caseInsensitiveText.indexOf(selectedIntentionalVerb.noun),
-			type: "eventNoun"
-		};
-
-		if (selectedIntentionalVerb.index == -1) selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedVerb.index );
-
 		if (selectedEventNoun.index == -1) return;
+
+		// Find possible common noun associated to the event noun (board meeting)
+		const adjacentCommonNoun = this.findAdjacentCommonNoun(auxiliaryStructures.tokens, auxiliaryStructures.pos, selectedEventNoun, selectedEventNoun.index);
 
 		// Find possible proper names (John)
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun.index);
 
 		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
-		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, selectedProperName);
+		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, adjacentCommonNoun, selectedProperName);
 		const startDateEndDate = this.parseDates(cleanDates);
 
 		if (startDateEndDate == undefined) return;
@@ -151,7 +135,9 @@ class NlpController {
 		// Semantic check
 		if(matchedEvent == null){
 			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
-			let eventTitle = selectedEventNoun.value;
+			let eventTitle = "";
+			if (adjacentCommonNoun != null) eventTitle += `${adjacentCommonNoun.value} `
+			eventTitle += selectedEventNoun.value;
 			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
 			sentence.eventNoun = eventTitle;
 			matchedEvent = eventController.checkEntities(sentence);
@@ -186,25 +172,15 @@ class NlpController {
 	********************************************************************************************************************************
  	*/
 
-	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, customVerbEntities: CustomEntities, lemmaMap: Map<string, string>} {
+	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, tokens: Tokens, pos: PartOfSpeech[]} {
 		const caseInsensitiveText = sentence.value.toLowerCase();
-		//const singularizedText = this.singularize(sentence.value);
-		//console.log(singularizedText);
-		const its = this._nlp.its;
 		const doc = this._nlp.readDoc(caseInsensitiveText);
 		// "I'll have a meeting" -> "I", "'ll", "have" ...
-		const tokens = doc.tokens().out(its.value);
 		const customEntities = doc.customEntities();
+		const tokens = doc.tokens();
+		const pos = tokens.out(this._nlp.its.pos);
 		// "I'll have a meeting" -> "I", "will", "have" ...
-		const lemmas = doc.tokens().out(its.lemma);
-		// Associates lemma to token
-		const lemmaMap = this.generateLemmaMap(tokens, lemmas);
-		// "I'll have a meeting" -> ""I will have a meeting"
-		const lemmaText = doc.tokens().out(its.lemma).toString();
-		const lemmaDoc = this._nlp.readDoc(lemmaText);
-		// Verbs in pattern are in lemma format
-		const customVerbEntities = lemmaDoc.customEntities();
-		return {caseInsensitiveText, customEntities, customVerbEntities, lemmaMap};
+		return {caseInsensitiveText, customEntities, tokens, pos};
 	}
 
 	private generateLemmaMap(tokens: string[], lemmas: string[]){
@@ -234,9 +210,8 @@ class NlpController {
 		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "eventNoun")) as Detail[];
 	}
 
-	private filterCommonNoun(customEntities: CustomEntities): Detail[] {
-		const its = this._nlp.its;
-		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "commonNoun")) as Detail[];
+	private filterPosCommonNoun(pos: PartOfSpeech[]): PartOfSpeech[] {
+		return pos.filter(pos => ((pos == "NOUN")));
 	}
 
 	private filterLemmaVerbs(customVerbEntities: CustomEntities): Detail[] {
@@ -312,6 +287,25 @@ class NlpController {
 		return selectedEventNoun;
 	}
 
+	private findAdjacentCommonNoun(tokens, pos, eventNoun, eventNounIndex) : {value: string, index: number, type: string} | null {
+		const selectedAdjCommonNoun = {
+			value: "",
+			index: -1,
+			type: ""
+		};
+		const stringTokens = tokens.out();
+		const eventNounTokenIndex = stringTokens.indexOf(eventNoun.value);
+		//console.log("eventNoun index ", eventNounWordIndex);
+		if (eventNounTokenIndex <= 0) return null;
+		const adjWord = stringTokens[eventNounTokenIndex - 1];
+		//console.log("adj word ", adjWord);
+		if (pos[eventNounTokenIndex - 1] != "NOUN") return null;
+		selectedAdjCommonNoun.value = adjWord;
+		selectedAdjCommonNoun.index = eventNounIndex - (adjWord.length + 1);
+		selectedAdjCommonNoun.type = "commonNoun";
+		return selectedAdjCommonNoun;
+	}
+
 	private findProperName(text, properNames, selectedEventNoun) : {value: string, index: number, type: string} | null {
 		const selectedProperName = {
 			value: "",
@@ -341,7 +335,7 @@ class NlpController {
 		return selectedProperName.index == -1 ? null : selectedProperName;
 	}
 
-	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, selectedProperName: {value, index, type}): {value, index, type}[] {
+	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, adjacentCommonNoun: {value, index, type},  selectedProperName: {value, index, type}): {value, index, type}[] {
 		const selection = []
 		dates.forEach(date => {
 			const dateIndex = text.indexOf(date.value);
@@ -350,6 +344,7 @@ class NlpController {
 		//selection.push(selectedVerb);    ---- Not needed since we don't need to highlight the verb too
 		if (selectedEventNoun!= null) selection.push(selectedEventNoun);
 		if (selectedProperName!= null) selection.push(selectedProperName);
+		if (adjacentCommonNoun != null) selection.push(adjacentCommonNoun);
 		// Order by index (builder.add needs to be called with increasing values)
 		const sorted = selection.sort((a, b) => a.index - b.index);
 		return sorted;
@@ -418,12 +413,9 @@ class NlpController {
 	testPOS(sentence: Sentence) {
 		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
 		const customEntities = auxiliaryStructures.customEntities;
-		const customVerbEntities = auxiliaryStructures.customVerbEntities;
 		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
-		const lemmaMap = auxiliaryStructures.lemmaMap;
 		let doc1 = this._nlp.readDoc(sentence.value);
 		console.log(doc1.tokens().out(this._nlp.its.pos));
-		console.log(customEntities.out(this._nlp.its.detail));
 	}
 }
 
