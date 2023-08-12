@@ -16,16 +16,15 @@ class EventController{
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	matchSentenceValue(sentence: Sentence): Event | null {
+		//console.log("[syntax check]: "+ sentence);
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
+		//console.log("[syntax check]: Match found!");
 		return filteredEvents[0];
 	}
 
-
-	// TODO: Fix different event noun between sentence found and event saved
-	// If the first check fails (event == undefined), check the entities (dates, eventNoun)
 	checkEntities(sentence: Sentence): Event | null {
 		const events = this.pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
