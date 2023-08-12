@@ -151,6 +151,9 @@ class NlpController {
 		// Semantic check
 		if(matchedEvent == null){
 			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
+			let eventTitle = selectedEventNoun.value;
+			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
+			sentence.eventNoun = eventTitle;
 			matchedEvent = eventController.checkEntities(sentence);
 		}
 		// Semantic check successful
@@ -158,9 +161,9 @@ class NlpController {
 
 		// Semantic check unsuccessful -> new event
 		if (matchedEvent == null){
-			let eventTitle = selectedEventNoun.value;
-			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
-			const event = eventController.createNewEvent(sentence.filePath, sentence.value, eventTitle, startDateEndDate.start, startDateEndDate.end);
+			//let eventTitle = selectedEventNoun.value;
+			//if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
+			const event = eventController.createNewEvent(sentence.filePath, sentence.value, sentence.eventNoun, startDateEndDate.start, startDateEndDate.end);
 			return {
 				selection,
 				event
@@ -173,6 +176,15 @@ class NlpController {
 		}
 
 	}
+
+
+	/*
+	********************************************************************************************************************************
+	*******************************************************					 *******************************************************
+	******************************************************* PRIVATE METHODS  *******************************************************
+	*******************************************************					 *******************************************************
+	********************************************************************************************************************************
+ 	*/
 
 	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, customVerbEntities: CustomEntities, lemmaMap: Map<string, string>} {
 		const caseInsensitiveText = sentence.value.toLowerCase();
@@ -194,15 +206,6 @@ class NlpController {
 		const customVerbEntities = lemmaDoc.customEntities();
 		return {caseInsensitiveText, customEntities, customVerbEntities, lemmaMap};
 	}
-
-
-	/*
-	********************************************************************************************************************************
-	*******************************************************					 *******************************************************
-	******************************************************* PRIVATE METHODS  *******************************************************
-	*******************************************************					 *******************************************************
-	********************************************************************************************************************************
-	 */
 
 	private generateLemmaMap(tokens: string[], lemmas: string[]){
 		const lemmaMap = new Map<string, string>();
@@ -324,8 +327,6 @@ class NlpController {
 			const adp = properName.value.split(" ").length == 1 ? undefined : properName.value.split(" ")[0];
 			//console.log("adp = " + adp);
 			if (adp != undefined) caseSensitiveFirstChar = text[pIndex + adp.length + 1];
-			console.log("proper name = " + properName.value)
-			console.log("caseSensitiveFirstChar = " + caseSensitiveFirstChar);
 			// Excluding lower case proper names to confuse words like "amber" and "Amber"
 			if (Misc.isLowerCase(caseSensitiveFirstChar)) return;
 			const distanceFromEventNoun = Math.abs(pIndex - selectedEventNoun);
