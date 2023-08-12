@@ -1,5 +1,6 @@
 import {App, Modal, Setting} from "obsidian";
 import {iCloudServiceStatus} from "../iCloudJs";
+import {text} from "stream/consumers";
 
 export class iCloudStatusModal extends Modal {
     submitCredentials: (username: string, pw: string, ref: any) => Promise<void>;

@@ -1,6 +1,5 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Event from "../model/event";
-import {readFileSync, createWriteStream, writeFileSync} from "fs";
 import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
 import {SettingInterface} from "../plugin/appSetting";
 
@@ -74,9 +73,7 @@ class ICloudController {
 			tz: this.appSettings.tz,
 			pGuid: calendar.guid
 		})
-		const postStatus = await this._calendarService.postEvent(event.value, calendar.ctag);
-		console.log(postStatus);
-		return postStatus;
+		return await this._calendarService.postEvent(event.value, calendar.ctag);
 	}
 }
 

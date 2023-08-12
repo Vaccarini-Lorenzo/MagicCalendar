@@ -79,7 +79,6 @@ export class AppSetting extends PluginSettingTab {
 				value.onClick(async () => {
 					this.plugin.updateSettings();
 					await this.plugin.saveSettings();
-
 					await this.plugin.checkLogin();
 				})
 			})

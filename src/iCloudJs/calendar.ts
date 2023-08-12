@@ -3,6 +3,8 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import iCloudService from "./index";
 import iCloudMisc from "./iCloudMisc";
+import iCloudController from "../controllers/iCloudController";
+import {Notice} from "obsidian";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -212,6 +214,11 @@ export class iCloudCalendarService {
         const body = this.getBody(newEvent, calendarCTag);
 		console.log(body);
         const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
+		if (requestStatus == 421){
+			new Notice("Refreshing tokens...");
+			await iCloudController.tryAuthentication("", "");
+			await this.postEvent(newEvent, calendarCTag);
+		}
 		return (requestStatus < 300 && requestStatus >= 200);
 
     }
