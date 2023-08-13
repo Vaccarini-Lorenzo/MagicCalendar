@@ -111,8 +111,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	updateSettings(){
-		console.log(this.settings);
 		iCloudController.injectSettings(this.settings);
+		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 	}
 }
 

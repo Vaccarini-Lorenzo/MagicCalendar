@@ -67,7 +67,6 @@ class ICloudController {
 		if (this.appSettings.calendar != "Log in to select a calendar"){
 			const firstMatchingCalendar = this._calendars.filter(calendar => calendar.title == this.appSettings.calendar)[0];
 			calendar = firstMatchingCalendar ?? calendar;
-			console.log(calendar);
 		}
 		event.injectICloudComponents({
 			tz: this.appSettings.tz,

@@ -1,5 +1,6 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
 import iCalObsidianSync from "./main";
+import dayjs from "dayjs";
 
 export interface SettingInterface {
 	tz: string;
@@ -8,7 +9,7 @@ export interface SettingInterface {
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
-	tz: "Europe/Rome",
+	tz: dayjs.tz.guess(),
 	proxyEndpoint: "https://icalobsidiansyncproxy.onrender.com/proxy",
 	calendar: "none"
 };
@@ -26,7 +27,6 @@ export class AppSetting extends PluginSettingTab {
 	}
 
 	updateCalendarDropdown(calendarNames: string[]){
-		console.log("Updating dropdown");
 		this.calendarNames = calendarNames;
 	}
 
@@ -74,14 +74,15 @@ export class AppSetting extends PluginSettingTab {
 			})
 
 		new Setting(containerEl)
-			.setName("Submit changes")
-			.addButton(value => {
-				value.onClick(async () => {
-					this.plugin.updateSettings();
-					await this.plugin.saveSettings();
-					await this.plugin.checkLogin();
-				})
-			})
+			.addButton((btn) =>
+				btn
+					.setButtonText("Submit changes")
+					.setCta()
+					.onClick(async () => {
+						await this.plugin.saveSettings();
+						this.plugin.updateSettings();
+						await this.plugin.checkLogin();
+					}));
 
 	}
 }

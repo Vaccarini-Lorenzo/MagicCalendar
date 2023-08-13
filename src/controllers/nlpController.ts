@@ -111,7 +111,6 @@ class NlpController {
 		let selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedDateIndex );
 		let selectedIntentionalVerb : {value, index, type, noun};
 		if (selectedEventNoun.index == -1){
-			console.log("eventNounindex = -1");
 			selectedIntentionalVerb = this.findIntentionalVerb(auxiliaryStructures.customEntities, caseInsensitiveText, selectedDateIndex);
 			if (selectedIntentionalVerb.index == -1) return null;
 			selectedEventNoun = {
@@ -252,11 +251,9 @@ class NlpController {
 			noun: ""
 		};
 		const intentionalVerbs = customEntities.out(this._nlp.its.detail).filter(pos => ((pos as unknown as Detail).type == "intentionalVerb")) as Detail[];
-		console.log("intentionalVerbs.length == 0", intentionalVerbs.length == 0);
 		if (intentionalVerbs.length == 0) return selectedIntentionalVerb;
 		let verbDistance = 1000;
 		intentionalVerbs.forEach(intentionalVerb => {
-			console.log("intentionalVerb", intentionalVerb);
 			const vIndex = text.indexOf(intentionalVerb.value);
 			const distanceFromDate = Math.abs(vIndex - selectedDateIndex);
 			if (distanceFromDate < verbDistance){

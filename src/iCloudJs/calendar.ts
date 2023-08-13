@@ -212,7 +212,6 @@ export class iCloudCalendarService {
             "Referer": "https://www.icloud.com/"
         }
         const body = this.getBody(newEvent, calendarCTag);
-		console.log(body);
         const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
 		if (requestStatus == 421){
 			new Notice("Refreshing tokens...");
@@ -226,7 +225,6 @@ export class iCloudCalendarService {
     private getQueryParams(event: iCloudCalendarEvent): Record<string, string> {
         const stringifiedStartDate = iCloudMisc.stringifyDateArray(event.startDate);
         const stringifiedEndDate = iCloudMisc.stringifyDateArray(event.endDate);
-		console.log("DSID = ", this.dsid);
         return {
             "dsid": this.dsid,
             "startDate": stringifiedStartDate,
