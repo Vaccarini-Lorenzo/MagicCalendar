@@ -9,6 +9,7 @@ import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
+import {randomBytes} from "crypto";
 
 let statusModal: iCloudStatusModal;
 
@@ -49,7 +50,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	updateStatus(status: iCloudServiceStatus){
 		this.iCloudStatus = status;
 		statusModal.updateModal(status);
-		if (this.iCloudStatus == iCloudServiceStatus.Trusted){
+		if (this.iCloudStatus == iCloudServiceStatus.Trusted || this.iCloudStatus == iCloudServiceStatus.Ready){
 			iCloudController.preloadData().then(() => {
 				this.appSetting.updateCalendarDropdown(iCloudController.getCalendarNames());
 			});
@@ -64,6 +65,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	async mfaCallback(code: string, ref: any){
 		const status = await iCloudController.MFACallback(code);
 		ref.updateStatus(status);
+		statusModal.open();
 	}
 
 	registerEvents(){
@@ -79,9 +81,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private injectDependencies() {
 		const basePath = (this.app.vault.adapter as any).basePath
-		const pluginPath =`${basePath}/.obsidian/plugins/obsidian-ical-sync`;
+		const pluginPath =`${basePath}/.obsidian/plugins/ical-obsidian-sync`;
 		nlpController.injectPath(pluginPath)
 		safeController.injectPath(pluginPath);
+		safeController.injectSettings(this.settings);
 		iCloudController.injectPath(pluginPath);
 		iCloudController.injectSettings(this.settings);
 		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
@@ -108,9 +111,24 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.appSetting = new AppSetting(this.app, this);
 		await this.loadSettings();
 		this.addSettingTab(this.appSetting);
+		await this.checkEncryption();
+	}
+
+	private async checkEncryption(){
+		if (this.settings.key == "none" || this.settings.iv == "none"){
+			console.log("Generating random key and iv");
+			const key = randomBytes(32);
+			const iv = randomBytes(16);
+			this.settings.key = key.toString("hex");
+			this.settings.iv = iv.toString("hex");
+			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
+			await this.saveSettings();
+			console.log("Done");
+		}
 	}
 
 	updateSettings(){
+		safeController.injectSettings(this.settings);
 		iCloudController.injectSettings(this.settings);
 		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 	}

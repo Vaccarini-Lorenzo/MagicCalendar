@@ -1,9 +1,11 @@
 import {readFileSync, writeFile, writeFileSync} from "fs";
 import crypto from "crypto";
 import dotenv from "dotenv"
+import {SettingInterface} from "../plugin/appSetting";
 
 class SafeController {
 	path: string;
+	settings: SettingInterface;
 	_username: { encryptedData: string };
 	_pw: { encryptedData: string };
 	_key: Buffer;
@@ -12,10 +14,14 @@ class SafeController {
 
 	injectPath(path: string){
 		this.path = `${path}/.c.txt`;
-		dotenv.config({path: `${path}/.env`});
-		this._key = Buffer.from(process.env.KEY).slice(0, 32);
-		this._iv = Buffer.from(process.env.IV).slice(0, 16);
-		this._algorithm = process.env.ALG;
+		//dotenv.config({path: `${path}/.env`});
+	}
+
+	injectSettings(settings: SettingInterface){
+		this.settings = settings;
+		this._key = Buffer.from(this.settings.key).slice(0, 32);
+		this._iv = Buffer.from(this.settings.iv).slice(0, 16);
+		this._algorithm = "aes-256-cbc";
 	}
 
 	checkSafe(): boolean{

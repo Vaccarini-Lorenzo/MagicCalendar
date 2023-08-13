@@ -3,21 +3,7 @@
 # iCalObsidianSync
 This Obsidian plugin allows for the sync between macOS/iOS native iCal and Obsidian.
 
-## Syntax
-To sync something with iCal just insert a tag with the following syntax.
-
-```  
-All-day event:  
-#YYYY-MM-DD/Title_of_your_event      
-      
-Event with fixed duration:
-1) #YYYY-MM-DD/HH-MM/HH-MM/Title_of_your_event
-The first HH-MM block is the start time and the second one is the end time      
-      
-2) #YYYY-MM-DD/D/Title_of_your_event
-The D block stands for the duration and it's specified in minutes  
-```  
-
+## 
 ## TO-DO
 The project is an absolute draft and the core functionalities are not ready yet: The following list will be useful to keep everything in mind.
 

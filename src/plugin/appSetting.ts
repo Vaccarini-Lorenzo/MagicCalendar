@@ -6,18 +6,24 @@ export interface SettingInterface {
 	tz: string;
 	proxyEndpoint: string;
 	calendar: string;
+	key: string;
+	iv: string;
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	tz: dayjs.tz.guess(),
 	proxyEndpoint: "https://icalobsidiansyncproxy.onrender.com/proxy",
-	calendar: "none"
+	calendar: "none",
+	key: "none",
+	iv: "none"
 };
 
 export class AppSetting extends PluginSettingTab {
 	plugin: iCalObsidianSync;
 	retryLogin: boolean;
 	calendarNames: string[]
+	key: string;
+	iv: string;
 
 	constructor(app: App, plugin: iCalObsidianSync) {
 		super(app, plugin);
@@ -28,6 +34,11 @@ export class AppSetting extends PluginSettingTab {
 
 	updateCalendarDropdown(calendarNames: string[]){
 		this.calendarNames = calendarNames;
+	}
+
+	updateEncryption(key: string, iv: string){
+		this.key = key;
+		this.iv = iv;
 	}
 
 	display(): void {
@@ -62,6 +73,24 @@ export class AppSetting extends PluginSettingTab {
 			})
 
 		containerEl.createEl("h3", {text: "Advanced"});
+
+		new Setting(containerEl)
+			.setName("Encryption key")
+			.addText(key => {
+				key.setValue(this.plugin.settings.key ?? "none");
+				key.onChange(async value => {
+					this.plugin.settings.key = value;
+				})
+			})
+
+		new Setting(containerEl)
+			.setName("Encryption IV")
+			.addText(iv => {
+				iv.setValue(this.plugin.settings.iv ?? "none");
+				iv.onChange(async value => {
+					this.plugin.settings.iv = value;
+				})
+			})
 
 		new Setting(containerEl)
 			.setName("CORS proxy endpoint")
