@@ -25,11 +25,11 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 		this.initState();
 
+		this.registerEvents();
+
 		this.registerEditorExtension(nlpPlugin)
 
 		await this.checkLogin();
-
-		this.registerEvents();
 
 	}
 
@@ -68,8 +68,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	registerEvents(){
 		this.addCommand({
-			id: "display-modal",
-			name: "Display modal",
+			id: "iCal",
+			name: "Insert iCloud credentials",
 			callback: () => {
 				statusModal.open();
 			},

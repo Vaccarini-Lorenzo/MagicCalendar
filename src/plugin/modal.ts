@@ -1,6 +1,5 @@
 import {App, Modal, Setting} from "obsidian";
 import {iCloudServiceStatus} from "../iCloudJs";
-import {text} from "stream/consumers";
 
 export class iCloudStatusModal extends Modal {
     submitCredentials: (username: string, pw: string, ref: any) => Promise<void>;
@@ -45,7 +44,11 @@ export class iCloudStatusModal extends Modal {
 			.addText((text) => text.onChange((newText) => username = newText));
 		new Setting(contentEl)
 			.setName("pw")
-			.addText((text) => text.onChange((newText) => pw = newText));
+			.addText((text) => text.onChange((newText) => {
+				pw = newText;
+				text.inputEl.type = "password";
+			}))
+
 
 		new Setting(contentEl)
 			.addButton((btn) =>
