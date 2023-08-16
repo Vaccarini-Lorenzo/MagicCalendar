@@ -4,21 +4,53 @@ import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
 import iCloudController from "./iCloudController";
 import {Notice} from "obsidian";
+import {appendFileSync, readFileSync, writeFileSync} from "fs";
 
 class EventController{
-	pathEventMap: Map<string, Event[]>;
-	uuidEventMap: Map<string, Event>;
-	currentEvent : Event;
+	private _pathEventMap: Map<string, Event[]>;
+	private _uuidEventMap: Map<string, Event>;
+	private _currentEvent : Event;
+	private _pluginPath: string;
+
 
 	constructor() {
-		this.pathEventMap = new Map<string, Event[]>();
-		this.uuidEventMap = new Map<string, Event>();
+		this._pathEventMap = new Map<string, Event[]>();
+		this._uuidEventMap = new Map<string, Event>();
+	}
+
+	injectPath(pluginPath: string){
+		this._pluginPath = pluginPath;
+	}
+
+	private loadMapData(path: string, map){
+		try{
+			const dataList = readFileSync(path).toString().split("\n");
+			dataList.forEach(data => {
+				console.log(data);
+				const json = JSON.parse(data);
+				console.log(json);
+			})
+		} catch (e) {
+			if (e.code == 'ENOENT'){
+				console.log("eventLogs file not found: creating it");
+				writeFileSync(path, "");
+			} else {
+				console.log(e);
+			}
+		}
+	}
+
+	init(){
+		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
+		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
+		this.loadMapData(pathEventMapFilePath, this._pathEventMap);
+		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap);
 	}
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	matchSentenceValue(sentence: Sentence): Event | null {
 		//console.log("[syntax check]: "+ sentence);
-		const events = this.pathEventMap.get(sentence.filePath);
+		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
@@ -27,7 +59,7 @@ class EventController{
 	}
 
 	checkEntities(sentence: Sentence): Event | null {
-		const events = this.pathEventMap.get(sentence.filePath);
+		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		// NodeJS months start from 0 (0: jan, 11: dec) and iCal months start from 1 (1:jan, 12: dec)
 		// When saving the event the month variable is increased by one for simplicity
@@ -84,25 +116,26 @@ class EventController{
 		} as iCloudCalendarEvent;
 
 		const newSentence =  new Sentence(filePath, sentenceValue);
-		newSentence.injectEntityFields(startDate, endDate, eventNoun);
+		newSentence.injectSemanticFields(startDate, endDate, eventNoun);
 		const newEvent = new Event(value, newSentence);
-		this.currentEvent = newEvent;
+		this._currentEvent = newEvent;
 		return newEvent;
 	}
 
-	processEvent(filePath: string){
+	processEvent(filePath: string, sync: boolean){
 		console.log("Processing event!");
-		const fileEvents = this.pathEventMap.get(filePath);
+		const fileEvents = this._pathEventMap.get(filePath);
 		if (fileEvents == undefined){
-			this.pathEventMap.set(filePath, [this.currentEvent])
+			this._pathEventMap.set(filePath, [this._currentEvent])
 		} else {
-			fileEvents.push(this.currentEvent);
-			this.pathEventMap.set(filePath, fileEvents)
+			fileEvents.push(this._currentEvent);
+			this._pathEventMap.set(filePath, fileEvents)
 		}
-		this.uuidEventMap.set(this.currentEvent.value.guid, this.currentEvent);
-
-		this.currentEvent.processed = true;
-		iCloudController.pushEvent(this.currentEvent).then((status => {
+		this._uuidEventMap.set(this._currentEvent.value.guid, this._currentEvent);
+		this._currentEvent.processed = true;
+		//this.syncLocalStorageEventLog(filePath, this._currentEvent);
+		if (!sync) return;
+		iCloudController.pushEvent(this._currentEvent).then((status => {
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
@@ -129,6 +162,19 @@ class EventController{
 			endDate.setMinutes(startDate.getHours() + 1);
 		}
 		return diffMins;
+	}
+
+	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {
+		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
+		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
+		try {
+			const pathEventMapData = `{"${eventFilePath}":${JSON.stringify(event)}}\n`;
+			appendFileSync(pathEventMapFilePath, pathEventMapData);
+			const uuidEventMapData = `{"${event.value.guid}":${JSON.stringify(event)}}\n`;
+			appendFileSync(uuidEventMapFilePath, uuidEventMapData);
+		} catch (e) {
+			console.log("Error syncing local storage: " + e);
+		}
 	}
 }
 

@@ -13,7 +13,7 @@ export class Sentence {
 		this.value = value;
 	}
 
-	injectEntityFields(startDate: Date, endDate: Date, eventNoun: string){
+	injectSemanticFields(startDate: Date, endDate: Date, eventNoun: string){
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.eventNoun = eventNoun;

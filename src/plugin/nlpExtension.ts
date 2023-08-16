@@ -1,22 +1,12 @@
-import {RangeSetBuilder} from "@codemirror/state";
+import { RangeSetBuilder } from "@codemirror/state";
 import nplController from "../controllers/nlpController";
-import {HighlightWidget} from "./highlightWidget";
-import {
-	Decoration,
-	DecorationSet,
-	EditorView,
-	PluginSpec,
-	PluginValue,
-	ViewPlugin,
-	ViewUpdate,
-	WidgetType,
-} from "@codemirror/view";
-import {UnderlineWidget} from "./underLineWidget";
-import {Sentence} from "../model/sentence";
+import { HighlightWidget } from "./highlightWidget";
+import { Decoration, DecorationSet, EditorView, PluginSpec, PluginValue, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
+import { UnderlineWidget } from "./underLineWidget";
+import { Sentence } from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
-import {Misc} from "../misc/misc";
-import {App, Notice, Workspace} from "obsidian";
+import { Misc } from "../misc/misc";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -37,7 +27,7 @@ class NLPPlugin implements PluginValue {
 	buildDecorations(view: EditorView): DecorationSet {
 		// TODO: Do not use global app variable
 		const activeFile = app.workspace.getActiveFile();
-		const filePath = activeFile == undefined ? "error": activeFile.path;
+		const filePath = activeFile == undefined ? "none": activeFile.path;
 		const builder = new RangeSetBuilder<Decoration>();
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
@@ -49,8 +39,8 @@ class NLPPlugin implements PluginValue {
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
-				const widget = this.getWidget(matches.selection, match, matchMetadata, () => {
-					eventController.processEvent(filePath);
+				const widget = this.getWidget(matches.selection, match, matchMetadata, (sync) => {
+					eventController.processEvent(filePath, sync);
 					this.widgetFirstLoad = true;
 					view.setState(view.state);
 				}, eventDetailString);
@@ -76,7 +66,6 @@ class NLPPlugin implements PluginValue {
 		// ...
 	}
 
-	// TODO: fix any
 	private getMatchTextMetadata(documentLines: string[], viewPortFrom: number, currentIndex: number, line: string, match: {value, index, type}): {startsFrom, endsTo, capitalizedMatch} | null {
 		let previousChars = viewPortFrom;
 		for (let j=0; j < currentIndex; j++){
@@ -102,7 +91,7 @@ class NLPPlugin implements PluginValue {
 	}
 
 
-	private getWidget(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: () => void, eventDetailString): WidgetType {
+	private getWidget(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: (sync: boolean) => void, eventDetailString): WidgetType {
 		let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
 		const isExplicitDatePresent = matches.filter(match => match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse").length > 0;
 		if (match.type == "properName" || match.type == "eventNoun" || match.type == "commonNoun") {
@@ -144,7 +133,10 @@ const pluginSpec: PluginSpec<NLPPlugin> = {
 	decorations: (value: NLPPlugin) => value.decorations,
 };
 
-export const nlpPlugin = ViewPlugin.fromClass(
+const nlpPlugin = ViewPlugin.fromClass(
 	NLPPlugin,
 	pluginSpec
 );
+
+
+export default nlpPlugin;

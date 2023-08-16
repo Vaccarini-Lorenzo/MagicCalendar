@@ -3,10 +3,10 @@ import {EditorView, WidgetType} from "@codemirror/view";
 export class HighlightWidget extends WidgetType {
 	sentenceValue: string;
 	eventDetails: string;
-	syncCallback: () => void;
+	syncCallback: (sync: boolean) => void;
 	markClass: string;
 
-	constructor(sentenceValue: string, eventDetails: string, syncCallback: () => void, firstLoad: boolean) {
+	constructor(sentenceValue: string, eventDetails: string, syncCallback: (sync: boolean) => void, firstLoad: boolean) {
 		super();
 		this.sentenceValue = sentenceValue;
 		this.eventDetails = eventDetails;
@@ -33,11 +33,14 @@ export class HighlightWidget extends WidgetType {
 		buttonSync.innerText = "Sync";
 		buttonSync.addClass("syncButton");
 		buttonSync.onClickEvent((mouseEvent) => {
-			this.syncCallback.call(this);
+			this.syncCallback(true);
 		})
 		const buttonNoSync = row.createEl("button")
 		buttonNoSync.addClass("syncButton");
 		buttonNoSync.innerText = "Ignore";
+		buttonNoSync.onClickEvent((mouseEvent) => {
+			this.syncCallback(false);
+		})
 
 		return navUl;
 

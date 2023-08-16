@@ -135,7 +135,7 @@ class NlpController {
 
 		// Semantic check
 		if(matchedEvent == null){
-			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
+			sentence.injectSemanticFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
 			let eventTitle = "";
 			if (adjacentCommonNoun != null) eventTitle += `${adjacentCommonNoun.value} `
 			eventTitle += selectedEventNoun.value;

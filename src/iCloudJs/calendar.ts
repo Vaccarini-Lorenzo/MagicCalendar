@@ -216,7 +216,7 @@ export class iCloudCalendarService {
 		if (requestStatus == 421){
 			new Notice("Refreshing tokens...");
 			await iCloudController.tryAuthentication("", "");
-			await this.postEvent(newEvent, calendarCTag);
+			return await this.postEvent(newEvent, calendarCTag);
 		}
 		return (requestStatus < 300 && requestStatus >= 200);
 
