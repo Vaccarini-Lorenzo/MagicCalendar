@@ -1,5 +1,6 @@
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "./sentence";
+import eventController from "../controllers/eventController";
 
 export default class Event {
 	value: iCloudCalendarEvent;
@@ -20,7 +21,6 @@ export default class Event {
 	}
 
 	private computeHash(): number{
-		// startDate is a [] does it work?
 		const tagProperties = this.sentence.toString();
 		let hash = 0,
 			i, chr;
@@ -31,5 +31,18 @@ export default class Event {
 			hash |= 0; // Convert to 32bit integer
 		}
 		return hash;
+	}
+
+	static fromJSON(json: Event) {
+		const filePath = json.sentence.filePath;
+		const value = json.sentence.value;
+		const sentence = new Sentence(filePath, value);
+		const startDate = new Date(json.sentence.startDate);
+		const endDate = new Date(json.sentence.endDate);
+		const eventNoun = json.sentence.eventNoun;
+		sentence.injectSemanticFields(startDate, endDate, eventNoun);
+		const event = eventController.createNewEvent(sentence);
+		event.processed = true;
+		return event;
 	}
 }

@@ -6,7 +6,6 @@ export class Sentence {
 	endDate: Date;
 	duration: number;
 	eventNoun: string;
-
 	static pathSeparator = " - ";
 
 	constructor(filePath: string, value: string) {
@@ -15,7 +14,6 @@ export class Sentence {
 	}
 
 	injectSemanticFields(startDate: Date, endDate: Date, eventNoun: string){
-		console.log("Injecting semantic field: ", startDate, endDate);
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.eventNoun = eventNoun;

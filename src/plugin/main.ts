@@ -11,7 +11,6 @@ import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
-import Event from "../model/event";
 
 let statusModal: iCloudStatusModal;
 
@@ -102,7 +101,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
-			console.log("checking safe");
+			
 			const iCloudStatus = await iCloudController.tryAuthentication("", "");
 			this.updateStatus(iCloudStatus);
 		}
@@ -117,14 +116,14 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private async checkEncryption(){
 		if (this.settings.key == "none" || this.settings.iv == "none"){
-			console.log("Generating random key and iv");
+			
 			const key = randomBytes(32);
 			const iv = randomBytes(16);
 			this.settings.key = key.toString("hex");
 			this.settings.iv = iv.toString("hex");
 			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
 			await this.saveSettings();
-			console.log("Done");
+			
 		}
 	}
 

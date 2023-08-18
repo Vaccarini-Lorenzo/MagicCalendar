@@ -31,8 +31,6 @@ class NLPPlugin implements PluginValue {
 		const builder = new RangeSetBuilder<Decoration>();
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
-			//nplController.testPOS(new Sentence(filePath, line));
-			//const matches = null;
 			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
 			const eventDetailString = this.getEventDetailString(matches.event);
@@ -71,18 +69,11 @@ class NLPPlugin implements PluginValue {
 		for (let j=0; j < currentIndex; j++){
 			previousChars += documentLines[j].length + 1;
 		}
-		// here we check the match status:
-		// compute hash -> check cacheMap
-		// if not sync, continue.
 		const indexOfMatch = line.toLowerCase().indexOf(match.value);
-		if(indexOfMatch == -1){
-			console.log("Error matching the string in the text");
-			return null;
-		}
+		if(indexOfMatch == -1) return null;
 		const capitalizedMatch = line.substring(indexOfMatch, indexOfMatch + match.value.length)
 		const startsFrom = previousChars + indexOfMatch;
 		const endsTo = startsFrom + match.value.length;
-
 		return {
 			startsFrom,
 			endsTo,
@@ -110,7 +101,7 @@ class NLPPlugin implements PluginValue {
 		const startDate = event.value.startDate;
 		const endDate = event.value.endDate;
 
-		// startDate, exactly like endDate is an array as the following [yearmonthdaystring, year, month, day, hour, min ...]
+		// startDate, exactly like endDate is an array as the following [yearMonthDay, year, month, day, hour, min ...]
 		const startDateString = `${startDate[1]}/${Misc.fromSingleToDoubleDigit(startDate[2])}/${Misc.fromSingleToDoubleDigit(startDate[3])}`
 		const endDateString = `${endDate[1]}/${Misc.fromSingleToDoubleDigit(endDate[2])}/${Misc.fromSingleToDoubleDigit(endDate[3])}`;
 		const startTimeString = `${Misc.fromSingleToDoubleDigit(startDate[4])}:${Misc.fromSingleToDoubleDigit(startDate[5])}`;

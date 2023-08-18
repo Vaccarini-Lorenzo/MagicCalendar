@@ -18,31 +18,37 @@ export class HighlightWidget extends WidgetType {
 	toDOM(view: EditorView): HTMLElement {
 		const navUl = document.createElement("ul");
 		navUl.addClass("navUL");
+
 		const mark = navUl.createEl("span");
 		mark.addClass(this.markClass);
 		mark.innerText = this.sentenceValue;
+
 		const bubble = mark.createEl("div");
 		bubble.addClass("bubblePosition");
 		bubble.addClass("hoverBubble");
+
 		const grid = bubble.createEl("div")
 		grid.addClass("gridContainer");
+		// TODO: Edit innerHTML
 		grid.innerHTML = this.eventDetails;
+
 		const row = bubble.createEl("div");
 		row.addClass("row");
+
 		const buttonSync = row.createEl("button")
 		buttonSync.innerText = "Sync";
 		buttonSync.addClass("syncButton");
-		buttonSync.onClickEvent((mouseEvent) => {
+		buttonSync.onClickEvent(() => {
 			this.syncCallback(true);
 		})
+
 		const buttonNoSync = row.createEl("button")
 		buttonNoSync.addClass("syncButton");
 		buttonNoSync.innerText = "Ignore";
-		buttonNoSync.onClickEvent((mouseEvent) => {
+		buttonNoSync.onClickEvent(() => {
 			this.syncCallback(false);
 		})
 
 		return navUl;
-
 	}
 }

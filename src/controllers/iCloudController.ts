@@ -46,23 +46,17 @@ class ICloudController {
 	async MFACallback(mfa: string): Promise<iCloudServiceStatus> {
 		await this._iCloud.provideMfaCode(mfa);
 		await this._iCloud.awaitReady;
-		console.log(this._iCloud.status);
 		return this._iCloud.status;
 	}
 
 	async preloadData() {
-		//console.log("preloading data: waiting for iCloud status");
 		await this._iCloud.awaitReady;
-		console.log("preloading data...");
-		//console.log("Fetching events!");
 		this._calendarService = this._iCloud.getService("calendar");
 		this._calendars = await this._calendarService.calendars();
 		this._dataLoadingComplete = true;
-		console.log("preloading data: Done");
 	}
 
 	async pushEvent(event: Event): Promise<boolean>{
-		console.log("Pushing event!");
 		let calendar = this._calendars.first();
 		if (this.appSettings.calendar != "Log in to select a calendar"){
 			const firstMatchingCalendar = this._calendars.filter(calendar => calendar.title == this.appSettings.calendar)[0];

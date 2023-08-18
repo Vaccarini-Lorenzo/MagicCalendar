@@ -7,11 +7,12 @@ import {Notice} from "obsidian";
 import {appendFileSync, readFileSync, writeFileSync} from "fs";
 
 class EventController{
+	// Map that connects the file path to the list of events
 	private _pathEventMap: Map<string, Event[]>;
+	// Map that connects an event's UUID with the event object
 	private _uuidEventMap: Map<string, Event>;
 	private _currentEvent : Event;
 	private _pluginPath: string;
-
 
 	constructor() {
 		this._pathEventMap = new Map<string, Event[]>();
@@ -22,20 +23,29 @@ class EventController{
 		this._pluginPath = pluginPath;
 	}
 
-	private loadMapData(path: string, map){
+	private loadMapData(path: string, map: Map<string, any>, isValueList: boolean){
 		try{
-			const dataList = readFileSync(path).toString().split("\n");
+			// Filter out possible empty lines
+			const dataList = readFileSync(path).toString().split("\n").filter(data => data.length > 0);
 			dataList.forEach(data => {
-				//console.log(data);
-				//const json = JSON.parse(data);
-				//console.log(json);
+				const json = JSON.parse(data);
+				const key = Object.keys(json)[0]
+				let value = Object.values(json)[0]
+				const isKeyPresent = map.has(key);
+				value = Event.fromJSON(value as Event);
+				if (isValueList) value = [value];
+				if (isKeyPresent) {
+					const eventList = map.get(key);
+					eventList.append(value as Event)
+				} else {
+					map.set(key, value as Event);
+				}
 			})
 		} catch (e) {
 			if (e.code == 'ENOENT'){
-				console.log("eventLogs file not found: creating it");
 				writeFileSync(path, "");
 			} else {
-				console.log(e);
+				console.error("Error loading map data");
 			}
 		}
 	}
@@ -43,31 +53,24 @@ class EventController{
 	init(){
 		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
 		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
-		this.loadMapData(pathEventMapFilePath, this._pathEventMap);
-		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap);
+		this.loadMapData(pathEventMapFilePath, this._pathEventMap, true);
+		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap, false);
 	}
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	syntacticCheck(sentence: Sentence): Event | null {
-		//console.log("[syntax check]: "+ sentence);
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
-		//console.log("[syntax check]: Match found!");
 		return filteredEvents[0];
 	}
 
+	// Second check: Check the semantic value of the sentence (event noun and dates)
 	semanticCheck(sentence: Sentence): Event | null {
-		console.log("Semantic check: ", sentence);
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
 		const filteredEvents = events.filter(event => {
-			console.log("EVENT: ", event);
-			console.log("eventNoun == eventNoun  ", sentence.eventNoun == event.sentence.eventNoun);
-			console.log("startDate.getTime() == startDate.getTime()  ", sentence.startDate.getTime() == event.sentence.startDate.getTime())
-			console.log("endDate.getTime() == endDate.getTime()  ", sentence.endDate.getTime() == event.sentence.endDate.getTime())
-
 			return sentence.eventNoun == event.sentence.eventNoun &&
 				sentence.startDate.getTime() == event.sentence.startDate.getTime() &&
 				sentence.endDate.getTime() == event.sentence.endDate.getTime()
@@ -75,18 +78,13 @@ class EventController{
 		if (filteredEvents.length == 0) return null;
 		// Update the sentence associated to the event (it has been modified)
 		filteredEvents[0].sentence.value = sentence.value;
+
 		return filteredEvents[0];
 	}
 
-	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
-	// TODO: FIX - Aux structure with one single tmp event. The event map is updated ONLY when an event is processed or ignored
-	// Minimal version
 	createNewEvent(sentence: Sentence): Event {
-		console.log("creating a new event");
 		const arrayStartDate = iCloudMisc.getArrayDate(sentence.startDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(sentence.endDate);
-		console.log("arrayEndDate");
-		console.log(arrayEndDate);
 		const guid = this.generateNewUUID();
 
 		const value = {
@@ -115,7 +113,6 @@ class EventController{
 	}
 
 	processEvent(filePath: string, sync: boolean){
-		console.log("Processing event!");
 		const fileEvents = this._pathEventMap.get(filePath);
 		if (fileEvents == undefined){
 			this._pathEventMap.set(filePath, [this._currentEvent])
@@ -125,8 +122,10 @@ class EventController{
 		}
 		this._uuidEventMap.set(this._currentEvent.value.guid, this._currentEvent);
 		this._currentEvent.processed = true;
-		//this.syncLocalStorageEventLog(filePath, this._currentEvent);
+		// Syncing local storage - Needed to remember which events have been already processed
+		this.syncLocalStorageEventLog(filePath, this._currentEvent);
 		if (!sync) return;
+		// Request to sync -> Push event to iCloud
 		iCloudController.pushEvent(this._currentEvent).then((status => {
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
@@ -146,15 +145,15 @@ class EventController{
 	}
 
 	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {
-		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
-		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
+		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt";
+		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt";
 		try {
 			const pathEventMapData = `{"${eventFilePath}":${JSON.stringify(event)}}\n`;
 			appendFileSync(pathEventMapFilePath, pathEventMapData);
 			const uuidEventMapData = `{"${event.value.guid}":${JSON.stringify(event)}}\n`;
 			appendFileSync(uuidEventMapFilePath, uuidEventMapData);
 		} catch (e) {
-			console.log("Error syncing local storage: " + e);
+			console.error("Error syncing local event log");
 		}
 	}
 }

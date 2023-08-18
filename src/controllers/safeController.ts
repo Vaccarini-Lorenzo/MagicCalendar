@@ -15,7 +15,6 @@ class SafeController {
 	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
 		this._path = `${pluginPath}/.c.txt`;
-		//dotenv.config({path: `${path}/.env`});
 	}
 
 	injectSettings(settings: SettingInterface){
@@ -30,19 +29,17 @@ class SafeController {
 			const data = readFileSync(this._path).toString();
 			const lines = data.split("\n");
 			if(lines.length == 2){
-				console.log("Found something in safe");
 				this._username = lines[0] as any;
 				this._pw = lines[1] as any;
 				return true;
 			}
-			console.log("Safe is empty");
+			
 			return false;
 		} catch (e) {
 			if (e.code == 'ENOENT'){
-				console.log("c file not found: creating it");
 				writeFileSync(this._path, "");
 			} else {
-				console.log(e);
+				console.error("Error checking the safe");
 			}
 			return false;
 		}
@@ -63,7 +60,7 @@ class SafeController {
 		try {
 			writeFile(this._path, `${encryptUser}\n${encryptPw}`, ()=>{});
 		} catch (e){
-			console.log("error storing credentials");
+			console.error("Error storing credentials");
 		}
 	}
 

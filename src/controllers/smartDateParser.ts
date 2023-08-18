@@ -7,7 +7,7 @@ class SmartDateParser {
 	constructor() {
 		this._chrono = casual.clone();
 		this._chrono.parsers.push({
-			pattern: (context) => { return /\d{1,2}(th|nd|rd)/},
+			pattern: () => { return /\d{1,2}(th|nd|rd)/},
 			extract: (context, match) => {
 				let parsedDay = match[0].replaceAll("th", "");
 				parsedDay = parsedDay.replaceAll("nd", "");
@@ -64,7 +64,6 @@ class SmartDateParser {
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
-		// TODO: Double check this logic
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
 
 		const start = new Date(
@@ -83,14 +82,6 @@ class SmartDateParser {
 			components[9].length == 0 ? start.getMinutes(): components[9][0],
 		);
 
-		//console.log(start.toLocaleDateString(),end.toLocaleDateString())
-		//console.log(start.toLocaleTimeString(),end.toLocaleTimeString())
-
-		//if (start.getTime() == end.getTime()) end.setMinutes(end.getMinutes() + 30)
-
-		console.log("MINS = ", components[9].length == 0 ? start.getMinutes(): components[9][0]);
-		console.log("start.getMinutes() = ",start.getMinutes());
-		console.log({start, end})
 		return {start, end};
 	}
 
