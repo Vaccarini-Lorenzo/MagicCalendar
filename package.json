@@ -4,8 +4,7 @@
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
-		"dev": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs && cp main.js /Users/lorenzovaccarini/Library/Mobile\\ Documents/iCloud~md~obsidian/Documents/Obsidian\\ Vault/.obsidian/plugins/ical-obsidian-sync && cp -R .patterns /Users/lorenzovaccarini/Library/Mobile\\ Documents/iCloud~md~obsidian/Documents/Obsidian\\ Vault/.obsidian/plugins/ical-obsidian-sync && cp styles.css /Users/lorenzovaccarini/Library/Mobile\\ Documents/iCloud~md~obsidian/Documents/Obsidian\\ Vault/.obsidian/plugins/ical-obsidian-sync",
-		"pack": "cp main.js ical-obsidian-sync && cp -R .patterns ical-obsidian-sync && cp manifest.json ical-obsidian-sync && cp styles.css ical-obsidian-sync",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
