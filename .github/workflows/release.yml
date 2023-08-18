@@ -8,7 +8,7 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-
+        permissions: write-all
         steps:
             - uses: actions/checkout@v3
 
@@ -27,8 +27,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   tag="${GITHUB_REF#refs/tags/}"
-                  
                   gh release create "$tag" \
                     --title="$tag" \
                     --draft \
-                    main.js manifest.json styles.css
+                    main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt
