@@ -59,6 +59,8 @@ class NlpController {
 
 	process(sentence: Sentence): {selection: {value, index, type}[], event: Event} | null{
 
+		console.log("process");
+
 		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
 		// Then the nearest noun (related to the event category) to the verb.
 		// We then check if the selected event-noun has some common/generic noun on the side
@@ -86,7 +88,7 @@ class NlpController {
 		//	  and therefore we need to create one.
 
 		// First match - Syntax check
-		let matchedEvent = eventController.matchSentenceValue(sentence);
+		let matchedEvent = eventController.syntacticCheck(sentence);
 		if (matchedEvent != null && matchedEvent.processed == true) return null;
 
 		// If the syntax check fails we'll need to compute the semantic check, once
@@ -135,13 +137,14 @@ class NlpController {
 
 		// Semantic check
 		if(matchedEvent == null){
+			console.log("About to start semantic check");
 			sentence.injectSemanticFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
 			let eventTitle = "";
 			if (adjacentCommonNoun != null) eventTitle += `${adjacentCommonNoun.value} `
 			eventTitle += selectedEventNoun.value;
 			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
 			sentence.eventNoun = eventTitle;
-			matchedEvent = eventController.checkEntities(sentence);
+			matchedEvent = eventController.semanticCheck(sentence);
 		}
 		// Semantic check successful
 		if (matchedEvent != null && matchedEvent.processed == true) return null;
@@ -150,7 +153,7 @@ class NlpController {
 		if (matchedEvent == null){
 			//let eventTitle = selectedEventNoun.value;
 			//if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
-			const event = eventController.createNewEvent(sentence.filePath, sentence.value, sentence.eventNoun, startDateEndDate.start, startDateEndDate.end);
+			const event = eventController.createNewEvent(sentence);
 			return {
 				selection,
 				event

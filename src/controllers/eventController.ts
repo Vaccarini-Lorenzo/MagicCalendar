@@ -26,9 +26,9 @@ class EventController{
 		try{
 			const dataList = readFileSync(path).toString().split("\n");
 			dataList.forEach(data => {
-				console.log(data);
-				const json = JSON.parse(data);
-				console.log(json);
+				//console.log(data);
+				//const json = JSON.parse(data);
+				//console.log(json);
 			})
 		} catch (e) {
 			if (e.code == 'ENOENT'){
@@ -48,7 +48,7 @@ class EventController{
 	}
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
-	matchSentenceValue(sentence: Sentence): Event | null {
+	syntacticCheck(sentence: Sentence): Event | null {
 		//console.log("[syntax check]: "+ sentence);
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
@@ -58,20 +58,19 @@ class EventController{
 		return filteredEvents[0];
 	}
 
-	checkEntities(sentence: Sentence): Event | null {
+	semanticCheck(sentence: Sentence): Event | null {
+		console.log("Semantic check: ", sentence);
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
-		// NodeJS months start from 0 (0: jan, 11: dec) and iCal months start from 1 (1:jan, 12: dec)
-		// When saving the event the month variable is increased by one for simplicity
-		// In the entity check it's needed to take into account this difference
 		const filteredEvents = events.filter(event => {
-			const iCalParsedStartDate = sentence.startDate;
-			iCalParsedStartDate.setMonth(sentence.startDate.getMonth() + 1);
-			const iCalParsedEndDate = sentence.endDate;
-			iCalParsedEndDate.setMonth(sentence.endDate.getMonth() + 1);
+			console.log("EVENT: ", event);
+			console.log("eventNoun == eventNoun  ", sentence.eventNoun == event.sentence.eventNoun);
+			console.log("startDate.getTime() == startDate.getTime()  ", sentence.startDate.getTime() == event.sentence.startDate.getTime())
+			console.log("endDate.getTime() == endDate.getTime()  ", sentence.endDate.getTime() == event.sentence.endDate.getTime())
+
 			return sentence.eventNoun == event.sentence.eventNoun &&
-				iCalParsedStartDate.getTime() == event.sentence.startDate.getTime() &&
-				iCalParsedEndDate.getTime() == event.sentence.endDate.getTime()
+				sentence.startDate.getTime() == event.sentence.startDate.getTime() &&
+				sentence.endDate.getTime() == event.sentence.endDate.getTime()
 		});
 		if (filteredEvents.length == 0) return null;
 		// Update the sentence associated to the event (it has been modified)
@@ -82,22 +81,17 @@ class EventController{
 	// TODO: CREATE A LOCAL SYNC for pathEventMap & uuidEventMap? - newEvent and processEvent
 	// TODO: FIX - Aux structure with one single tmp event. The event map is updated ONLY when an event is processed or ignored
 	// Minimal version
-	createNewEvent(filePath: string, sentenceValue: string, eventNoun: string, startDate: Date, endDate: Date): Event {
-		const normalizedMonthStartDate = startDate;
-		normalizedMonthStartDate.setMonth(startDate.getMonth() + 1);
-		const normalizedMonthEndDate = endDate;
-		normalizedMonthEndDate.setMonth(endDate.getMonth() + 1);
-		const duration = this.computeDuration(normalizedMonthStartDate, normalizedMonthEndDate)
-		const arrayStartDate = iCloudMisc.getArrayDate(normalizedMonthStartDate);
-		//console.log("arrayStartDate");
-		//console.log(arrayStartDate);
-		const arrayEndDate = iCloudMisc.getArrayDate(normalizedMonthEndDate);
+	createNewEvent(sentence: Sentence): Event {
+		console.log("creating a new event");
+		const arrayStartDate = iCloudMisc.getArrayDate(sentence.startDate);
+		const arrayEndDate = iCloudMisc.getArrayDate(sentence.endDate);
+		console.log("arrayEndDate");
+		console.log(arrayEndDate);
 		const guid = this.generateNewUUID();
-		const allDay = normalizedMonthStartDate.getTime() == normalizedMonthEndDate.getTime()
 
 		const value = {
-			title: eventNoun,
-			duration,
+			title: sentence.eventNoun,
+			duration: sentence.duration,
 			description : "",
 			guid,
 			location: "",
@@ -106,7 +100,7 @@ class EventController{
 			localStartDate: arrayStartDate,
 			localEndDate: arrayEndDate,
 			extendedDetailsAreIncluded: true,
-			allDay: allDay,
+			allDay: false,
 			isJunk: false,
 			recurrenceMaster: false,
 			recurrenceException: false,
@@ -115,9 +109,7 @@ class EventController{
 			changeRecurring: null
 		} as iCloudCalendarEvent;
 
-		const newSentence =  new Sentence(filePath, sentenceValue);
-		newSentence.injectSemanticFields(startDate, endDate, eventNoun);
-		const newEvent = new Event(value, newSentence);
+		const newEvent = new Event(value, sentence);
 		this._currentEvent = newEvent;
 		return newEvent;
 	}
@@ -151,17 +143,6 @@ class EventController{
 		const fourthUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
 		const lastUUID = iCloudMisc.getRandomHex(maxIntTwelveNibbles);
 		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
-	}
-
-	private computeDuration(startDate: Date, endDate: Date) {
-		const diffMilli = endDate.getTime() - startDate.getTime();
-		let diffMins = diffMilli / (1000 * 60);
-		if (diffMins == 0){
-			if (startDate.getHours() == 0 && startDate.getMinutes() == 0) return diffMins;
-			diffMins = 60;
-			endDate.setMinutes(startDate.getHours() + 1);
-		}
-		return diffMins;
 	}
 
 	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {

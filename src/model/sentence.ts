@@ -4,6 +4,7 @@ export class Sentence {
 	value: string;
 	startDate: Date;
 	endDate: Date;
+	duration: number;
 	eventNoun: string;
 
 	static pathSeparator = " - ";
@@ -14,12 +15,26 @@ export class Sentence {
 	}
 
 	injectSemanticFields(startDate: Date, endDate: Date, eventNoun: string){
+		console.log("Injecting semantic field: ", startDate, endDate);
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.eventNoun = eventNoun;
+		this.computeDuration();
+	}
+
+	private computeDuration() {
+		const diffMilli = this.endDate.getTime() - this.startDate.getTime();
+		let diffMins = diffMilli / (1000 * 60);
+		if (diffMins == 0){
+			diffMins = 60;
+			this.endDate = new Date(this.endDate.getTime() + 60 * 60 * 1000);
+		}
+		this.duration = diffMins;
 	}
 
 	toString(){
 		return this.filePath + Sentence.pathSeparator + this.value;
 	}
+
+
 }
