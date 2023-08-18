@@ -2,11 +2,11 @@ import {EditorView, WidgetType} from "@codemirror/view";
 
 export class HighlightWidget extends WidgetType {
 	sentenceValue: string;
-	eventDetails: string;
+	eventDetails: {title, dateString, timeString, hasTimeDetails};
 	syncCallback: (sync: boolean) => void;
 	markClass: string;
 
-	constructor(sentenceValue: string, eventDetails: string, syncCallback: (sync: boolean) => void, firstLoad: boolean) {
+	constructor(sentenceValue: string, eventDetails:  {title, dateString, timeString, hasTimeDetails}, syncCallback: (sync: boolean) => void, firstLoad: boolean) {
 		super();
 		this.sentenceValue = sentenceValue;
 		this.eventDetails = eventDetails;
@@ -29,8 +29,32 @@ export class HighlightWidget extends WidgetType {
 
 		const grid = bubble.createEl("div")
 		grid.addClass("gridContainer");
-		// TODO: Edit innerHTML
-		grid.innerHTML = this.eventDetails;
+
+		const titleIcon = grid.createEl("span");
+		titleIcon.addClass("sideBar");
+		titleIcon.innerText = " 📕 ";
+
+		const titleContent = grid.createEl("span");
+		titleContent.addClass("content");
+		titleContent.innerText = ` ${this.eventDetails.title} `;
+
+		const dateIcon = grid.createEl("span");
+		dateIcon.addClass("sideBar");
+		dateIcon.innerText = " 📅 ";
+
+		const dateContent = grid.createEl("span");
+		dateContent.addClass("content");
+		dateContent.innerText = ` ${this.eventDetails.dateString} `;
+
+		if (this.eventDetails.hasTimeDetails){
+			const timeIcon = grid.createEl("span");
+			timeIcon.addClass("sideBar");
+			timeIcon.innerText = " 🕑 ";
+
+			const timeContent = grid.createEl("span");
+			timeContent.addClass("content");
+			timeContent.innerText = ` ${this.eventDetails.timeString} `;
+		}
 
 		const row = bubble.createEl("div");
 		row.addClass("row");
