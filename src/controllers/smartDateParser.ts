@@ -86,7 +86,6 @@ class SmartDateParser {
 	}
 
 	getOnlyIfCertain(parsedComponent: ParsedComponents, component: Component){
-		// TODO: Filter out hours == now.getHours();
 		if (parsedComponent.isCertain(component))
 			return parsedComponent.get(component);
 		return null;

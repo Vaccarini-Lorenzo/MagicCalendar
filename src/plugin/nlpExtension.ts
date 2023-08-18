@@ -25,9 +25,7 @@ class NLPPlugin implements PluginValue {
 	}
 
 	buildDecorations(view: EditorView): DecorationSet {
-		// TODO: Do not use global app variable
-		const activeFile = app.workspace.getActiveFile();
-		const filePath = activeFile == undefined ? "none": activeFile.path;
+		const filePath = Misc.getCurrentFilePath();
 		const builder = new RangeSetBuilder<Decoration>();
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
@@ -132,6 +130,5 @@ const nlpPlugin = ViewPlugin.fromClass(
 	NLPPlugin,
 	pluginSpec
 );
-
 
 export default nlpPlugin;

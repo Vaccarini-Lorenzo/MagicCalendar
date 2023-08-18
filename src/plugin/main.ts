@@ -11,6 +11,7 @@ import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
+import {Misc} from "../misc/misc";
 
 let statusModal: iCloudStatusModal;
 
@@ -78,7 +79,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		});
 	}
 
-
 	private injectDependencies() {
 		const basePath = (this.app.vault.adapter as any).basePath
 		const pluginPath =`${basePath}/.obsidian/plugins/ical-obsidian-sync`;
@@ -97,11 +97,11 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		eventController.init();
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
 		this.iCloudStatus = iCloudServiceStatus.NotStarted;
+		Misc.app = this.app;
 	}
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
-			
 			const iCloudStatus = await iCloudController.tryAuthentication("", "");
 			this.updateStatus(iCloudStatus);
 		}
