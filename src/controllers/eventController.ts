@@ -8,9 +8,9 @@ import {appendFileSync, readFileSync, writeFileSync} from "fs";
 
 class EventController{
 	// Map that connects the file path to the list of events
-	private _pathEventMap: Map<string, Event[]>;
+	private readonly _pathEventMap: Map<string, Event[]>;
 	// Map that connects an event's UUID with the event object
-	private _uuidEventMap: Map<string, Event>;
+	private readonly _uuidEventMap: Map<string, Event>;
 	private _currentEvent : Event;
 	private _pluginPath: string;
 
@@ -23,6 +23,13 @@ class EventController{
 		this._pluginPath = pluginPath;
 	}
 
+	init(){
+		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
+		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
+		this.loadMapData(pathEventMapFilePath, this._pathEventMap, true);
+		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap, false);
+	}
+
 	private loadMapData(path: string, map: Map<string, any>, isValueList: boolean){
 		try{
 			// Filter out possible empty lines
@@ -33,12 +40,14 @@ class EventController{
 				let value = Object.values(json)[0]
 				const isKeyPresent = map.has(key);
 				value = Event.fromJSON(value as Event);
-				if (isValueList) value = [value];
 				if (isKeyPresent) {
 					const eventList = map.get(key);
-					eventList.append(value as Event)
+					eventList.push(value as Event)
 				} else {
-					map.set(key, value as Event);
+					if (isValueList)
+						map.set(key, [value] as Event[]);
+					else
+						map.set(key, value as Event);
 				}
 			})
 		} catch (e) {
@@ -46,21 +55,17 @@ class EventController{
 				writeFileSync(path, "");
 			} else {
 				console.error("Error loading map data");
+				console.log(e);
 			}
 		}
-	}
-
-	init(){
-		const pathEventMapFilePath = this._pluginPath + "/.pathEventMap.txt"
-		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
-		this.loadMapData(pathEventMapFilePath, this._pathEventMap, true);
-		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap, false);
 	}
 
 	// First bland check on whole sentence (if nobody modified it, this should match)
 	syntacticCheck(sentence: Sentence): Event | null {
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
+		console.log(sentence);
+		console.log(events);
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
 		return filteredEvents[0];

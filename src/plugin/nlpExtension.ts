@@ -33,7 +33,7 @@ class NLPPlugin implements PluginValue {
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
-			const eventDetailString = this.getEventDetailString(matches.event);
+			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
@@ -96,7 +96,7 @@ class NLPPlugin implements PluginValue {
 		return widget;
 	}
 
-	private getEventDetailString(event: Event) {
+	private getEventDetail(event: Event): {title, dateString, timeString, hasTimeDetails} {
 		const title = event.value.title;
 		const startDate = event.value.startDate;
 		const endDate = event.value.endDate;
@@ -113,10 +113,14 @@ class NLPPlugin implements PluginValue {
 		let timeString = startTimeString;
 		if(startTimeString != endTimeString) timeString += ` - ${endTimeString}`;
 
-		let eventDetailString = `<span class="sidebar"> 📕 </span> <span class="content"> ${title} </span> <span class="sidebar"> 📅 </span> <span class="content"> ${dateString} </span>`;
+		const hasTimeDetails = startTimeString != "00:00";
 
-		if (startTimeString != "00:00") eventDetailString += ` <span class="sidebar"> 🕑 </span><span class="content"> ${timeString} </span>`;
-		return eventDetailString;
+		return {
+			title,
+			dateString,
+			timeString,
+			hasTimeDetails
+		};
 	}
 }
 
