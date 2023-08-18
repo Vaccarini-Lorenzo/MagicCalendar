@@ -16,7 +16,7 @@ const port = process.env.PORT;
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.listen(port, () => console.log(`listening to port ${port}`));
+app.listen(port, () => console.log("Listening to port ", port));
 
 app.use((req, res, next) => {
 	res.append('Access-Control-Allow-Origin', ['*']);
@@ -32,7 +32,7 @@ app.get('/', (req, res)=>{
 
 app.post("/proxy", async (req, res) => {
 	const url = filterUrl(req.url);
-	console.log("Req received:" + url);
+	
 	const method = req.body["method"];
 	const headers = req.body["headers"];
 	const body = req.body["body"];
@@ -54,7 +54,7 @@ app.post("/proxy", async (req, res) => {
 			res.set('set-cookie', value);
 		}
 		if(key.toString().toLowerCase() === "access-control-allow-origin"){
-			console.log("found 'Access-Control-Allow-Origin'");
+			
 			res.set("Access-Control-Allow-Origin", "app://obsidian.md")
 		}
 		if(key.toString().toLowerCase() === "access-control-expose-headers"){
@@ -66,14 +66,12 @@ app.post("/proxy", async (req, res) => {
 		if(key.toString().toLowerCase() === "content-length"){
 			res.removeHeader(key);
 		}
-		console.log(`h: ${key} -> ${value}`);
 	})
-	console.log(`request processed with status:${fetchRes.status}\n\n`);
+	
 	try{
 		let json = await fetchRes.json();
 		res.json(json);
 	} catch (e){
-		console.log("Error parsing the json: Body not forwarded");
 		res.send();
 	}
 

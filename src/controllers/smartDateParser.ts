@@ -7,7 +7,7 @@ class SmartDateParser {
 	constructor() {
 		this._chrono = casual.clone();
 		this._chrono.parsers.push({
-			pattern: (context) => { return /\d{1,2}(th|nd|rd)/},
+			pattern: () => { return /\d{1,2}(th|nd|rd)/},
 			extract: (context, match) => {
 				let parsedDay = match[0].replaceAll("th", "");
 				parsedDay = parsedDay.replaceAll("nd", "");
@@ -46,14 +46,14 @@ class SmartDateParser {
 		parsed.forEach(p => {
 			if(p.start != undefined){
 				startYear.push(this.getOnlyIfCertain(p.start, 'year'));
-				startMonth.push(this.getOnlyIfCertain(p.start, 'month') == null ? null : this.getOnlyIfCertain(p.start, 'month') - 1);
+				startMonth.push(this.getOnlyIfCertain(p.start, 'month'));
 				startDay.push(this.getOnlyIfCertain(p.start, 'day'));
 				startHour.push(this.getOnlyIfCertain(p.start, 'hour'));
 				startMin.push(this.getOnlyIfCertain(p.start, 'minute'));
 			}
 			if (p.end != undefined){
 				endYear.push(this.getOnlyIfCertain(p.end, 'year'));
-				endMonth.push(this.getOnlyIfCertain(p.end, 'month') == null ? null : this.getOnlyIfCertain(p.end, 'month') - 1);
+				endMonth.push(this.getOnlyIfCertain(p.end, 'month'));
 				startDay.push(this.getOnlyIfCertain(p.end, 'day'));
 				endHour.push(this.getOnlyIfCertain(p.end, 'hour'));
 				endMin.push(this.getOnlyIfCertain(p.end, 'minute'));
@@ -64,26 +64,23 @@ class SmartDateParser {
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
-		// TODO: Double check this logic
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
 
 		const start = new Date(
-			startYear[0] ?? firstValidStartParser.start.get("year"),
-			startMonth[0] ?? (firstValidStartParser.start.get("month") - 1),
-			startDay[0] ?? firstValidStartParser.start.get("day"),
-			startHour ?? 0,
-			startMin ?? 0,
+			components[0].length == 0 ? firstValidStartParser.start.get("year") : components[0][0],
+			components[1].length == 0 ? firstValidStartParser.start.get("month") : components[1][0],
+			components[2].length == 0 ? firstValidStartParser.start.get("day") : components[2][0],
+			components[3].length == 0 ? 0 : components[3][0],
+			components[4].length == 0 ? 0 : components[4][0],
 		);
 
 		const end = new Date(
-			endYear[0] ??  firstValidStartParser.start.get("year"),
-			endMonth[0] ?? (firstValidStartParser.start.get("month") - 1),
-			endDay[0] ?? firstValidStartParser.start.get("day"),
-			endHour[0] ?? start.getHours(),
-			endMin[0] ?? start.getMinutes(),
+			components[5].length == 0 ? start.getFullYear(): components[5][0],
+			components[6].length == 0 ? start.getMonth(): components[6][0],
+			components[7].length == 0 ? start.getDate(): components[7][0],
+			components[8].length == 0 ? start.getHours(): components[8][0],
+			components[9].length == 0 ? start.getMinutes(): components[9][0],
 		);
-
-		//if (start.getTime() == end.getTime()) end.setMinutes(end.getMinutes() + 30)
 
 		return {start, end};
 	}

@@ -3,13 +3,14 @@ import {iCloudServiceStatus} from "../iCloudJs";
 import {iCloudStatusModal} from "./modal";
 import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
-import {nlpPlugin} from "./nlpExtension";
+import nlpPlugin from "./nlpExtension";
 import {PluginValue} from "@codemirror/view";
 import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
+import eventController from "../controllers/eventController";
 
 let statusModal: iCloudStatusModal;
 
@@ -19,7 +20,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	settings: SettingInterface;
 
 	async onload() {
-
 		await this.initSettings();
 
 		this.injectDependencies();
@@ -47,7 +47,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		await this.saveData(this.settings);
 	}
 
-	updateStatus(status: iCloudServiceStatus){
+	private updateStatus(status: iCloudServiceStatus){
 		this.iCloudStatus = status;
 		statusModal.updateModal(status);
 		if (this.iCloudStatus == iCloudServiceStatus.Trusted || this.iCloudStatus == iCloudServiceStatus.Ready){
@@ -57,18 +57,18 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		}
 	}
 	
-	async submitCallback(username: string, pw: string, ref: any){
+	private async submitCallback(username: string, pw: string, ref: any){
 		const status = await iCloudController.tryAuthentication(username, pw);
 		ref.updateStatus(status);
 	}
 
-	async mfaCallback(code: string, ref: any){
+	private async mfaCallback(code: string, ref: any){
 		const status = await iCloudController.MFACallback(code);
 		ref.updateStatus(status);
 		statusModal.open();
 	}
 
-	registerEvents(){
+	private registerEvents(){
 		this.addCommand({
 			id: "iCal",
 			name: "Insert iCloud credentials",
@@ -88,20 +88,20 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		iCloudController.injectPath(pluginPath);
 		iCloudController.injectSettings(this.settings);
 		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
+		eventController.injectPath(pluginPath);
 	}
 
 	private initState() {
-
 		// TODO: Maybe ping the proxy server to avoid cold starts?
-
-		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		nplController.init();
+		eventController.init();
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
+		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 	}
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
-			console.log("checking safe");
+			
 			const iCloudStatus = await iCloudController.tryAuthentication("", "");
 			this.updateStatus(iCloudStatus);
 		}
@@ -116,18 +116,18 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private async checkEncryption(){
 		if (this.settings.key == "none" || this.settings.iv == "none"){
-			console.log("Generating random key and iv");
+			
 			const key = randomBytes(32);
 			const iv = randomBytes(16);
 			this.settings.key = key.toString("hex");
 			this.settings.iv = iv.toString("hex");
 			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
 			await this.saveSettings();
-			console.log("Done");
+			
 		}
 	}
 
-	updateSettings(){
+	public updateSettings(){
 		safeController.injectSettings(this.settings);
 		iCloudController.injectSettings(this.settings);
 		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);

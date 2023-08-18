@@ -30,7 +30,6 @@ class NlpController {
 	}
 
 	loadPatterns(){
-		console.log("loading patterns...");
 		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
 		const properNamePatternPath = `${this._pluginPath}/.patterns/proper_name_patterns.txt`
 
@@ -56,19 +55,9 @@ class NlpController {
 		this._customPatterns.push({name: "eventNoun", patterns: parsedNouns});
 	}
 
-
 	process(sentence: Sentence): {selection: {value, index, type}[], event: Event} | null{
-
-		// The main idea: Let's find the main date. Once that is done, find the nearest verb.
-		// Then the nearest noun (related to the event category) to the verb.
-		// We then check if the selected event-noun has some common/generic noun on the side
-		// e.g.:
-		// The common noun -> Football   match <- event related noun
-
-		// The verb pattern is based on lemmas, so we need to work on customVerbEntities (from lemmaDoc)
-
 		if(!this._ready){
-			console.log("NPL not ready");
+			console.warn("Not able to process: NLP module not ready");
 			return null;
 		}
 
@@ -85,13 +74,12 @@ class NlpController {
 		//	  This mean that we can not assume that the modified string is associated to an event
 		//	  and therefore we need to create one.
 
-		// First match - Syntax check
-		let matchedEvent = eventController.matchSentenceValue(sentence);
+		// First match - Syntactic check
+		let matchedEvent = eventController.syntacticCheck(sentence);
 		if (matchedEvent != null && matchedEvent.processed == true) return null;
 
-		// If the syntax check fails we'll need to compute the semantic check, once
+		// If the syntax check fails we'll need to perform a semantic check, once
 		// all the sentence elements are defined
-
 		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
 		const customEntities = auxiliaryStructures.customEntities;
 		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
@@ -104,7 +92,6 @@ class NlpController {
 		const properNames = this.filterProperNames(customEntities);
 		const eventNouns = this.filterEventNoun(customEntities);
 
-		//console.log(`found ${dates.length} dates, ${lemmaVerbs.length} verbs, ${eventNouns.length} eventNouns, ${properNames.length} proper names`);
 		if (dates.length == 0) return null;
 
 		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
@@ -135,22 +122,21 @@ class NlpController {
 
 		// Semantic check
 		if(matchedEvent == null){
-			sentence.injectEntityFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
+			sentence.injectSemanticFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
 			let eventTitle = "";
 			if (adjacentCommonNoun != null) eventTitle += `${adjacentCommonNoun.value} `
 			eventTitle += selectedEventNoun.value;
 			if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
 			sentence.eventNoun = eventTitle;
-			matchedEvent = eventController.checkEntities(sentence);
+			matchedEvent = eventController.semanticCheck(sentence);
 		}
+
 		// Semantic check successful
 		if (matchedEvent != null && matchedEvent.processed == true) return null;
 
 		// Semantic check unsuccessful -> new event
 		if (matchedEvent == null){
-			//let eventTitle = selectedEventNoun.value;
-			//if (selectedProperName != null) eventTitle += ` ${selectedProperName.value}`
-			const event = eventController.createNewEvent(sentence.filePath, sentence.value, sentence.eventNoun, startDateEndDate.start, startDateEndDate.end);
+			const event = eventController.createNewEvent(sentence);
 			return {
 				selection,
 				event
@@ -176,21 +162,12 @@ class NlpController {
 	private getAuxiliaryStructures(sentence: Sentence): {caseInsensitiveText: string, customEntities: CustomEntities, tokens: Tokens, pos: PartOfSpeech[]} {
 		const caseInsensitiveText = sentence.value.toLowerCase();
 		const doc = this._nlp.readDoc(caseInsensitiveText);
-		// "I'll have a meeting" -> "I", "'ll", "have" ...
 		const customEntities = doc.customEntities();
 		const tokens = doc.tokens();
 		const pos = tokens.out(this._nlp.its.pos);
-		// "I'll have a meeting" -> "I", "will", "have" ...
 		return {caseInsensitiveText, customEntities, tokens, pos};
 	}
 
-	private generateLemmaMap(tokens: string[], lemmas: string[]){
-		const lemmaMap = new Map<string, string>();
-		tokens.forEach((token, i) => lemmaMap.set(lemmas[i], token));
-		return lemmaMap;
-	}
-
-	// TODO: Fix anys
 	private filterDates(customEntities: CustomEntities): Detail[] {
 		const its = this._nlp.its;
 		return customEntities.out(its.detail).filter(pos => {
@@ -210,38 +187,6 @@ class NlpController {
 		const its = this._nlp.its;
 		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "eventNoun")) as Detail[];
 	}
-
-	private filterPosCommonNoun(pos: PartOfSpeech[]): PartOfSpeech[] {
-		return pos.filter(pos => ((pos == "NOUN")));
-	}
-
-	private filterLemmaVerbs(customVerbEntities: CustomEntities): Detail[] {
-		const its = this._nlp.its;
-		return customVerbEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "verb")) as Detail[];
-	}
-
-	private findVerb(text, lemmaVerbs, lemmaMap, selectedDateIndex): {value: string, index: number, type: string} {
-		const selectedVerb = {
-			value: "",
-			index: -1,
-			type: ""
-		};
-		let verbDistance = 1000;
-		lemmaVerbs.forEach(lemmaVerb => {
-			const verb = lemmaMap.get(lemmaVerb.value);
-			const vIndex = text.indexOf(verb);
-			const distanceFromDate = Math.abs(vIndex - selectedDateIndex);
-			if (distanceFromDate < verbDistance){
-				verbDistance = distanceFromDate;
-				selectedVerb.value = verb;
-				selectedVerb.index = vIndex;
-				selectedVerb.type = verb.type;
-			}
-		})
-		//console.log(`Found verb: ${selectedVerb.value}`);
-		return selectedVerb;
-	}
-
 
 	private findIntentionalVerb(customEntities: CustomEntities, text: string, selectedDateIndex: number): {value, index, type, noun} {
 		const selectedIntentionalVerb = {
@@ -284,7 +229,6 @@ class NlpController {
 				selectedEventNoun.type = n.type;
 			}
 		})
-		//console.log(`Found eventNoun: ${selectedEventNoun.value}`);
 		return selectedEventNoun;
 	}
 
@@ -296,10 +240,8 @@ class NlpController {
 		};
 		const stringTokens = tokens.out();
 		const eventNounTokenIndex = stringTokens.indexOf(eventNoun.value);
-		//console.log("eventNoun index ", eventNounWordIndex);
 		if (eventNounTokenIndex <= 0) return null;
 		const adjWord = stringTokens[eventNounTokenIndex - 1];
-		//console.log("adj word ", adjWord);
 		if (pos[eventNounTokenIndex - 1] != "NOUN") return null;
 		selectedAdjCommonNoun.value = adjWord;
 		selectedAdjCommonNoun.index = eventNounIndex - (adjWord.length + 1);
@@ -313,14 +255,13 @@ class NlpController {
 			index: -1,
 			type: ""
 		};
+
 		let properNameDistance = 1000;
 		properNames.forEach(properName => {
 			const pIndex = text.toLowerCase().indexOf(properName.value);
 			let caseSensitiveFirstChar = text[pIndex];
-			//console.log("properName = " + properName.value);
 			// Checking ad-positions
 			const adp = properName.value.split(" ").length == 1 ? undefined : properName.value.split(" ")[0];
-			//console.log("adp = " + adp);
 			if (adp != undefined) caseSensitiveFirstChar = text[pIndex + adp.length + 1];
 			// Excluding lower case proper names to confuse words like "amber" and "Amber"
 			if (Misc.isLowerCase(caseSensitiveFirstChar)) return;
@@ -331,8 +272,7 @@ class NlpController {
 				selectedProperName.index = pIndex;
 				selectedProperName.type = properName.type;
 			}
-		})
-		//console.log(`Found properName: ${selectedProperName.value}`);
+		});
 		return selectedProperName.index == -1 ? null : selectedProperName;
 	}
 
@@ -342,7 +282,6 @@ class NlpController {
 			const dateIndex = text.indexOf(date.value);
 			selection.push({value: date.value, index: dateIndex, type: date.type});
 		})
-		//selection.push(selectedVerb);    ---- Not needed since we don't need to highlight the verb too
 		if (selectedEventNoun!= null) selection.push(selectedEventNoun);
 		if (selectedProperName!= null) selection.push(selectedProperName);
 		if (adjacentCommonNoun != null) selection.push(adjacentCommonNoun);
@@ -360,22 +299,10 @@ class NlpController {
 		const dateComponents = dates.filter(d => dateComponentPatterns.indexOf(d.type) > -1);
 		const times = dates.filter(t => timePatterns.indexOf(t.type) > -1);
 		let cleanDates = dates;
-		//console.log("Before cleaning");
-		//console.log(cleanDates);
-		if(dateComponents.length > 1){
-			//console.log("Found multiple dates");
-			// Filtering: Either it's a date or it's the very first value
+		if(dateComponents.length > 1)
 			cleanDates = cleanDates.filter(d => ((timePatterns.indexOf(d.type) > -1) || (d.value == dateComponents[0].value)));
-			//console.log("After dates cleaning");
-			//console.log(cleanDates);
-		}
-		if(times.length > 1){
-			//console.log("Found multiple times");
-			// Filtering: Either it's a time or it's the very first value
+		if(times.length > 1)
 			cleanDates = cleanDates.filter(d =>  ((dateComponentPatterns.indexOf(d.type) > -1) || (d.value == times[0].value)));
-			//console.log("After times cleaning");
-			//console.log(cleanDates);
-		}
 		return cleanDates;
 	}
 
@@ -383,40 +310,6 @@ class NlpController {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
 		return smartDateParser.getDates(parsed);
-	}
-
-	/*
-	private singularize(text: string){
-		const pluralEndings = {
-			ves: 'fe ',
-			ies: 'y ',
-			i: 'us ',
-			zes: 'ze ',
-			ses: 's ',
-			es: 'e ',
-			"\\ws": ' '
-		};
-		return text.replace(
-			new RegExp(`(${Object.keys(pluralEndings).join('|')}) `),
-			plural => {
-				const key = plural.replace(" ", "");
-				console.log("key " + key);
-				return(pluralEndings[key]);
-			}
-		);
-	}
-*/
-
-
-
-
-
-	testPOS(sentence: Sentence) {
-		const auxiliaryStructures = this.getAuxiliaryStructures(sentence);
-		const customEntities = auxiliaryStructures.customEntities;
-		const caseInsensitiveText = auxiliaryStructures.caseInsensitiveText;
-		let doc1 = this._nlp.readDoc(sentence.value);
-		console.log(doc1.tokens().out(this._nlp.its.pos));
 	}
 }
 

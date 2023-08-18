@@ -1,10 +1,10 @@
 import {readFileSync, writeFile, writeFileSync} from "fs";
 import crypto from "crypto";
-import dotenv from "dotenv"
 import {SettingInterface} from "../plugin/appSetting";
 
 class SafeController {
-	path: string;
+	_pluginPath: string;
+	_path: string;
 	settings: SettingInterface;
 	_username: { encryptedData: string };
 	_pw: { encryptedData: string };
@@ -12,9 +12,9 @@ class SafeController {
 	_iv: Buffer;
 	_algorithm: string;
 
-	injectPath(path: string){
-		this.path = `${path}/.c.txt`;
-		//dotenv.config({path: `${path}/.env`});
+	injectPath(pluginPath: string){
+		this._pluginPath = pluginPath;
+		this._path = `${pluginPath}/.c.txt`;
 	}
 
 	injectSettings(settings: SettingInterface){
@@ -26,22 +26,20 @@ class SafeController {
 
 	checkSafe(): boolean{
 		try{
-			const data = readFileSync(this.path).toString();
+			const data = readFileSync(this._path).toString();
 			const lines = data.split("\n");
 			if(lines.length == 2){
-				console.log("Found something in safe");
 				this._username = lines[0] as any;
 				this._pw = lines[1] as any;
 				return true;
 			}
-			console.log("Safe is empty");
+			
 			return false;
 		} catch (e) {
 			if (e.code == 'ENOENT'){
-				console.log("c file not found: creating it");
-				writeFileSync(this.path, "");
+				writeFileSync(this._path, "");
 			} else {
-				console.log(e);
+				console.error("Error checking the safe");
 			}
 			return false;
 		}
@@ -60,9 +58,9 @@ class SafeController {
 		const encryptUser = JSON.stringify(this.encrypt(username));
 		const encryptPw = JSON.stringify(this.encrypt(password));
 		try {
-			writeFile(this.path, `${encryptUser}\n${encryptPw}`, ()=>{});
+			writeFile(this._path, `${encryptUser}\n${encryptPw}`, ()=>{});
 		} catch (e){
-			console.log("error storing credentials");
+			console.error("Error storing credentials");
 		}
 	}
 
