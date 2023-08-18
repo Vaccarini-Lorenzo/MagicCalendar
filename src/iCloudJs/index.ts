@@ -217,10 +217,8 @@ export default class iCloudService extends EventEmitter {
         if (!username) throw new Error("Username is required");
         if (!password) throw new Error("Password is required");
 
-
         if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
         this.authStore.loadTrustToken(this.options.username);
-
 
         this._setState(iCloudServiceStatus.Started);
         try {
