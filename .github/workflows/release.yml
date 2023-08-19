@@ -22,6 +22,11 @@ jobs:
                   npm install
                   npm run build
 
+            - name: Create Zip
+              run: |
+                zip -r ical-obsidian-sync.zip \
+                main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt
+
             - name: Create release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,5 +34,4 @@ jobs:
                   tag="${GITHUB_REF#refs/tags/}"
                   gh release create "$tag" \
                     --title="$tag" \
-                    --draft \
-                    main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt
+                    main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt ical-obsidian-sync.zip
