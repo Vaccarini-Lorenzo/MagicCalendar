@@ -30,8 +30,8 @@ class NlpController {
 	}
 
 	loadPatterns(){
-		const nounPatternPath = `${this._pluginPath}/.patterns/noun_patterns.txt`
-		const properNamePatternPath = `${this._pluginPath}/.patterns/proper_name_patterns.txt`
+		const nounPatternPath = `${this._pluginPath}/.noun_patterns.txt`
+		const properNamePatternPath = `${this._pluginPath}/.proper_name_patterns.txt`
 
 		const nounData = readFileSync(nounPatternPath);
 		const parsedNouns = JSON.parse(nounData.toString());

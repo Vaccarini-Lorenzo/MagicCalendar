@@ -58,9 +58,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		}
 	}
 	
-	private async submitCallback(username: string, pw: string, ref: any){
+	private async submitCallback(username: string, pw: string, ref: any): Promise<boolean> {
 		const status = await iCloudController.tryAuthentication(username, pw);
 		ref.updateStatus(status);
+		return status != iCloudServiceStatus.Error
 	}
 
 	private async mfaCallback(code: string, ref: any){

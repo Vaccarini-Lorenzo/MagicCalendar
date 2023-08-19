@@ -63,8 +63,8 @@ class ICloudMisc {
 			},
 			body: JSON.stringify(embeddedBody)
 		}
-		const fetchResponse = await fetch(newUrl, newInit);
-		return fetchResponse;
+
+		return await fetch(newUrl, newInit);
 	}
 }
 

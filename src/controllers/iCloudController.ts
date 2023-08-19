@@ -39,8 +39,14 @@ class ICloudController {
 			saveCredentials: true,
 			trustDevice: true
 		});
-		await this._iCloud.authenticate();
-		return this._iCloud.status;
+		try {
+			await this._iCloud.authenticate();
+			return this._iCloud.status;
+		} catch (e) {
+			console.warn("Error during authentication");
+			console.warn(e.message);
+			return iCloudServiceStatus.Error;
+		}
 	}
 
 	async MFACallback(mfa: string): Promise<iCloudServiceStatus> {

@@ -173,4 +173,10 @@ ul.navUL span:hover .hoverBubble {
 	grid-gap: 10px;
 }
 
+b {
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
+	font-weight: bold;
+	color: #8a3cf5;
 
+}
