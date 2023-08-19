@@ -5,7 +5,8 @@
 	"main": "main.js",
 	"scripts": {
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"pack": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs && cp main.js ical-obsidian-sync && cp manifest.json ical-obsidian-sync && cp styles.css  ical-obsidian-sync && cp .noun_patterns.txt ical-obsidian-sync && cp .proper_name_patterns.txt ical-obsidian-sync"
 	},
 	"keywords": [],
 	"author": "",

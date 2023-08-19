@@ -64,8 +64,6 @@ class EventController{
 	syntacticCheck(sentence: Sentence): Event | null {
 		const events = this._pathEventMap.get(sentence.filePath);
 		if (events == undefined) return null;
-		console.log(sentence);
-		console.log(events);
 		const filteredEvents = events.filter(event => event.sentence.value == sentence.value);
 		if (filteredEvents.length == 0) return null;
 		return filteredEvents[0];
