@@ -1,5 +1,3 @@
-<ins>This project is still a draft and a lot of work still needs to be done</u>
-
 # iCalObsidianSync
 This Obsidian plugin allows to synchronize iCalendar with your Obsidian notes. 
 
@@ -11,13 +9,14 @@ This Obsidian plugin allows to synchronize iCalendar with your Obsidian notes.
 ### Installation
 Currently, this plugin is not registered as a standard community plugin for downloading or updating within Obsidian. <br>
 To install it:
-- Clone the repository
-- Move the ``ical-obsidian-sync`` folder inside your plugin folder.
-- Enable the plugin in your Obsidian settings
+- Check the [latest release](https://github.com/Vaccarini-Lorenzo/iCalObsidianSync/releases/latest)
+- Download ```ical-obsidian-sync.zip```
+- Unzip the file and move the ```ical-obsidian-sync``` folder into your Obsidian plugin folder
+- Enable the plugin from your Obsidian settings.
 
 ### Log-in
-To interact with your iCalendar you'll need to login into your iCloud account. Unfortunately Apple doesn't provide any kind of OAuth authentication.
-Your credentials will be stored <ins>exclusively</ins> in your local device (encrypted). Check the **How it works** section for more informations.
+To interact with iCalendar you'll need to login into your iCloud account.
+Your credentials will be stored <ins>exclusively</ins> in your local device (encrypted).<br> Check the **How it works** section for more informations.<br>
 To login just look for *iCalSync* in your command palette.
 
 ### Just sync it
