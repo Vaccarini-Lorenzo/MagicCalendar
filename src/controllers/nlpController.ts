@@ -108,7 +108,7 @@ class NlpController {
 		}
 
 		// Find possible common noun associated to the event noun (board meeting)
-		const adjacentCommonNoun = this.findAdjacentCommonNoun(tokens, pos, selectedEventNoun, selectedEventNoun.index);
+		const adjacentCommonNoun = this.findAdjacentCommonNoun(tokens, pos, selectedEventNoun, selectedEventNoun.index, selectedDateIndex);
 
 		// Find possible proper names (John)
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun.index);
@@ -116,6 +116,7 @@ class NlpController {
 		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, adjacentCommonNoun, selectedProperName);
+		console.log(selection);
 		const startDateEndDate = this.parseDates(cleanDates);
 
 		if (startDateEndDate == undefined) return;
@@ -232,7 +233,7 @@ class NlpController {
 		return selectedEventNoun;
 	}
 
-	private findAdjacentCommonNoun(tokens, pos, eventNoun, eventNounIndex) : {value: string, index: number, type: string} | null {
+	private findAdjacentCommonNoun(tokens, pos, eventNoun, eventNounIndex, selectedDateIndex) : {value: string, index: number, type: string} | null {
 		const selectedAdjCommonNoun = {
 			value: "",
 			index: -1,
@@ -243,6 +244,9 @@ class NlpController {
 		if (eventNounTokenIndex <= 0) return null;
 		const adjWord = stringTokens[eventNounTokenIndex - 1];
 		if (pos[eventNounTokenIndex - 1] != "NOUN") return null;
+		const selectedAdjCommonNounIndex = eventNounIndex - (adjWord.length + 1);
+		// If the common noun found is the selected date, returns
+		if (selectedAdjCommonNounIndex == selectedDateIndex) return null;
 		selectedAdjCommonNoun.value = adjWord;
 		selectedAdjCommonNoun.index = eventNounIndex - (adjWord.length + 1);
 		selectedAdjCommonNoun.type = "commonNoun";
@@ -310,6 +314,9 @@ class NlpController {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
 		return smartDateParser.getDates(parsed);
+	}
+
+	DEVtest(sentence: Sentence){
 	}
 }
 

@@ -8,7 +8,7 @@ import eventController from "../controllers/eventController";
 import Event from "../model/event";
 import { Misc } from "../misc/misc";
 import iCloudController from "../controllers/iCloudController";
-import {Notice} from "obsidian";
+import { Notice } from "obsidian";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
