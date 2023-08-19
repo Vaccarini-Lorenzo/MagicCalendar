@@ -74,6 +74,10 @@ class ICloudController {
 		})
 		return await this._calendarService.postEvent(event.value, calendar.ctag);
 	}
+
+	isLoggedIn(){
+		return this._iCloud != undefined && (this._iCloud.status == iCloudServiceStatus.Ready || this._iCloud.status == iCloudServiceStatus.Trusted)
+	}
 }
 
 const iCloudController = new ICloudController();

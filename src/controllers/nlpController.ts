@@ -1,4 +1,4 @@
-import wink, {CustomEntities, Detail, Entities, PartOfSpeech, Tokens} from "wink-nlp";
+import wink, {CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";

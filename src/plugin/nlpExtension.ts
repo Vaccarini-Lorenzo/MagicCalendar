@@ -7,6 +7,8 @@ import { Sentence } from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
 import { Misc } from "../misc/misc";
+import iCloudController from "../controllers/iCloudController";
+import {Notice} from "obsidian";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -36,6 +38,10 @@ class NLPPlugin implements PluginValue {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
 				const widget = this.getWidget(matches.selection, match, matchMetadata, (sync) => {
+					if (!iCloudController.isLoggedIn()){
+						new Notice("You're not logged in! 🥲\nLook for iCalSync in the command palette to log in")
+						return;
+					}
 					eventController.processEvent(filePath, sync);
 					this.widgetFirstLoad = true;
 					view.setState(view.state);
