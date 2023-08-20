@@ -1,16 +1,16 @@
 import {MarkdownRenderChild} from "obsidian";
 
 export class CalendarView extends MarkdownRenderChild {
-	text: string;
+	hourSpan: number;
 
 	constructor(containerEl: HTMLElement, text: string) {
 		super(containerEl);
-		this.text = text;
+		this.hourSpan = 24;
 	}
 
 	onload() {
 		const test = this.containerEl.createSpan({
-			text: this.text,
+			//text: this.text,
 		});
 		this.containerEl.replaceWith(test);
 	}

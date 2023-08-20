@@ -155,21 +155,12 @@ export class iCloudCalendarService {
 
         if (method == "POST" && body != undefined){
             requestParameters["body"] = JSON.stringify(body);
-            /*
-            console.log(`url: ${url}`);
-            console.log(`-H 'Cookie: ${requestParameters.headers.Cookie}'`);
-            console.log(`-H 'Referer: ${requestParameters.headers.Referer}'`);
-            console.log(`-H 'Accept: ${requestParameters.headers.Accept}'`);
-            console.log(`-H 'Origin: ${requestParameters.headers.Origin}'`);
-            console.log(`-H 'User-Agent: ${requestParameters.headers["User-Agent"]}'`);
-            console.log(`-H 'Content-Type: ${requestParameters.headers["Content-Type"]}'`);
-            console.log(JSON.stringify(body));
-             */
         }
 
         const response = await iCloudMisc.wrapRequest(url, requestParameters);
 		if (onlyResponseStatus) return response.status;
-        return await response.json() as T;
+		const test = await response.json() as T;
+        return test;
     }
 
     async eventDetails(calendarGuid: string, eventGuid: string) {
@@ -182,6 +173,22 @@ export class iCloudCalendarService {
         return response.Event[0];
     }
 
+
+	async getRangeData(){
+		const response = await this.executeRequest<iCloudCalendarStartupResponse>("/startup", {
+			startDate: dayjs(dayjs().startOf("month")).format(this.dateFormat),
+			endDate: dayjs(dayjs().endOf("month")).format(this.dateFormat),
+			dsid: this.dsid,
+			lang: "en-us",
+			usertz: dayjs.tz.guess()
+		});
+
+		return {
+			calendars: response.Collection || [],
+			events: response.Event || []
+		};
+	}
+
     async events(from?: Date, to?: Date) {
         const response = await this.executeRequest<iCloudCalendarEventsResponse>("/events", {
             startDate: dayjs(from ?? dayjs().startOf("month")).format(this.dateFormat),
@@ -190,7 +197,6 @@ export class iCloudCalendarService {
             lang: "en-us",
             usertz: dayjs.tz.guess()
         });
-
         return response.Event || [];
     }
 

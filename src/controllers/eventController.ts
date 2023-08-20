@@ -161,14 +161,20 @@ class EventController{
 		}
 	}
 
-	getEventFromRange(dateRange: DateRange): iCloudCalendarEvent[] {
+	async getEventsFromRange(dateRange: DateRange): Promise<iCloudCalendarEvent[]> {
 		const cacheCheck = cacheController.checkCache(dateRange);
 		if (cacheCheck.missedDateRanges.length == 0) return cacheCheck.cachedICouldEvents;
 		const iCloudEvents = cacheCheck.cachedICouldEvents;
-		cacheCheck.missedDateRanges.forEach(async (missedDateRange) => {
+		for (let i=0; i<cacheCheck.missedDateRanges.length; i++){
+			const missedDateRange = cacheCheck.missedDateRanges[i];
 			const fetchedICloudEvents = await iCloudController.getICloudEvents(missedDateRange);
 			fetchedICloudEvents.forEach(iCloudEvent => iCloudEvents.push(iCloudEvent));
-		})
+		}
+		return iCloudEvents;
+	}
+
+	getEventDate(eventDateComponents: number[]): Date {
+		return new Date(`${eventDateComponents[1]}/${eventDateComponents[2]}/${eventDateComponents[3]} ${eventDateComponents[4]}:${eventDateComponents[5]}`)
 	}
 }
 

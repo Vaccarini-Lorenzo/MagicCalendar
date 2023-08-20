@@ -55,7 +55,7 @@ class SmartDateParser {
 			if (p.end != undefined){
 				endYear.push(this.getOnlyIfCertain(p.end, 'year'));
 				endMonth.push(this.getOnlyIfCertain(p.end, 'month'));
-				startDay.push(this.getOnlyIfCertain(p.end, 'day'));
+				endDay.push(this.getOnlyIfCertain(p.end, 'day'));
 				endHour.push(this.getOnlyIfCertain(p.end, 'hour'));
 				endMin.push(this.getOnlyIfCertain(p.end, 'minute'));
 			}
