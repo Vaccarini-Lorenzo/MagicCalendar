@@ -65,8 +65,6 @@ class SmartDateParser {
 		const components = [startYear, startMonth, startDay, startHour, startMin, endYear, endMonth, endDay, endHour, endMin];
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
-		console.log(components);
-
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
 
 		const start = new Date(

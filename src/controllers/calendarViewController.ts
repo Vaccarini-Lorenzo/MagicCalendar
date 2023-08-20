@@ -1,10 +1,8 @@
-import smartDateParser from "./smartDateParser";
 import eventController from "./eventController";
 import {DateRange} from "../model/dateRange";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
-import {CalendarView} from "../plugin/calendarView";
-import dayjs from "dayjs";
 import {CalendarViewDetail} from "../model/calendarViewDetail";
+import {CalendarView} from "../plugin/calendarView";
 
 class CalendarViewController {
 	async getMarkdownPostProcessor(element, context){
@@ -13,12 +11,10 @@ class CalendarViewController {
 		if (codeComponents == null) return;
 		const eventList = await calendarViewController.getEventList(codeComponents);
 		const calendarViewData = calendarViewController.getCalendarViewData( new DateRange(new Date(codeComponents.from), new Date(codeComponents.to)), eventList);
-		console.log(calendarViewData);
-		// # columns = 24?
-		//context.addChild(new CalendarView(codeblocks, calendarViewDetials));
+		context.addChild(new CalendarView(codeComponents.codeBlock, calendarViewData));
 	}
 
-	checkCodeBlocks(codeBlocks): {from, to} | null {
+	checkCodeBlocks(codeBlocks): {codeBlock, from, to} | null {
 		if (codeBlocks.length == 0) return null;
 		const codeBlock = codeBlocks.item(0);
 		const codeText = codeBlock.innerText.replaceAll(" ", "");
@@ -30,7 +26,7 @@ class CalendarViewController {
 		let to = calendarViewController.matchRegex("to:", codeText);
 		if(to == undefined) to = from;
 		else to = to.replaceAll("to:", "");
-		return {from, to};
+		return {codeBlock, from, to};
 	}
 
 	private matchRegex(prefix, text): string | undefined{
@@ -46,16 +42,16 @@ class CalendarViewController {
 		return await eventController.getEventsFromRange(dateRange);
 	}
 
-	private getCalendarViewData(dateRange: DateRange, eventList: iCloudCalendarEvent[] | []): {numOfCols, numOfRows, calendarViewDetails} {
+	private getCalendarViewData(dateRange: DateRange, eventList: iCloudCalendarEvent[] | []): {numOfCols, numOfRows, calendarViewDetails, startDate} {
 		const calendarViewDetails: CalendarViewDetail[] = [];
 		const numOfConsideredHours = 24;
 		// Every 15 mins
-		const refiner = 4;
+		const refiner = 2;
 		const refinerMinutes = 60 / refiner;
 		const numOfCols = numOfConsideredHours * refiner;
 		const maxTimeMilli = dateRange.end.getTime();
 		const minTimeMilli = dateRange.start.getTime();
-		const maxDateDelta =  - maxTimeMilli - minTimeMilli;
+		const maxDateDelta =  maxTimeMilli - minTimeMilli;
 		const milliInDay = 1000 * 3600 * 24;
 		const numOfRows = Math.floor(maxDateDelta / milliInDay);
 		eventList.forEach(event => {
@@ -66,14 +62,14 @@ class CalendarViewController {
 			const dateDelta = eventStartTime.getTime() - minTimeMilli;
 			const row = Math.floor(dateDelta / milliInDay);
 			const title = event.title;
-			console.log({title, row, fromCol, toCol});
 			const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol)
 			calendarViewDetails.push(calendarViewDetail);
 		})
 		return {
 			numOfCols,
 			numOfRows,
-			calendarViewDetails
+			calendarViewDetails,
+			startDate: dateRange.start
 		}
 	}
 }

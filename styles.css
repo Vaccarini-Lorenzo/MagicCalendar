@@ -180,3 +180,45 @@ b {
 	color: #8a3cf5;
 
 }
+
+
+
+
+.table-wrapper {
+	width: 100rem;
+	overflow: auto;
+}
+
+
+table {
+	font-size: 60%;
+	max-width: 100px;
+	overflow: auto;
+}
+
+th {
+	border-top: white;
+	border-bottom: white;
+	border-left: transparent !important;
+	border-right: transparent !important;
+	font-size: 80% !important;
+	font-weight: normal;
+}
+
+td {
+	border-top: white;
+	border-bottom: white;
+	border-left: transparent !important;
+	border-right: transparent !important;
+	font-size: 50%;
+	border-radius: 0.5rem;
+}
+
+
+.palette-0 {background-color: #8a3cf5; box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);}
+.palette-1 {background-color: #FC00BD; box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);}
+.palette-2 {background-color: #FF8656; box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);}
+.palette-3 {background-color: #FFC449; box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);}
+.palette-4 {background-color: #F9F871; box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);}
+
+
