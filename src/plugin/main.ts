@@ -1,4 +1,4 @@
-import {Plugin} from 'obsidian';
+import {MarkdownRenderChild, Plugin} from 'obsidian';
 import {iCloudServiceStatus} from "../iCloudJs";
 import {iCloudStatusModal} from "./modal";
 import nplController from "../controllers/nlpController";
@@ -12,6 +12,7 @@ import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
 import {Misc} from "../misc/misc";
+import calendarViewController from "../controllers/calendarViewController";
 
 let statusModal: iCloudStatusModal;
 
@@ -21,6 +22,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	settings: SettingInterface;
 
 	async onload() {
+
 		await this.initSettings();
 
 		this.injectDependencies();
@@ -30,6 +32,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.registerEvents();
 
 		this.registerEditorExtension(nlpPlugin)
+
+		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
 
 		await this.checkLogin();
 
@@ -117,14 +121,12 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private async checkEncryption(){
 		if (this.settings.key == "none" || this.settings.iv == "none"){
-			
 			const key = randomBytes(32);
 			const iv = randomBytes(16);
 			this.settings.key = key.toString("hex");
 			this.settings.iv = iv.toString("hex");
 			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
 			await this.saveSettings();
-			
 		}
 	}
 
@@ -134,5 +136,3 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 	}
 }
-
-

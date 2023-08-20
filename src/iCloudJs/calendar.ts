@@ -181,6 +181,7 @@ export class iCloudCalendarService {
 
         return response.Event[0];
     }
+
     async events(from?: Date, to?: Date) {
         const response = await this.executeRequest<iCloudCalendarEventsResponse>("/events", {
             startDate: dayjs(from ?? dayjs().startOf("month")).format(this.dateFormat),
@@ -192,6 +193,7 @@ export class iCloudCalendarService {
 
         return response.Event || [];
     }
+
     async calendars() {
         const response = await this.executeRequest<iCloudCalendarStartupResponse>("/startup", {
             startDate: dayjs(dayjs().startOf("month")).format(this.dateFormat),

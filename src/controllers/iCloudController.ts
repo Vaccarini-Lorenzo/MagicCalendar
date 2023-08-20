@@ -1,7 +1,8 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Event from "../model/event";
-import {iCloudCalendarCollection, iCloudCalendarService} from "../iCloudJs/calendar";
+import {iCloudCalendarCollection, iCloudCalendarEvent, iCloudCalendarService} from "../iCloudJs/calendar";
 import {SettingInterface} from "../plugin/appSetting";
+import {DateRange} from "../model/dateRange";
 
 class ICloudController {
 	private _iCloud: iCloudService;
@@ -77,6 +78,10 @@ class ICloudController {
 
 	isLoggedIn(){
 		return this._iCloud != undefined && (this._iCloud.status == iCloudServiceStatus.Ready || this._iCloud.status == iCloudServiceStatus.Trusted)
+	}
+
+	async getICloudEvents(missedDateRange: DateRange): Promise<iCloudCalendarEvent[]> {
+		return await this._calendarService.events(missedDateRange.start, missedDateRange.end);
 	}
 }
 

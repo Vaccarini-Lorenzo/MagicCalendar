@@ -7,6 +7,7 @@ import smartDateParser from "./smartDateParser";
 import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
 import Event from "../model/event";
+import {DateRange} from "../model/dateRange";
 
 class NlpController {
 	private _customPatterns: {name, patterns}[];
@@ -116,14 +117,15 @@ class NlpController {
 		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, adjacentCommonNoun, selectedProperName);
-		console.log(selection);
-		const startDateEndDate = this.parseDates(cleanDates);
 
-		if (startDateEndDate == undefined) return;
+		// From natural language to dates
+		const dateRange = this.parseDates(cleanDates);
+
+		if (dateRange == undefined) return;
 
 		// Semantic check
 		if(matchedEvent == null){
-			sentence.injectSemanticFields(startDateEndDate.start, startDateEndDate.end, selectedEventNoun.value)
+			sentence.injectSemanticFields(dateRange.start, dateRange.end, selectedEventNoun.value)
 			let eventTitle = "";
 			if (adjacentCommonNoun != null) eventTitle += `${adjacentCommonNoun.value} `
 			eventTitle += selectedEventNoun.value;
@@ -310,13 +312,10 @@ class NlpController {
 		return cleanDates;
 	}
 
-	private parseDates(dates) {
+	private parseDates(dates): DateRange {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
 		return smartDateParser.getDates(parsed);
-	}
-
-	DEVtest(sentence: Sentence){
 	}
 }
 
