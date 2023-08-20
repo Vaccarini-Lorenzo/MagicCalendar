@@ -29,28 +29,40 @@ export class CalendarView extends MarkdownRenderChild {
 	private generateRows(table: HTMLTableElement) {
 		const date = this.calendarViewData.startDate;
 		for (let rowIndex = 0; rowIndex < this.calendarViewData.numOfRows; rowIndex++){
-			const row = table.createEl("tr");
-			const leftLabel = row.createEl("td");
-			leftLabel.innerText  = date.toLocaleDateString();
-			date.setDate(date.getDate() + 1);
-			const events = this.calendarViewData.calendarViewDetails.filter(calendarViewDetail => calendarViewDetail.row == rowIndex);
-			let columnIndex = 0;
-			if (events.length != 0){
-				events.sort(function(a, b){return a.fromCol - b.fromCol})
-				events.forEach(event => {
-					for (let i = columnIndex; i < event.fromCol; i++){
-						row.createEl("td");
-					}
-					const eventView = row.createEl("td");
-					eventView.innerText = event.title;
-					eventView.addClass(`palette-1`);
-					eventView.setAttr("colspan", event.toCol - event.fromCol)
-					columnIndex = event.toCol;
-				})
-			}
-			for (let i = columnIndex; i < this.calendarViewData.numOfCols; i++){
-				row.createEl("td");
-			}
+			const row = this.initRow(table, date);
+			this.fillEventsCells(row, rowIndex);
 		}
 	}
+
+	private initRow(table: HTMLElement, date: Date): HTMLElement{
+		const row = table.createEl("tr");
+		const leftLabel = row.createEl("td");
+		leftLabel.innerText  = date.toLocaleDateString();
+		date.setDate(date.getDate() + 1);
+		return row;
+	}
+
+	private fillEventsCells(row: HTMLElement, rowIndex: number) {
+		const events = this.calendarViewData.calendarViewDetails.filter(calendarViewDetail => calendarViewDetail.row == rowIndex);
+		let columnIndex = 0;
+		if (events.length != 0){
+			events.sort(function(a, b){return a.fromCol - b.fromCol})
+
+			events.forEach(event => {
+				for (let i = columnIndex; i < event.fromCol; i++){
+					row.createEl("td");
+				}
+				const eventView = row.createEl("td");
+				eventView.innerText = event.title;
+				eventView.addClass(`palette-1`);
+				eventView.setAttr("colspan", event.toCol - event.fromCol)
+				columnIndex = event.toCol;
+			})
+		}
+
+		for (let i = columnIndex; i < this.calendarViewData.numOfCols; i++){
+			row.createEl("td");
+		}
+	}
+
 }
