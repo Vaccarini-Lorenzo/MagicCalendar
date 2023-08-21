@@ -173,9 +173,6 @@ class EventController{
 		return iCloudEvents;
 	}
 
-	getEventDate(eventDateComponents: number[]): Date {
-		return new Date(`${eventDateComponents[1]}/${eventDateComponents[2]}/${eventDateComponents[3]} ${eventDateComponents[4]}:${eventDateComponents[5]}`)
-	}
 }
 
 const eventController = new EventController();
