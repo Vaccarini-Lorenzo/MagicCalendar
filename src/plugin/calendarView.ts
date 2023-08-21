@@ -2,12 +2,19 @@ import {MarkdownRenderChild} from "obsidian";
 
 export class CalendarView extends MarkdownRenderChild {
 	calendarViewData: {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate};
-	paletteNumber;
+	paletteNumber: number;
+	paletteIndex: number;
+	numOfEvents: number;
+	paletteIndexIncrease: number;
 
 	constructor(containerEl: HTMLElement, calendarViewData: {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate}) {
 		super(containerEl);
 		this.calendarViewData = calendarViewData;
-		this.paletteNumber = 5;
+		this.paletteNumber = 22;
+		this.paletteIndex = 0;
+		this.numOfEvents = this.calendarViewData.calendarViewDetails.length;
+		const paletteEventRatio = Math.round(this.paletteNumber / this.numOfEvents);
+		this.paletteIndexIncrease = paletteEventRatio == 0 ? 1 : paletteEventRatio;
 	}
 
 	onload() {
@@ -59,7 +66,8 @@ export class CalendarView extends MarkdownRenderChild {
 				}
 				const eventView = row.createEl("td");
 				eventView.innerText = event.title;
-				eventView.addClass(`palette-1`);
+				eventView.addClass(this.getPaletteClass());
+				eventView.addClass("event-box")
 				eventView.setAttr("colspan", event.toCol - event.fromCol)
 				columnIndex = event.toCol;
 			})
@@ -68,6 +76,13 @@ export class CalendarView extends MarkdownRenderChild {
 		for (let i = columnIndex; i < this.calendarViewData.numOfCols; i++){
 			row.createEl("td");
 		}
+	}
+
+	private getPaletteClass(){
+		const paletteClass = `palette-${this.paletteIndex}`;
+		this.paletteIndex += this.paletteIndexIncrease;
+		if (this.paletteIndex == this.paletteNumber) this.paletteIndex = 0;
+		return paletteClass;
 	}
 
 }

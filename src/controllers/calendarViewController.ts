@@ -48,57 +48,11 @@ class CalendarViewController {
 		const noOverlapMap = this.manageEventOverlap(eventList, dateRange);
 		const auxStruct = this.getAuxiliaryStructure(dateRange);
 		const rowNeedsLabelMap = new Map<number, boolean>();
-		//console.log(noOverlapMap);
-		let rowIndex = 0;
-		console.log(noOverlapMap);
-		Array.from(noOverlapMap.entries()).forEach((noOverlapEntry, entryIndex) => {
-			const eventBlocks = noOverlapEntry[1];
-			if (eventBlocks.length == 0){
-				rowNeedsLabelMap.set(rowIndex, true);
-				rowIndex += 1;
-				return;
-			}
-			let isOverlap = false;
-			eventBlocks.forEach(noOverlapArray => {
-				noOverlapArray.forEach(noOverlapEvent => {
-					if (isOverlap){
-						rowNeedsLabelMap.set(rowIndex, false);
-					} else {
-						rowNeedsLabelMap.set(rowIndex, true);
-					}
-					const eventStartTime = Misc.getDateFromICloudArray(noOverlapEvent.startDate)
-					const eventEndTime = Misc.getDateFromICloudArray(noOverlapEvent.endDate)
-					const fromCol = eventStartTime.getHours() * auxStruct.refiner + eventStartTime.getMinutes() / auxStruct.refinerMinutes
-					const toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes
-					const row = rowIndex;
-					const title = noOverlapEvent.title;
-					const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol)
-					calendarViewDetails.push(calendarViewDetail);
-				})
-				isOverlap = true;
-				rowIndex += 1;
-			})
-		})
-
-		/*
-		eventList.forEach(event => {
-			const eventStartTime = Misc.getDateFromICloudArray(event.startDate)
-			const eventEndTime = Misc.getDateFromICloudArray(event.endDate)
-			const fromCol = eventStartTime.getHours() * auxStruct.refiner + eventStartTime.getMinutes() / auxStruct.refinerMinutes
-			const toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes
-			const dateDelta = eventStartTime.getTime() - auxStruct.minTimeMilli;
-			let row = Math.floor(dateDelta / auxStruct.milliInDay);
-			const title = event.title;
-			const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol)
-			calendarViewDetails.push(calendarViewDetail);
-		})
-		*/
-
-		console.log(rowNeedsLabelMap);
+		const filledRows = this.fillCalendarViewDetails(noOverlapMap, rowNeedsLabelMap, auxStruct, calendarViewDetails);
 
 		return {
 			numOfCols: auxStruct.numOfCols,
-			numOfRows: rowIndex,
+			numOfRows: filledRows,
 			rowNeedsLabelMap,
 			calendarViewDetails,
 			startDate: dateRange.start
@@ -183,6 +137,41 @@ class CalendarViewController {
 				}
 			}
 		})
+	}
+
+	private fillCalendarViewDetails(noOverlapMap, rowNeedsLabelMap, auxStruct, calendarViewDetails): number {
+		let rowIndex = 0;
+		console.log(noOverlapMap);
+		Array.from(noOverlapMap.entries()).forEach((noOverlapEntry, entryIndex) => {
+			const eventBlocks = noOverlapEntry[1];
+			if (eventBlocks.length == 0){
+				rowNeedsLabelMap.set(rowIndex, true);
+				rowIndex += 1;
+				return;
+			}
+			let isOverlap = false;
+			eventBlocks.forEach(noOverlapArray => {
+				noOverlapArray.forEach(noOverlapEvent => {
+					if (isOverlap){
+						rowNeedsLabelMap.set(rowIndex, false);
+					} else {
+						rowNeedsLabelMap.set(rowIndex, true);
+					}
+					const eventStartTime = Misc.getDateFromICloudArray(noOverlapEvent.startDate)
+					const eventEndTime = Misc.getDateFromICloudArray(noOverlapEvent.endDate)
+					const fromCol = eventStartTime.getHours() * auxStruct.refiner + eventStartTime.getMinutes() / auxStruct.refinerMinutes
+					const toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes
+					const row = rowIndex;
+					const title = noOverlapEvent.title;
+					const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol)
+					calendarViewDetails.push(calendarViewDetail);
+				})
+				isOverlap = true;
+				rowIndex += 1;
+			})
+		})
+
+		return rowIndex;
 	}
 }
 
