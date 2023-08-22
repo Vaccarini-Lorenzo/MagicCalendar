@@ -69,11 +69,7 @@ export class iCloudStatusModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl("h1", {text: "Logging in..."});
-		contentEl.createEl("h2", {text: "The server is starting..."});
-		contentEl.createEl("p", {text: "Unfortunately to communicate with iCloud it's necessary to go through a proxy. The proxy at the moment is a Render's free instance and you might experience a cold start, give it few seconds."});
-		contentEl.createEl("b", {text: "The server is placed near Frankfurt: If you activated 2FA you'll probably see a request coming from the server location" });
-		contentEl.createEl("h2", {text: "Is it taking too long? You can start your own proxy server!"})
-		contentEl.createEl("p", {text: "Check the plugin README.md for more info"});
+		contentEl.createEl("h2", {text: "If you activated 2FA in your iCloud account you might be asked to insert a code"});
 	}
 
 	error(){

@@ -92,12 +92,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		safeController.injectSettings(this.settings);
 		iCloudController.injectPath(pluginPath);
 		iCloudController.injectSettings(this.settings);
-		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 		eventController.injectPath(pluginPath);
 	}
 
 	private initState() {
-		// TODO: Maybe ping the proxy server to avoid cold starts?
 		nplController.init();
 		eventController.init();
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
@@ -133,6 +131,5 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	public updateSettings(){
 		safeController.injectSettings(this.settings);
 		iCloudController.injectSettings(this.settings);
-		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 	}
 }

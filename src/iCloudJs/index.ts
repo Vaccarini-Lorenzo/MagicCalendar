@@ -339,6 +339,7 @@ export default class iCloudService extends EventEmitter {
      */
     async checkPCS() {
         const pcsTest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
+		
         if (pcsTest.status == 200) {
             const j = await pcsTest.json();
             this.pcsEnabled = typeof j.isDeviceConsentedForPCS == "boolean";

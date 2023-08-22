@@ -36,10 +36,10 @@ export class CalendarView extends MarkdownRenderChild {
 
 	private generateRows(table: HTMLTableElement) {
 		const date = this.calendarViewData.startDate;
-		console.log(this.calendarViewData.calendarViewDetails);
+		
 		for (let rowIndex = 0; rowIndex < this.calendarViewData.numOfRows; rowIndex++){
 			const needsLabel = this.calendarViewData.rowNeedsLabelMap.get(rowIndex);
-			console.log(needsLabel);
+			
 			const row = this.initRow(table, date, needsLabel);
 			this.fillEventsCells(row, rowIndex);
 		}
@@ -60,6 +60,7 @@ export class CalendarView extends MarkdownRenderChild {
 		if (calendarEventDetails.length != 0){
 			calendarEventDetails.sort(function(a, b){return a.fromCol - b.fromCol})
 
+			
 			calendarEventDetails.forEach(event => {
 				for (let i = columnIndex; i < event.fromCol; i++){
 					row.createEl("td");

@@ -68,6 +68,7 @@ export class iCloudAuthenticationStore {
      * @returns {boolean} True if the secrets are all present, false otherwise.
      */
     processAuthSecrets(authResponse: Response) {
+
         try {
 			this.sessionId = authResponse.headers.get("X-Apple-Session-Token");
             this.sessionToken = this.sessionId;
@@ -87,7 +88,6 @@ export class iCloudAuthenticationStore {
      * @param cloudSetupResponse The response from the iCloud setup request
      * @returns {boolean} True if cookies were found, false otherwise.
      */
-	// Error here
     processCloudSetupResponse(cloudSetupResponse: Response) {
 		this.icloudCookies = Array.from(cloudSetupResponse.headers.entries())
             .filter((v) => v[0].toLowerCase() == "forward-cookie")

@@ -1,12 +1,7 @@
-import fetch, {RequestInfo, RequestInit, Response} from "node-fetch";
+import {RequestInfo, RequestInit, Response} from "node-fetch";
+import {requestUrl, RequestUrlParam} from "obsidian";
 
 class ICloudMisc {
-	private proxyEndpoint: string;
-
-	setProxyEndpoint(proxyEndpoint: string){
-		this.proxyEndpoint = proxyEndpoint;
-	}
-
     private stringifyDateNumber(dateNumber: number): string {
         return dateNumber.toString().length == 1 ? "0" + dateNumber.toString() : dateNumber.toString()
     }
@@ -44,27 +39,39 @@ class ICloudMisc {
     }
 
 	async wrapRequest(url: RequestInfo, init?: RequestInit): Promise<Response>{
-
-		const newUrl = `${this.proxyEndpoint}?url=${url}`;
-		const embeddedBody = {
+		const requestUrlParam = {
+			url: url.toString(),
 			method: init.method ?? "GET",
 			headers: init.headers,
+			body: init.body
 		}
 
-		if(init.body != undefined){
-			embeddedBody["body"] = JSON.parse(init.body as string);
+		let requestUrlResponse;
+		try{
+			requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
+		} catch (e){
+			console.warn("Error requestingUrl");
 		}
 
-		const newInit = {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Accept": "application/json"
-			},
-			body: JSON.stringify(embeddedBody)
+		const setCookieField = requestUrlResponse.headers["set-cookie"] as any;
+		let setCookieString = "";
+
+		if (setCookieField != undefined){
+			setCookieField.forEach(setCookie => {
+				setCookieString += `${setCookie.split(";")[0]}, `
+			})
+			requestUrlResponse.headers["forward-cookie"] = setCookieString;
 		}
 
-		return await fetch(newUrl, newInit);
+		const responseInit = {
+			headers: requestUrlResponse.headers,
+			status: requestUrlResponse.status,
+			statusText: requestUrlResponse.status.toString(),
+			url: url.toString()
+		};
+
+		const responseWrapper = new Response(requestUrlResponse.arrayBuffer, responseInit)
+		return responseWrapper;
 	}
 }
 
