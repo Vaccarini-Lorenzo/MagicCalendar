@@ -6,7 +6,6 @@ import nlpController from "../controllers/nlpController";
 import nlpPlugin from "./nlpExtension";
 import {PluginValue} from "@codemirror/view";
 import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
-import iCloudMisc from "../iCloudJs/iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
@@ -21,6 +20,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	settings: SettingInterface;
 
 	async onload() {
+
 		await this.initSettings();
 
 		this.injectDependencies();
@@ -88,12 +88,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		safeController.injectSettings(this.settings);
 		iCloudController.injectPath(pluginPath);
 		iCloudController.injectSettings(this.settings);
-		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 		eventController.injectPath(pluginPath);
 	}
 
 	private initState() {
-		// TODO: Maybe ping the proxy server to avoid cold starts?
 		nplController.init();
 		eventController.init();
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
@@ -117,22 +115,17 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private async checkEncryption(){
 		if (this.settings.key == "none" || this.settings.iv == "none"){
-			
 			const key = randomBytes(32);
 			const iv = randomBytes(16);
 			this.settings.key = key.toString("hex");
 			this.settings.iv = iv.toString("hex");
 			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
 			await this.saveSettings();
-			
 		}
 	}
 
 	public updateSettings(){
 		safeController.injectSettings(this.settings);
 		iCloudController.injectSettings(this.settings);
-		iCloudMisc.setProxyEndpoint(this.settings.proxyEndpoint);
 	}
 }
-
-

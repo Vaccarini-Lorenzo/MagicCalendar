@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 
 export interface SettingInterface {
 	tz: string;
-	proxyEndpoint: string;
 	calendar: string;
 	key: string;
 	iv: string;
@@ -12,7 +11,6 @@ export interface SettingInterface {
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	tz: dayjs.tz.guess(),
-	proxyEndpoint: "https://icalobsidiansyncproxy.onrender.com/proxy",
 	calendar: "none",
 	key: "none",
 	iv: "none"
@@ -89,16 +87,6 @@ export class AppSetting extends PluginSettingTab {
 				iv.setValue(this.plugin.settings.iv ?? "none");
 				iv.onChange(async value => {
 					this.plugin.settings.iv = value;
-				})
-			})
-
-		new Setting(containerEl)
-			.setName("CORS proxy endpoint")
-			.addText(proxyServerURL => {
-				proxyServerURL.setValue((this.plugin.settings.proxyEndpoint));
-				proxyServerURL.onChange(async value => {
-					this.plugin.settings.proxyEndpoint = value;
-					this.retryLogin = true;
 				})
 			})
 

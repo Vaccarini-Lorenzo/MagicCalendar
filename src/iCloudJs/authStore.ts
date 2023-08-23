@@ -61,31 +61,6 @@ export class iCloudAuthenticationStore {
         }
     }
 
-	/*
-	    processAuthSecrets(authResponse: Response) {
-    	try{
-    		const headerMap = {};
-			authResponse.headers.forEach((value, key) => {
-				headerMap[key.toString().toLowerCase()] = value;
-			})
-			console.log(headerMap);
-
-			this.sessionId = headerMap["x-apple-session-token"]
-			console.log(`sessionId = ${this.sessionId}`);
-            this.sessionToken = this.sessionId;
-            //this.scnt = authResponse.headers.get("scnt");
-			this.scnt = headerMap["scnt"];
-
-
-			const headers = Array.from(authResponse.headers.values());
-            const aaspCookie = headers.find((v) => v.includes("aasp="));
-            this.aasp = aaspCookie.split("aasp=")[1].split(";")[0];
-            return this.validateAuthSecrets();
-    	}catch(){
-    	}
-    }
-	 */
-
     /**
      * Processes a successful iCloud sign in response.
      * Sets this authenticationStore's sessionId, sessionToken, scnt, and aasp properties.
@@ -93,6 +68,7 @@ export class iCloudAuthenticationStore {
      * @returns {boolean} True if the secrets are all present, false otherwise.
      */
     processAuthSecrets(authResponse: Response) {
+
         try {
 			this.sessionId = authResponse.headers.get("X-Apple-Session-Token");
             this.sessionToken = this.sessionId;
@@ -112,7 +88,6 @@ export class iCloudAuthenticationStore {
      * @param cloudSetupResponse The response from the iCloud setup request
      * @returns {boolean} True if cookies were found, false otherwise.
      */
-	// Error here
     processCloudSetupResponse(cloudSetupResponse: Response) {
 		this.icloudCookies = Array.from(cloudSetupResponse.headers.entries())
             .filter((v) => v[0].toLowerCase() == "forward-cookie")

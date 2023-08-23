@@ -8,7 +8,8 @@ import eventController from "../controllers/eventController";
 import Event from "../model/event";
 import { Misc } from "../misc/misc";
 import iCloudController from "../controllers/iCloudController";
-import {Notice} from "obsidian";
+import { Notice } from "obsidian";
+import nlpController from "../controllers/nlpController";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -51,13 +52,17 @@ class NLPPlugin implements PluginValue {
 					if (ref.widgetFirstLoad) ref.widgetFirstLoad = false;
 				}, 500, this);
 
-				builder.add(
-					matchMetadata.startsFrom,
-					matchMetadata.endsTo,
-					Decoration.replace({
-						widget,
-					})
-				);
+				try{
+					builder.add(
+						matchMetadata.startsFrom,
+						matchMetadata.endsTo,
+						Decoration.replace({
+							widget,
+						})
+					);
+				} catch (e){
+					// Nothing to see here
+				}
 			});
 			return true;
 		})
@@ -87,15 +92,15 @@ class NLPPlugin implements PluginValue {
 
 
 	private getWidget(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: (sync: boolean) => void, eventDetailString): WidgetType {
-		let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
+		let widget: WidgetType = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
+		//let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
 		const isExplicitDatePresent = matches.filter(match => match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse").length > 0;
-		if (match.type == "properName" || match.type == "eventNoun" || match.type == "commonNoun") {
-			widget = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
-		}
 		// If there is no explicit date, highlight the exactTime/timeRange
 		// e.g.: At 2 o'clock I'll join a meeting  <-  2 o'clock should be highlighted
-		if(isExplicitDatePresent && (match.type == "exactTime" || match.type == "timeRange")){
-			widget = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
+		if(isExplicitDatePresent &&  (match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse")){
+			widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
+		} else if (!isExplicitDatePresent && (match.type == "timeRange" || match.type == "exactTime")){
+			widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
 		}
 		return widget;
 	}
