@@ -54,13 +54,17 @@ class NLPPlugin implements PluginValue {
 					if (ref.widgetFirstLoad) ref.widgetFirstLoad = false;
 				}, 500, this);
 
-				builder.add(
-					matchMetadata.startsFrom,
-					matchMetadata.endsTo,
-					Decoration.replace({
-						widget,
-					})
-				);
+				try{
+					builder.add(
+						matchMetadata.startsFrom,
+						matchMetadata.endsTo,
+						Decoration.replace({
+							widget,
+						})
+					);
+				} catch (e){
+					// Nothing to see here
+				}
 			});
 			return true;
 		})
