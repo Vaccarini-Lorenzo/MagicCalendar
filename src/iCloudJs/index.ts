@@ -6,13 +6,8 @@ import { iCloudAuthenticationStore } from "./authStore";
 import { AUTH_ENDPOINT, AUTH_HEADERS, DEFAULT_HEADERS, SETUP_ENDPOINT } from "./consts";
 import { iCloudAccountDetailsService } from "./account";
 import { iCloudCalendarService } from "./calendar";
-import { iCloudDriveService } from "./drive";
-import { iCloudFindMyService } from "./findMy";
-import { iCloudPhotosService } from "./photos";
-import { iCloudUbiquityService } from "./ubiquity";
 import { AccountInfo } from "./types";
 import iCloudMisc from "./iCloudMisc";
-import SafeController from "../controllers/safeController";
 import safeController from "../controllers/safeController";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
@@ -64,50 +59,6 @@ export const enum iCloudServiceStatus {
     Ready = "Ready",
     // The authentication failed.
     Error = "Error"
-}
-
-
-/**
- * Information about the account's storage usage.
- */
-export interface iCloudStorageUsage {
-    storageUsageByMedia: Array<{
-      mediaKey: string
-      displayLabel: string
-      displayColor: string
-      usageInBytes: number
-    }>
-    storageUsageInfo: {
-      compStorageInBytes: number
-      usedStorageInBytes: number
-      totalStorageInBytes: number
-      commerceStorageInBytes: number
-    }
-    quotaStatus: {
-      overQuota: boolean
-      haveMaxQuotaTier: boolean
-      "almost-full": boolean
-      paidQuota: boolean
-    }
-    familyStorageUsageInfo: {
-      mediaKey: string
-      displayLabel: string
-      displayColor: string
-      usageInBytes: number
-      familyMembers: Array<{
-        lastName: string
-        dsid: number
-        fullName: string
-        firstName: string
-        usageInBytes: number
-        id: string
-        appleId: string
-      }>
-    }
-  }
-
-function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -339,6 +290,7 @@ export default class iCloudService extends EventEmitter {
      */
     async checkPCS() {
         const pcsTest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestWebAccessState", { headers: this.authStore.getHeaders(), method: "POST" });
+		
         if (pcsTest.status == 200) {
             const j = await pcsTest.json();
             this.pcsEnabled = typeof j.isDeviceConsentedForPCS == "boolean";
@@ -349,58 +301,6 @@ export default class iCloudService extends EventEmitter {
         }
     }
 
-    /**
-     * Requests PCS access to a specific service. Required to call before accessing any PCS protected services when iCloud Advanced Data Protection is enabled.
-     * @remarks Should only be called when iCloudService.ICDRSDisabled is `false`, however this function will check for you, and immediately return as it's not required..
-     * @experimental
-     * @param appName The service name to request access to.
-     */
-    async requestServiceAccess(appName: "iclouddrive") {
-        await this.checkPCS();
-        if (!this.ICDRSDisabled) {
-            console.warn("[icloud] requestServiceAccess: ICRS is not disabled.");
-            return true;
-        }
-        if (!this.pcsAccess) {
-            const requestPcs = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/enableDeviceConsentForPCS", { headers: this.authStore.getHeaders(), method: "POST" });
-            const requestPcsJson = await requestPcs.json();
-            if (!requestPcsJson.isDeviceConsentNotificationSent) {
-                throw new Error("Unable to request PCS access!");
-            }
-        }
-        while (!this.pcsAccess) {
-            await sleep(5000);
-            await this.checkPCS();
-        }
-        let pcsRequest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: true }) });
-        let pcsJson = await pcsRequest.json();
-        while (true) {
-            if (pcsJson.status == "success") {
-                break;
-            } else {
-                switch (pcsJson.message) {
-                case "Requested the device to upload cookies.":
-                case "Cookies not available yet on server.":
-                    await sleep(5000);
-                    break;
-                default:
-                    console.error("[icloud] unknown PCS request state", pcsJson);
-                }
-                pcsRequest = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/requestPCS", { headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify({ appName, derivedFromUserAction: false }) });
-                pcsJson = await pcsRequest.json();
-            }
-        }
-        this.authStore.addCookies(pcsRequest.headers.raw()["set-cookie"]);
-
-        return true;
-    }
-
-
-
-
-
-
-
     private _serviceCache: {[key: string]: any} = {};
     /**
      * A mapping of service names to their classes.
@@ -410,28 +310,18 @@ export default class iCloudService extends EventEmitter {
      */
     serviceConstructors: {[key: string]: any} = {
         account: iCloudAccountDetailsService,
-        findme: iCloudFindMyService,
-        ubiquity: iCloudUbiquityService,
-        drivews: iCloudDriveService,
         calendar: iCloudCalendarService,
-        photos: iCloudPhotosService
     };
 
     // Returns an instance of the 'account' (Account Details) service.
     getService(service: "account"): iCloudAccountDetailsService;
     // Returns an instance of the 'findme' (Find My) service.
-    getService(service: "findme"): iCloudFindMyService;
     /**
      * Returns an instance of the 'ubiquity' (Legacy iCloud Documents) service.
      * @deprecated
      */
-    getService(service: "ubiquity"): iCloudUbiquityService;
-    // Returns an instance of the 'drivews' (iCloud Drive) service.
-    getService(service: "drivews"): iCloudDriveService
     // Returns an instance of the 'calendar' (iCloud Calendar) service.
     getService(service: "calendar"): iCloudCalendarService
-    // Returns an instance of the 'photos' (iCloud Photos) service.
-    getService(service: "photos"): iCloudPhotosService
     /**
      * Returns an instance of the specified service. Results are cached, so subsequent calls will return the same instance.
      * @param service The service name to return an instance of. Must be one of the keys in {@link iCloudService.serviceConstructors}.
@@ -446,20 +336,5 @@ export default class iCloudService extends EventEmitter {
 			this._serviceCache[service] = new this.serviceConstructors[service](this, this.accountInfo.webservices[service].url);
         }
 		return this._serviceCache[service];
-    }
-
-
-    private _storage;
-    /**
-     * Gets the storage usage data for the account.
-     * @param refresh Force a refresh of the storage usage data.
-     * @returns {Promise<iCloudStorageUsage>} The storage usage data.
-     */
-    async getStorageUsage(refresh = false): Promise<iCloudStorageUsage> {
-        if (!refresh && this._storage) return this._storage;
-        const response = await iCloudMisc.wrapRequest("https://setup.icloud.com/setup/ws/1/storageUsageInfo", { headers: this.authStore.getHeaders() });
-        const json = await response.json();
-        this._storage = json;
-        return this._storage;
     }
 }

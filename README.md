@@ -1,5 +1,5 @@
 # iCalObsidianSync
-This Obsidian plugin allows to synchronize iCalendar with your Obsidian notes. 
+This Obsidian plugin allows to synchronize iCalendar with your Obsidian notes.
 
 <p align="center">
   <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/iCalObsidianSync/main/materials/iCalDemo.gif">
@@ -29,5 +29,19 @@ The plugin works on top of a **NLP** library [(NLP wink)](https://winkjs.org/win
 ### iCloud module
 The communication with iCloud wouldn't be possible without the help of [iCloud.js](https://github.com/foxt/icloud.js.git). The library has been opportunely modified to support POST requests and bypass CORS policies. <br>
 Since Apple doesn't support OAuth, it's necessary to login with email and password. These inserted credentials are stored exclusively in your local device (AES encrypted) in order to avoid a manual login everytime a token refresh is needed. The encryption key is randomly generated when the plugin is installed. It can be manually changed in the settings section (not recommended).
-### CORS proxy
-Obsidian is an Electron App and as such it implements its own CORS policies. To bypass them it's necessary to deploy a CORS proxy server that will simply forward the requests to the specified URL. At the moment the default CORS proxy is a simple server deployed on Render but it's possible to modify the proxy endpoint in the settings section. In the repository it's provided the [exact code of the deployed CORS](https://github.com/Vaccarini-Lorenzo/iCalObsidianSync/blob/main/src/CORSProxy/proxyServer.js) server which can be eventually be started locally.
+
+
+# What's new?
+### v.1.1.0
+- No need for a CORS proxy anymore
+- NPL module improvements:
+  1) Entity-related attributes identification
+  2) Event purpose recognition
+  3) Fix entity overlap bug
+
+# Currently in development phase
+- **Event inline view**: From version v.1.2.0 will be possible to embed iCalendar events in your notes
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/iCalObsidianSync/main/materials/inlineViewDemo.gif">
+</p>

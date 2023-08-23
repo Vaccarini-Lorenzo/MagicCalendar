@@ -1,5 +1,6 @@
 import {casual, Chrono, Component, ParsedResult} from "chrono-node";
 import {ParsedComponents} from "chrono-node/dist/cjs/types";
+import {DateRange} from "../model/dateRange";
 
 class SmartDateParser {
 	private _chrono: Chrono;
@@ -25,7 +26,7 @@ class SmartDateParser {
 	}
 
 
-	getDates(parsed: ParsedResult[]): {start?: Date, end?: Date} {
+	getDates(parsed: ParsedResult[]): DateRange {
 		let startYear, startMonth, startDay, startHour, startMin;
 		startYear = [];
 		startMonth = [];
@@ -54,7 +55,7 @@ class SmartDateParser {
 			if (p.end != undefined){
 				endYear.push(this.getOnlyIfCertain(p.end, 'year'));
 				endMonth.push(this.getOnlyIfCertain(p.end, 'month'));
-				startDay.push(this.getOnlyIfCertain(p.end, 'day'));
+				endDay.push(this.getOnlyIfCertain(p.end, 'day'));
 				endHour.push(this.getOnlyIfCertain(p.end, 'hour'));
 				endMin.push(this.getOnlyIfCertain(p.end, 'minute'));
 			}
@@ -82,7 +83,7 @@ class SmartDateParser {
 			components[9].length == 0 ? start.getMinutes(): components[9][0],
 		);
 
-		return {start, end};
+		return new DateRange(start, end);
 	}
 
 	getOnlyIfCertain(parsedComponent: ParsedComponents, component: Component){
