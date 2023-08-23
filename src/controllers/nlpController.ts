@@ -18,10 +18,6 @@ class NlpController {
 	// e.g. John is both a noun and a proper noun
 	private _secondaryNLP;
 	private _ready: boolean;
-	private test_list_pos: string[];
-	private nouns: string[];
-	private test_list_entities: string[];
-	private map: Map<string[], string>;
 
 	constructor() {
 		this._ready = false;
@@ -29,10 +25,6 @@ class NlpController {
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
 		this._secondaryCustomPatterns = []
-		this.test_list_pos = [];
-		this.test_list_entities = [];
-		this.map = new Map();
-		this.nouns = [];
 	}
 
 	injectPath(pluginPath: string){
@@ -68,9 +60,8 @@ class NlpController {
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
-		this._customPatterns.push({name: "purpose", patterns: ["[|PART] [VERB] [|VERB] [|ADJ] [NOUN] [|NOUN|ADJ] [|CCONJ] [|NOUN|ADJ] [|NOUN|ADJ]",
-				"[to|about|regarding|concerning] [|VERB] [PRON|ADJ|NOUN] [|NOUN|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN]"]});
-		// The secondayCustomPatterns exist to manage possible overlap between entities
+		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]", "to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
+		// The secondaryCustomPatterns exist to manage possible overlap between entities
 		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._secondaryCustomPatterns.push({name: "properName", patterns: parsedProperNames});
 	}
@@ -131,9 +122,9 @@ class NlpController {
 		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun);
 
 		// Find possible common noun associated to the event noun (board meeting)
-		const backwardsAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedEventNoun.index, selectedDateIndex, true);
+		const backwardsAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, true);
 
-		const forwardAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedEventNoun.index, selectedDateIndex);
+		const forwardAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex);
 
 		const cleanDates = this.cleanJunkDates(dates);
 		// Fill selection array
@@ -147,8 +138,7 @@ class NlpController {
 		// Semantic check
 		if(matchedEvent == null){
 			sentence.injectSemanticFields(dateRange.start, dateRange.end, selectedEventNoun.value)
-			const eventTitle = this.getEventTitle(backwardsAdjAttributes, forwardAdjAttributes, selectedEventNoun, selectedProperName, purpose);
-			sentence.eventNoun = eventTitle;
+			sentence.eventNoun = this.getEventTitle(backwardsAdjAttributes, forwardAdjAttributes, selectedEventNoun, selectedProperName, purpose);
 			matchedEvent = eventController.semanticCheck(sentence);
 		}
 
@@ -214,7 +204,7 @@ class NlpController {
 	private findPurpose(text: string, customEntities: CustomEntities): {value, index, type} {
 		const its = this._secondaryNLP.its;
 		const purpose = customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "purpose")).first() as Detail;
-		console.log("Purpose", purpose);
+
 		if (purpose == undefined) return null;
 		const purposeIndex = text.indexOf(purpose.value);
 		return {
@@ -248,7 +238,7 @@ class NlpController {
 		})
 		const verbIndex = pos.indexOf("VERB");
 		const verb = tokenValue[verbIndex];
-		console.log(verb);
+
 		selectedIntentionalVerb.noun = `${verb} ${selectedIntentionalVerb.value.split(" ").last()}`;
 		return selectedIntentionalVerb;
 	}
@@ -277,18 +267,18 @@ class NlpController {
 	// The idea:
 	// Look for [|ADP] [...NOUN]
 	// backwards flag -> looks back
-	private findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, eventNounIndex, selectedDateIndex, backward = false) : {value: string, index: number, type: string}[] | null {
-		const selectedAdjAttributes: { value, index, type }[] = [];
+	private findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, backward = false) : {value: string, index: number, type: string}[] | null {
+		let selectedAdjAttributes: { value, index, type }[] = [];
 		let adjOffset = 1;
 		if (backward) adjOffset = -1;
 		const stringTokens = tokens.out();
 		const eventNounTokenIndex = stringTokens.indexOf(selectedEventNoun.value);
 		if (eventNounTokenIndex <= 0) return null;
-		let cumulativeIndex = 0;
+		let cumulativeIndex = selectedEventNoun.index;
 		while (pos[eventNounTokenIndex + adjOffset] == "NOUN" || pos[eventNounTokenIndex + adjOffset] == "ADJ" || pos[eventNounTokenIndex + adjOffset] == "ADP" || pos[eventNounTokenIndex + adjOffset] == "PRON"){
 			const adjWord = stringTokens[eventNounTokenIndex + adjOffset];
 			if(selectedProperName != null && adjWord == selectedProperName.value) return null;
-			const selectedAdjAttributedIndex = cumulativeIndex + (backward ? eventNounIndex - (adjWord.length + 1) : eventNounIndex + (adjWord.length + 1));
+			const selectedAdjAttributedIndex = backward ? cumulativeIndex - (adjWord.length + 1) : cumulativeIndex + (adjWord.length + 1);
 			cumulativeIndex = selectedAdjAttributedIndex;
 			if (selectedAdjAttributedIndex == selectedDateIndex) return null;
 			const selectedAdjAttribute = {
@@ -303,6 +293,8 @@ class NlpController {
 			if (backward) adjOffset -= 1;
 			else adjOffset += 1;
 		}
+
+		if (backward) selectedAdjAttributes = selectedAdjAttributes.reverse();
 
 		// The last element can't be an ADP or a PRON
 		while (selectedAdjAttributes.length > 0 && (selectedAdjAttributes[selectedAdjAttributes.length - 1].type == "ADP" || selectedAdjAttributes[selectedAdjAttributes.length - 1].type == "PRON")){
@@ -352,7 +344,7 @@ class NlpController {
 	}
 
 	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, backwardsAdjAttributes: {value, index, type}[],
-								forwardAdjAttributes: {value, index, type}[],  selectedProperName: {value, index, type}, purpose: {value, index, type}): {value, index, type}[] {
+							  forwardAdjAttributes: {value, index, type}[],  selectedProperName: {value, index, type}, purpose: {value, index, type}): {value, index, type}[] {
 		const selection = []
 
 		dates.forEach(date => {
@@ -374,11 +366,8 @@ class NlpController {
 		}
 		if (purpose != null) selection.push(purpose);
 
-		console.log(selection);
-
 		// Order by index (builder.add needs to be called with increasing values)
-		const sorted = selection.sort((a, b) => a.index - b.index);
-		return sorted;
+		return selection.sort((a, b) => a.index - b.index);
 	}
 
 	// There can be just one date (2023/01/01, The second of August ...) and/or one time (at 2, from 10 to 12);
@@ -403,58 +392,10 @@ class NlpController {
 		return smartDateParser.getDates(parsed);
 	}
 
-	test(sentence: Sentence) {
-		const text = sentence.value;
-		const sentences = text.split("\n");
-		sentences.forEach(sentence => {
-			const caseInsensitiveText = sentence.toLowerCase();
-			const doc = this._mainNLP.readDoc(caseInsensitiveText);
-			const testDoc = this._secondaryNLP.readDoc(caseInsensitiveText);
-			const customEntities = doc.customEntities().out(this._mainNLP.its.detail);
-			const testCustomE = testDoc.customEntities().out(this._secondaryNLP.its.detail);
-			console.log("customE", customEntities);
-			console.log("testCustomE", testCustomE);
-			const entities = doc.entities().out(this._mainNLP.its.detail);
-			const dates = entities.filter(e => e.type == "DATE");
-			const tokens = doc.tokens();
-			const tokenValues = tokens.out();
-			const pos = tokens.out(this._mainNLP.its.pos);
-			pos.forEach((p, i) => {
-				if (p == "PROPN"){
-					const corrispectiveToken = tokenValues[i];
-					const corrispectiveDateList = dates.filter(d => d.value == corrispectiveToken)
-					if (corrispectiveDateList.length > 0){
-						pos[i] = corrispectiveDateList[0].type;
-					}
-				}
-				if (p == "PUNCT"){
-					pos.remove(p);
-				}
-				if (p == "NOUN"){
-					const corrispectiveToken = tokenValues[i];
-					this.nouns.push(corrispectiveToken);
-				}
-			})
-			this.test_list_pos.push(pos);
-			this.map.set(pos, sentence);
-		})
-	}
-
-	print() {
-		console.log("POS list")
-		console.log(this.test_list_pos);
-		this.test_list_pos = [];
-		console.log(Array.from(this.map.entries()));
-		console.log("Nouns")
-		console.log(this.nouns);
-		this.nouns = [];
-
-	}
-
 	private getEventTitle(backwardsAdjAttributes, forwardAdjAttributes, selectedEventNoun, selectedProperName, purpose): string {
 		let eventTitle = "";
 		if (backwardsAdjAttributes != null){
-			backwardsAdjAttributes.reverse().forEach(backwardsAdjAttribute => {
+			backwardsAdjAttributes.forEach(backwardsAdjAttribute => {
 				eventTitle += `${backwardsAdjAttribute.value} `
 			})
 		}
