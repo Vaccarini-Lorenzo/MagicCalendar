@@ -1,4 +1,4 @@
-import {MarkdownRenderChild, Plugin} from 'obsidian';
+import {Plugin} from 'obsidian';
 import {iCloudServiceStatus} from "../iCloudJs";
 import {iCloudStatusModal} from "./modal";
 import nplController from "../controllers/nlpController";
@@ -6,13 +6,11 @@ import nlpController from "../controllers/nlpController";
 import nlpPlugin from "./nlpExtension";
 import {PluginValue} from "@codemirror/view";
 import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
-import iCloudMisc from "../iCloudJs/iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
 import {Misc} from "../misc/misc";
-import calendarViewController from "../controllers/calendarViewController";
 
 let statusModal: iCloudStatusModal;
 
@@ -32,8 +30,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.registerEvents();
 
 		this.registerEditorExtension(nlpPlugin)
-
-		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
 
 		await this.checkLogin();
 
