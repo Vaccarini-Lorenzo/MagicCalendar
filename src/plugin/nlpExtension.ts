@@ -9,7 +9,6 @@ import Event from "../model/event";
 import { Misc } from "../misc/misc";
 import iCloudController from "../controllers/iCloudController";
 import { Notice } from "obsidian";
-import nlpController from "../controllers/nlpController";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;

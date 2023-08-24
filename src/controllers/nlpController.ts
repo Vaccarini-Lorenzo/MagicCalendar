@@ -24,7 +24,7 @@ class NlpController {
 		this._mainNLP = wink( model );
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
-		this._secondaryCustomPatterns = []
+		this._secondaryCustomPatterns = [];
 	}
 
 	injectPath(pluginPath: string){
@@ -56,7 +56,7 @@ class NlpController {
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		);
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["from [TIME|CARDINAL|NUM] [|NOUN] to [TIME|CARDINAL|NUM] [|NOUN]", "ADP SYM PART SYM"]},
+			{name: "timeRange", patterns: ["from [TIME|CARDINAL|NUM] [|am|pm] to [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
 		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});

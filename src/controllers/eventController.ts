@@ -3,7 +3,7 @@ import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
 import iCloudController from "./iCloudController";
-import {Notice} from "obsidian";
+import {Notice, requestUrl, RequestUrlParam} from "obsidian";
 import {appendFileSync, readFileSync, writeFileSync} from "fs";
 import {DateRange} from "../model/dateRange";
 
@@ -133,6 +133,7 @@ class EventController{
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
+		this.updateCounter();
 	}
 
 	private generateNewUUID(): string {
@@ -160,7 +161,19 @@ class EventController{
 		}
 	}
 
-
+	// This method sends a body-less post request to an internal server to notify the synchronisation request
+	// The purpose is to publish on the README page a badge with the number of synced requests
+	private updateCounter() {
+		const requestUrlParam = {
+			url: "https://icalsynccounter.onrender.com/numSync",
+			method: "POST"
+		}
+		try {
+			requestUrl(requestUrlParam as RequestUrlParam);
+		} catch (e) {
+			console.warn("Error interacting with the counter server", e);
+		}
+	}
 }
 
 const eventController = new EventController();
