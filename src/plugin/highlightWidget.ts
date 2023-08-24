@@ -11,8 +11,8 @@ export class HighlightWidget extends WidgetType {
 		this.sentenceValue = sentenceValue;
 		this.eventDetails = eventDetails;
 		this.syncCallback = syncCallback;
-		this.markClass = "highlighted-text-static";
-		if(firstLoad) this.markClass = "highlighted-text-dynamic";
+		this.markClass = "highlightedTextStatic";
+		if(firstLoad) this.markClass = "highlightedTextDynamic";
 	}
 
 	toDOM(view: EditorView): HTMLElement {
@@ -31,33 +31,33 @@ export class HighlightWidget extends WidgetType {
 		grid.addClass("gridContainer");
 
 		const titleIcon = grid.createEl("span");
-		titleIcon.addClass("sideBar");
+		titleIcon.addClass("iconBar");
 		titleIcon.innerText = " 📕 ";
 
 		const titleContent = grid.createEl("span");
-		titleContent.addClass("content");
+		titleContent.addClass("eventDataBar");
 		titleContent.innerText = ` ${this.eventDetails.title} `;
 
 		const dateIcon = grid.createEl("span");
-		dateIcon.addClass("sideBar");
+		dateIcon.addClass("iconBar");
 		dateIcon.innerText = " 📅 ";
 
 		const dateContent = grid.createEl("span");
-		dateContent.addClass("content");
+		dateContent.addClass("eventDataBar");
 		dateContent.innerText = ` ${this.eventDetails.dateString} `;
 
 		if (this.eventDetails.hasTimeDetails){
 			const timeIcon = grid.createEl("span");
-			timeIcon.addClass("sideBar");
+			timeIcon.addClass("iconBar");
 			timeIcon.innerText = " 🕑 ";
 
 			const timeContent = grid.createEl("span");
-			timeContent.addClass("content");
+			timeContent.addClass("eventDataBar");
 			timeContent.innerText = ` ${this.eventDetails.timeString} `;
 		}
 
 		const row = bubble.createEl("div");
-		row.addClass("row");
+		row.addClass("gridRow");
 
 		const buttonSync = row.createEl("button")
 		buttonSync.innerText = "Sync";

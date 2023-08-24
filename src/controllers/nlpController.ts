@@ -1,4 +1,4 @@
-import wink, {CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
+import wink, {CerConfig, CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -19,24 +19,12 @@ class NlpController {
 	private _secondaryNLP;
 	private _ready: boolean;
 
-
-	private test_list_pos: string[];
-	private nouns: string[];
-	private test_list_entities: string[];
-	private map: Map<string[], string>;
-
-
 	constructor() {
 		this._ready = false;
 		this._mainNLP = wink( model );
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
 		this._secondaryCustomPatterns = []
-
-		this.test_list_pos = [];
-		this.test_list_entities = [];
-		this.map = new Map();
-		this.nouns = [];
 	}
 
 	injectPath(pluginPath: string){
@@ -68,10 +56,10 @@ class NlpController {
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		);
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL|NUM] [|am|pm] [|ADP] [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
+			{name: "timeRange", patterns: ["from [TIME|CARDINAL|NUM] [|NOUN] to [TIME|CARDINAL|NUM] [|NOUN]", "ADP SYM PART SYM"]},
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
-		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN|ADV]"]});
+		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
 		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]", "to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
 		// The secondaryCustomPatterns exist to manage possible overlap between entities
 		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: parsedNouns});
@@ -111,6 +99,7 @@ class NlpController {
 		const pos = auxiliaryStructures.pos;
 
 		const dates = this.filterDates(mainCustomEntities);
+		//const times = this.filterTimes(secondaryCustomEntities);
 		const properNames = this.filterProperNames(secondaryCustomEntities);
 		const eventNouns = this.filterEventNoun(secondaryCustomEntities);
 		const purpose = this.findPurpose(auxiliaryStructures.caseInsensitiveText, mainCustomEntities);
@@ -202,6 +191,8 @@ class NlpController {
 				(p.type == "exactTime") || (p.type == "duration")
 		}) as Detail[];
 	}
+
+
 
 	private filterProperNames(customEntities: CustomEntities): Detail[] {
 		const its = this._secondaryNLP.its;
@@ -422,6 +413,7 @@ class NlpController {
 		if (purpose != null) eventTitle += ` ${purpose.value}`
 		return eventTitle;
 	}
+
 }
 
 const nplController = new NlpController();
