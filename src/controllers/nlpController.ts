@@ -1,4 +1,4 @@
-import wink, {CerConfig, CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
+import wink, {CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -19,12 +19,22 @@ class NlpController {
 	private _secondaryNLP;
 	private _ready: boolean;
 
+	private test_list_pos: string[];
+	private nouns: string[];
+	private test_list_entities: string[];
+	private map: Map<string[], string>;
+
 	constructor() {
 		this._ready = false;
 		this._mainNLP = wink( model );
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
-		this._secondaryCustomPatterns = [];
+		this._secondaryCustomPatterns = []
+
+		this.test_list_pos = [];
+		this.test_list_entities = [];
+		this.map = new Map();
+		this.nouns = [];
 	}
 
 	injectPath(pluginPath: string){
@@ -51,16 +61,17 @@ class NlpController {
 			// All date objects, including "may" and "march", which for some reason are not included (may I do ..., march on the Alps)
 			{name: "date", patterns: ["[|DATE] [|may] [|march] ", "on DATE"]},
 			// 12th of Jan 2023, second of may
-			{name: "ordinalDate", patterns: ["[ORDINAL] [|ADP] [DATE|may|march] [|DATE]"]},
+			{name: "ordinalDate", patterns: ["[ORDINAL] [|ADP] [|DATE|may|march] [|DATE]"]},
 			// July the third
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		);
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["from [TIME|CARDINAL|NUM] [|am|pm] to [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
+			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL|NUM] [|am|pm] [|ADP] [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
-		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
-		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]", "to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
+		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|DET] [|ADP|at] [|PRON] [|DET] [|ADJ] [NOUN] [|NOUN]"]});
+		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning|for] [|DET] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]",
+				"to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
 		// The secondaryCustomPatterns exist to manage possible overlap between entities
 		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: parsedNouns});
 		this._secondaryCustomPatterns.push({name: "properName", patterns: parsedProperNames});
@@ -98,37 +109,54 @@ class NlpController {
 		const tokens = auxiliaryStructures.tokens;
 		const pos = auxiliaryStructures.pos;
 
-		const dates = this.filterDates(mainCustomEntities);
-		//const times = this.filterTimes(secondaryCustomEntities);
-		const properNames = this.filterProperNames(secondaryCustomEntities);
-		const eventNouns = this.filterEventNoun(secondaryCustomEntities);
-		const purpose = this.findPurpose(auxiliaryStructures.caseInsensitiveText, mainCustomEntities);
+		if (tokens == undefined || pos == undefined) return null;
 
+		const dates = this.filterDates(mainCustomEntities);
 		if (dates.length == 0) return null;
 
-		const selectedDateIndex = caseInsensitiveText.indexOf(dates[0].value);
-		let selectedEventNoun = this.findEventNoun(caseInsensitiveText, eventNouns, selectedDateIndex);
+		// Select as useful date the first encountered
+		const selectedDate = dates[0];
+		const selectedDateIndex = caseInsensitiveText.indexOf(selectedDate.value);
+
+		// Find purpose in text
+		// e.g. "to discuss finances"
+		const purpose = this.filterPurpose(caseInsensitiveText, mainCustomEntities, tokens);
+		// Find proper names
+		const properNames = this.filterProperNames(secondaryCustomEntities);
+		// Find nouns that conform to the concept of event
+		// e.g. meetings, shows etc
+		// The function takes as argument the purpose string in order to avoid entity overlap
+		const eventNouns = this.filterEventNoun(secondaryCustomEntities, purpose == null ? [] : purpose.nouns);
+
+		// Select an event noun from the list of event nouns
+		let selectedEventNoun = this.selectEventNoun(caseInsensitiveText, eventNouns, selectedDateIndex);
+
 		let selectedIntentionalVerb : {value, index, type, noun};
 		if (selectedEventNoun.index == -1){
-			selectedIntentionalVerb = this.findIntentionalVerb(auxiliaryStructures.mainCustomEntities, auxiliaryStructures.tokens, caseInsensitiveText, selectedDateIndex);
+			// If an event-related noun is not found, it's worth looking for verbs that express an intention
+			// e.g. I'll meet John tomorrow
+			selectedIntentionalVerb = this.selectIntentionalVerb(mainCustomEntities, caseInsensitiveText, selectedDateIndex);
 			if (selectedIntentionalVerb.index == -1) return null;
 			selectedEventNoun = {
 				value: selectedIntentionalVerb.noun,
-				index: auxiliaryStructures.caseInsensitiveText.indexOf(selectedIntentionalVerb.noun),
+				index: caseInsensitiveText.indexOf(selectedIntentionalVerb.noun),
 				type: "eventNoun"
 			};
 		}
 
-		// Find possible proper names (John)
-		const selectedProperName = this.findProperName(sentence.value, properNames, selectedEventNoun);
+		// Select proper name from the found ones
+		const selectedProperName = this.selectProperName(sentence.value, properNames, selectedEventNoun);
 
 		// Find possible common noun associated to the event noun (board meeting)
-		const backwardsAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, true);
+		const backwardsAdjAttributes = this.selectAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, true);
 
-		const forwardAdjAttributes = this.findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex);
+		const forwardAdjAttributes = this.selectAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex);
 
+		// Clean extra dates
 		const cleanDates = this.cleanJunkDates(dates);
+
 		// Fill selection array
+		// The selection array is the object that represent what items will be either highlighted or underlined
 		const selection = this.getSelectionArray(caseInsensitiveText, cleanDates, selectedEventNoun, backwardsAdjAttributes, forwardAdjAttributes, selectedProperName, purpose);
 
 		// From natural language to dates
@@ -192,32 +220,41 @@ class NlpController {
 		}) as Detail[];
 	}
 
-
-
 	private filterProperNames(customEntities: CustomEntities): Detail[] {
 		const its = this._secondaryNLP.its;
 		return customEntities.out(its.detail).filter(pos => (pos as unknown as Detail).type == "properName") as Detail[];
 	}
 
-	private filterEventNoun(customEntities: CustomEntities): Detail[] {
+	private filterEventNoun(customEntities: CustomEntities, purposeNouns: string[]): Detail[] {
 		const its = this._mainNLP.its;
-		return customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "eventNoun")) as Detail[];
+		return customEntities.out(its.detail).filter(pos => {
+			const isEventNoun = (pos as unknown as Detail).type == "eventNoun";
+			const isDifferentFromPurposeNouns = purposeNouns.filter(purposeNoun => purposeNoun == (pos as unknown as Detail).value).length == 0;
+			return isEventNoun && isDifferentFromPurposeNouns;
+		}) as Detail[];
 	}
 
-	private findPurpose(text: string, customEntities: CustomEntities): {value, index, type} {
+	private filterPurpose(text: string, customEntities: CustomEntities, tokens: Tokens): {value, index, type, nouns} {
 		const its = this._secondaryNLP.its;
 		const purpose = customEntities.out(its.detail).filter(pos => ((pos as unknown as Detail).type == "purpose")).first() as Detail;
-
 		if (purpose == undefined) return null;
+		const pos = tokens.out(its.pos);
+		const tokenValues = tokens.out();
+		const nouns = [];
+		pos.forEach((pos, i) => {
+			if (pos == "NOUN" && purpose.value.split(" ").filter(purposeItem => purposeItem == tokenValues[i]).length > 0) nouns.push(tokenValues[i]);
+		})
+
 		const purposeIndex = text.indexOf(purpose.value);
 		return {
 			value: purpose.value,
 			index: purposeIndex,
-			type: "purpose"
+			type: "purpose",
+			nouns
 		};
 	}
 
-	private findIntentionalVerb(customEntities: CustomEntities, tokens: Tokens, text: string, selectedDateIndex: number): {value, index, type, noun} {
+	private selectIntentionalVerb(customEntities: CustomEntities, text: string, selectedDateIndex: number): {value, index, type, noun} {
 		const selectedIntentionalVerb = {
 			value: "",
 			index: -1,
@@ -225,11 +262,11 @@ class NlpController {
 			noun: ""
 		};
 		const intentionalVerbs = customEntities.out(this._mainNLP.its.detail).filter(detail => ((detail as unknown as Detail).type == "intentionalVerb")) as Detail[];
-		const pos = tokens.out(this._mainNLP.its.pos)
-		const tokenValue = tokens.out();
 		if (intentionalVerbs.length == 0) return selectedIntentionalVerb;
 		let verbDistance = 1000;
 		intentionalVerbs.forEach(intentionalVerb => {
+			// Remove potential aux
+			intentionalVerb.value = intentionalVerb.value.replaceAll("'ll", "");
 			const vIndex = text.indexOf(intentionalVerb.value);
 			const distanceFromDate = Math.abs(vIndex - selectedDateIndex);
 			if (distanceFromDate < verbDistance){
@@ -239,14 +276,12 @@ class NlpController {
 				selectedIntentionalVerb.type = intentionalVerb.type;
 			}
 		})
-		const verbIndex = pos.indexOf("VERB");
-		const verb = tokenValue[verbIndex];
 
-		selectedIntentionalVerb.noun = `${verb} ${selectedIntentionalVerb.value.split(" ").last()}`;
+		selectedIntentionalVerb.noun = selectedIntentionalVerb.value.split(" ").last();
 		return selectedIntentionalVerb;
 	}
 
-	private findEventNoun(text, eventNouns, selectedVerbIndex): {value: string, index: number, type: string} {
+	private selectEventNoun(text, eventNouns, selectedVerbIndex): {value: string, index: number, type: string} {
 		const selectedEventNoun = {
 			value: "",
 			index: -1,
@@ -270,7 +305,7 @@ class NlpController {
 	// The idea:
 	// Look for [|ADP] [...NOUN]
 	// backwards flag -> looks back
-	private findAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, backward = false) : {value: string, index: number, type: string}[] | null {
+	private selectAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, backward = false) : {value: string, index: number, type: string}[] | null {
 		let selectedAdjAttributes: { value, index, type }[] = [];
 		let adjOffset = 1;
 		if (backward) adjOffset = -1;
@@ -278,7 +313,8 @@ class NlpController {
 		const eventNounTokenIndex = stringTokens.indexOf(selectedEventNoun.value);
 		if (eventNounTokenIndex <= 0) return null;
 		let cumulativeIndex = selectedEventNoun.index;
-		while (pos[eventNounTokenIndex + adjOffset] == "NOUN" || pos[eventNounTokenIndex + adjOffset] == "ADJ" || pos[eventNounTokenIndex + adjOffset] == "ADP" || pos[eventNounTokenIndex + adjOffset] == "PRON"){
+		while (pos[eventNounTokenIndex + adjOffset] == "NOUN" || pos[eventNounTokenIndex + adjOffset] == "ADJ" || pos[eventNounTokenIndex + adjOffset] == "ADP"
+		|| pos[eventNounTokenIndex + adjOffset] == "PRON" || pos[eventNounTokenIndex + adjOffset] == "PART"){
 			const adjWord = stringTokens[eventNounTokenIndex + adjOffset];
 			if(selectedProperName != null && adjWord == selectedProperName.value) return null;
 			const selectedAdjAttributedIndex = backward ? cumulativeIndex - (adjWord.length + 1) : cumulativeIndex + (adjWord.length + 1);
@@ -299,9 +335,11 @@ class NlpController {
 
 		if (backward) selectedAdjAttributes = selectedAdjAttributes.reverse();
 
-		// The last element can't be an ADP or a PRON
-		while (selectedAdjAttributes.length > 0 && (selectedAdjAttributes[selectedAdjAttributes.length - 1].type == "ADP" || selectedAdjAttributes[selectedAdjAttributes.length - 1].type == "PRON")){
+		// The last element can't be an ADP, PRON or a PART
+		let lastElement = selectedAdjAttributes[selectedAdjAttributes.length - 1];
+		while (selectedAdjAttributes.length > 0 && (lastElement.type == "ADP" || lastElement.type == "PRON" || lastElement.type == "PART")){
 			selectedAdjAttributes.pop();
+			lastElement = selectedAdjAttributes[selectedAdjAttributes.length - 1];
 		}
 
 		if (selectedAdjAttributes.length == 0) return null;
@@ -309,7 +347,7 @@ class NlpController {
 		return selectedAdjAttributes;
 	}
 
-	private findProperName(text, properNames, selectedEventNoun) : {value: string, index: number, type: string, parsedValue: string} | null {
+	private selectProperName(text, properNames, selectedEventNoun) : {value: string, index: number, type: string, parsedValue: string} | null {
 		const selectedProperName = {
 			value: "",
 			index: -1,
@@ -339,10 +377,16 @@ class NlpController {
 			}
 		});
 		if (selectedProperName.index == -1) return null
+
+		// Check if in the selectedEventNoun is in the form verb - noun and if the noun coincides with the proper name
+		const selectedEventNounSplitted = selectedEventNoun.value.split(" ");
+		const potentialProperNoun = selectedEventNounSplitted[1];
+		if (potentialProperNoun != undefined && potentialProperNoun.toLowerCase() == selectedProperName.value) return null;
+
 		selectedProperName.parsedValue = selectedProperName.value.charAt(0).toUpperCase() + selectedProperName.value.slice(1);
 		if (!hasAdp) selectedProperName.parsedValue = `with ${selectedProperName.parsedValue}`;
 		else selectedProperName.parsedValue = `${adp} ${selectedProperName.parsedValue}`
-		// Check if eventNoun coincides with
+
 		return selectedProperName;
 	}
 
@@ -414,6 +458,55 @@ class NlpController {
 		return eventTitle;
 	}
 
+	test(sentence: Sentence) {
+		const text = sentence.value;
+		const sentences = text.split("\n");
+		sentences.forEach(sentence => {
+			const caseInsensitiveText = sentence.toLowerCase();
+			const doc = this._mainNLP.readDoc(caseInsensitiveText);
+			const testDoc = this._secondaryNLP.readDoc(caseInsensitiveText);
+			const customEntities = doc.customEntities().out(this._mainNLP.its.detail);
+			const testCustomE = testDoc.customEntities().out(this._secondaryNLP.its.detail);
+			console.log("customE", customEntities);
+			console.log("testCustomE", testCustomE);
+			const entities = doc.entities().out(this._mainNLP.its.detail);
+			console.log("entities", entities);
+			const dates = entities.filter(e => e.type == "DATE");
+			const tokens = doc.tokens();
+			const tokenValues = tokens.out();
+			const pos = tokens.out(this._mainNLP.its.pos);
+			pos.forEach((p, i) => {
+				if (p == "PROPN"){
+					const corrispectiveToken = tokenValues[i];
+					const corrispectiveDateList = dates.filter(d => d.value == corrispectiveToken)
+					if (corrispectiveDateList.length > 0){
+						pos[i] = corrispectiveDateList[0].type;
+					}
+				}
+				if (p == "PUNCT"){
+					pos.remove(p);
+				}
+				if (p == "NOUN"){
+					const corrispectiveToken = tokenValues[i];
+					this.nouns.push(corrispectiveToken);
+				}
+			})
+			this.test_list_pos.push(pos);
+			this.map.set(pos, sentence);
+		})
+	}
+
+	print() {
+		console.log("POS list")
+		console.log(this.test_list_pos);
+		this.test_list_pos = [];
+		console.log(Array.from(this.map.entries()));
+		this.map = new Map<string[], string>();
+		console.log("Nouns")
+		console.log(this.nouns);
+		this.nouns = [];
+
+	}
 }
 
 const nplController = new NlpController();
