@@ -33,6 +33,8 @@ class NLPPlugin implements PluginValue {
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
+			nlpController.test(new Sentence(filePath, line));
+			//const matches = null;
 			if(matches == null) return false;
 			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {

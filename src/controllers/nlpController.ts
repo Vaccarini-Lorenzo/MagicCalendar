@@ -1,4 +1,4 @@
-import wink, {CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
+import wink, {CerConfig, CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -18,7 +18,6 @@ class NlpController {
 	// e.g. John is both a noun and a proper noun
 	private _secondaryNLP;
 	private _ready: boolean;
-
 
 	private test_list_pos: string[];
 	private nouns: string[];
@@ -68,10 +67,10 @@ class NlpController {
 			{name: "ordinalDateReverse", patterns: [" [|DATE] [DATE|may|march] [|DET] [ORDINAL]"]},
 		);
 		this._customPatterns.push(
-			{name: "timeRange", patterns: ["[|ADP] [TIME|CARDINAL|NUM] [|am|pm] [|ADP] [TIME|CARDINAL|NUM] [|am|pm]", "[TIME|CARDINAL] [-|/] [TIME|CARDINAL]"]},
+			{name: "timeRange", patterns: ["from [TIME|CARDINAL|NUM] [|NOUN] to [TIME|CARDINAL|NUM] [|NOUN]", "ADP SYM PART SYM"]},
 			{name: "exactTime", patterns: ["[at|for] [CARDINAL|TIME]"]}
 		)
-		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN|ADV]"]});
+		this._customPatterns.push({name: "intentionalVerb", patterns: ["[|AUX] [VERB] [|ADP] [|DET] [NOUN]"]});
 		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]", "to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
 		// The secondaryCustomPatterns exist to manage possible overlap between entities
 		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: parsedNouns});
@@ -111,6 +110,7 @@ class NlpController {
 		const pos = auxiliaryStructures.pos;
 
 		const dates = this.filterDates(mainCustomEntities);
+		//const times = this.filterTimes(secondaryCustomEntities);
 		const properNames = this.filterProperNames(secondaryCustomEntities);
 		const eventNouns = this.filterEventNoun(secondaryCustomEntities);
 		const purpose = this.findPurpose(auxiliaryStructures.caseInsensitiveText, mainCustomEntities);
@@ -202,6 +202,8 @@ class NlpController {
 				(p.type == "exactTime") || (p.type == "duration")
 		}) as Detail[];
 	}
+
+
 
 	private filterProperNames(customEntities: CustomEntities): Detail[] {
 		const its = this._secondaryNLP.its;
@@ -422,6 +424,57 @@ class NlpController {
 		if (purpose != null) eventTitle += ` ${purpose.value}`
 		return eventTitle;
 	}
+
+
+	test(sentence: Sentence) {
+		const text = sentence.value;
+		const sentences = text.split("\n");
+		sentences.forEach(sentence => {
+			const caseInsensitiveText = sentence.toLowerCase();
+			const doc = this._mainNLP.readDoc(caseInsensitiveText);
+			const testDoc = this._secondaryNLP.readDoc(caseInsensitiveText);
+			const customEntities = doc.customEntities().out(this._mainNLP.its.detail);
+			const secondaryCustomE = testDoc.customEntities().out(this._secondaryNLP.its.detail);
+			console.log("customE", customEntities);
+			console.log("secondaryCustomE", secondaryCustomE);
+			const entities = doc.entities().out(this._mainNLP.its.detail);
+			const dates = entities.filter(e => e.type == "DATE");
+			const tokens = doc.tokens();
+			const tokenValues = tokens.out();
+			const pos = tokens.out(this._mainNLP.its.pos);
+			console.log(pos);
+			pos.forEach((p, i) => {
+				if (p == "PROPN"){
+					const corrispectiveToken = tokenValues[i];
+					const corrispectiveDateList = dates.filter(d => d.value == corrispectiveToken)
+					if (corrispectiveDateList.length > 0){
+						pos[i] = corrispectiveDateList[0].type;
+					}
+				}
+				if (p == "PUNCT"){
+					pos.remove(p);
+				}
+				if (p == "NOUN"){
+					const corrispectiveToken = tokenValues[i];
+					this.nouns.push(corrispectiveToken);
+				}
+			})
+			this.test_list_pos.push(pos);
+			this.map.set(pos, sentence);
+		})
+	}
+
+	print() {
+		console.log("POS list")
+		console.log(this.test_list_pos);
+		this.test_list_pos = [];
+		console.log(Array.from(this.map.entries()));
+		console.log("Nouns")
+		console.log(this.nouns);
+		this.nouns = [];
+
+	}
+
 }
 
 const nplController = new NlpController();

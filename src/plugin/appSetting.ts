@@ -1,6 +1,6 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
 import iCalObsidianSync from "./main";
-import dayjs from "dayjs";
+import moment from "moment-timezone";
 
 export interface SettingInterface {
 	tz: string;
@@ -10,7 +10,7 @@ export interface SettingInterface {
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
-	tz: dayjs.tz.guess(),
+	tz: moment.tz.guess(),
 	calendar: "none",
 	key: "none",
 	iv: "none"
@@ -44,9 +44,7 @@ export class AppSetting extends PluginSettingTab {
 
 		containerEl.empty();
 
-		const general = containerEl.createEl("h3", {text: "General"})
-
-		new Setting(general)
+		new Setting(containerEl)
 			.setName("Time zone")
 			.addText(tz => {
 				tz.setValue((this.plugin.settings.tz));
