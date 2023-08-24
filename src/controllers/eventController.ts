@@ -5,7 +5,6 @@ import {Sentence} from "../model/sentence";
 import iCloudController from "./iCloudController";
 import {Notice, requestUrl, RequestUrlParam} from "obsidian";
 import {appendFileSync, readFileSync, writeFileSync} from "fs";
-import {DateRange} from "../model/dateRange";
 
 class EventController{
 	// Map that connects the file path to the list of events

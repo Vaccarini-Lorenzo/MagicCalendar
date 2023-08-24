@@ -28,19 +28,17 @@ class SmartDateParser {
 
 
 	getDates(parsed: ParsedResult[]): DateRange {
-		let startYear, startMonth, startDay, startHour, startMin;
-		startYear = [];
-		startMonth = [];
-		startDay = [];
-		startHour = [];
-		startMin = [];
+		const startYear = [];
+		const startMonth = [];
+		const startDay = [];
+		const startHour = [];
+		const startMin = [];
 
-		let endYear, endMonth, endDay, endHour, endMin;
-		endYear = [];
-		endMonth = [];
-		endDay = [];
-		endHour = [];
-		endMin = [];
+		const endYear = [];
+		const endMonth = [];
+		const endDay = [];
+		const endHour = [];
+		const endMin = [];
 
 		if (parsed.length  == 0) return;
 

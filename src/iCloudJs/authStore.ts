@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, {writeFileSync} from "fs";
 import { Response } from "node-fetch";
 import path from "path";
 import { Cookie } from "tough-cookie";
@@ -55,7 +55,7 @@ export class iCloudAuthenticationStore {
     writeTrustToken(account: string) {
         try {
             if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
-            require("fs").writeFileSync(this.tknFile + "-" + Buffer.from(account.toLowerCase()).toString("base64"), this.trustToken);
+            writeFileSync(this.tknFile + "-" + Buffer.from(account.toLowerCase()).toString("base64"), this.trustToken);
         } catch (e) {
             console.warn("[icloud] Unable to write trust token:", e.toString());
         }
@@ -109,13 +109,6 @@ export class iCloudAuthenticationStore {
         this.trustToken = trustResponse.headers.get("x-apple-twosv-trust-token");
         this.writeTrustToken(account);
         return this.validateAccountTokens();
-    }
-    /**
-     * Parses a list of cookies and adds them to the authenticationStore's icloudCookies property.
-     * @param cookies A list of cookies to add in the format of a Set-Cookie header.
-     */
-    addCookies(cookies: string[]) {
-        cookies.map((v) => Cookie.parse(v)).forEach((v) => this.icloudCookies.push(v));
     }
 
     // Gets the headers required for a MFA request

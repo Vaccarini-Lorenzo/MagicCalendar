@@ -391,7 +391,7 @@ class NlpController {
 	}
 
 	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, backwardsAdjAttributes: {value, index, type}[],
-							  forwardAdjAttributes: {value, index, type}[],  selectedProperName: {value, index, type}, purpose: {value, index, type}): {value, index, type}[] {
+								forwardAdjAttributes: {value, index, type}[],  selectedProperName: {value, index, type}, purpose: {value, index, type}): {value, index, type}[] {
 		const selection = []
 
 		dates.forEach(date => {
