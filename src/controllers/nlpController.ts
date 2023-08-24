@@ -1,4 +1,4 @@
-import wink, {CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
+import wink, {CerConfig, CustomEntities, Detail, PartOfSpeech, Tokens} from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import {readFileSync} from "fs";
 import {ParsedResult} from "chrono-node";
@@ -99,6 +99,7 @@ class NlpController {
 		const pos = auxiliaryStructures.pos;
 
 		const dates = this.filterDates(mainCustomEntities);
+		//const times = this.filterTimes(secondaryCustomEntities);
 		const properNames = this.filterProperNames(secondaryCustomEntities);
 		const eventNouns = this.filterEventNoun(secondaryCustomEntities);
 		const purpose = this.findPurpose(auxiliaryStructures.caseInsensitiveText, mainCustomEntities);
@@ -190,6 +191,8 @@ class NlpController {
 				(p.type == "exactTime") || (p.type == "duration")
 		}) as Detail[];
 	}
+
+
 
 	private filterProperNames(customEntities: CustomEntities): Detail[] {
 		const its = this._secondaryNLP.its;
