@@ -19,23 +19,12 @@ class NlpController {
 	private _secondaryNLP;
 	private _ready: boolean;
 
-	private test_list_pos: string[];
-	private nouns: string[];
-	private test_list_entities: string[];
-	private map: Map<string[], string>;
-
-
 	constructor() {
 		this._ready = false;
 		this._mainNLP = wink( model );
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
 		this._secondaryCustomPatterns = []
-
-		this.test_list_pos = [];
-		this.test_list_entities = [];
-		this.map = new Map();
-		this.nouns = [];
 	}
 
 	injectPath(pluginPath: string){
@@ -423,56 +412,6 @@ class NlpController {
 		if (selectedProperName != null) eventTitle += ` ${selectedProperName.parsedValue}`
 		if (purpose != null) eventTitle += ` ${purpose.value}`
 		return eventTitle;
-	}
-
-
-	test(sentence: Sentence) {
-		const text = sentence.value;
-		const sentences = text.split("\n");
-		sentences.forEach(sentence => {
-			const caseInsensitiveText = sentence.toLowerCase();
-			const doc = this._mainNLP.readDoc(caseInsensitiveText);
-			const testDoc = this._secondaryNLP.readDoc(caseInsensitiveText);
-			const customEntities = doc.customEntities().out(this._mainNLP.its.detail);
-			const secondaryCustomE = testDoc.customEntities().out(this._secondaryNLP.its.detail);
-			console.log("customE", customEntities);
-			console.log("secondaryCustomE", secondaryCustomE);
-			const entities = doc.entities().out(this._mainNLP.its.detail);
-			const dates = entities.filter(e => e.type == "DATE");
-			const tokens = doc.tokens();
-			const tokenValues = tokens.out();
-			const pos = tokens.out(this._mainNLP.its.pos);
-			console.log(pos);
-			pos.forEach((p, i) => {
-				if (p == "PROPN"){
-					const corrispectiveToken = tokenValues[i];
-					const corrispectiveDateList = dates.filter(d => d.value == corrispectiveToken)
-					if (corrispectiveDateList.length > 0){
-						pos[i] = corrispectiveDateList[0].type;
-					}
-				}
-				if (p == "PUNCT"){
-					pos.remove(p);
-				}
-				if (p == "NOUN"){
-					const corrispectiveToken = tokenValues[i];
-					this.nouns.push(corrispectiveToken);
-				}
-			})
-			this.test_list_pos.push(pos);
-			this.map.set(pos, sentence);
-		})
-	}
-
-	print() {
-		console.log("POS list")
-		console.log(this.test_list_pos);
-		this.test_list_pos = [];
-		console.log(Array.from(this.map.entries()));
-		console.log("Nouns")
-		console.log(this.nouns);
-		this.nouns = [];
-
 	}
 
 }

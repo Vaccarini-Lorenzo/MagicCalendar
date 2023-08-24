@@ -124,6 +124,13 @@ ul.navUL span {
 	rotate: 180deg;
 }
 
+.gridContainer {
+	/*border:1px solid #000;*/
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-gap: 10px;
+}
+
 /* Bubble hover */
 ul.navUL span:hover .hoverBubble {
 	opacity: 1;
@@ -147,14 +154,14 @@ ul.navUL span:hover .hoverBubble {
 	margin: 5%;
 }
 
-.sidebar {
+.iconBar {
 	/*border:1px solid #000;*/
 	font-size: 170%;
 	margin: -5px;
 	align-self: center;
 }
 
-.content {
+.eventDataBar {
 	font-size: 85%;
 	align-self: center;
 	white-space: initial;
