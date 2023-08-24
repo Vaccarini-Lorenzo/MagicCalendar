@@ -13,12 +13,16 @@ class ICloudController {
 	private _tagHash: Map<number, Event>;
 	private _dataLoadingComplete: boolean;
 	private appSettings: SettingInterface;
+	private maxReconnectAttempt: number;
+	private reconnectAttempt: number;
 
 	constructor() {
 		this._tagHash = new Map<number, Event>();
 		this._pendingTagsBuffer = [];
 		this._calendars = [];
 		this._dataLoadingComplete = false;
+		this.maxReconnectAttempt = 5;
+		this.reconnectAttempt = 0;
 	}
 
 	injectPath(pluginPath: string){
@@ -76,12 +80,31 @@ class ICloudController {
 		return await this._calendarService.postEvent(event.value, calendar.ctag);
 	}
 
+	async awaitReady(){
+		await this._iCloud.awaitReady;
+	}
+
 	isLoggedIn(){
 		return this._iCloud != undefined && (this._iCloud.status == iCloudServiceStatus.Ready || this._iCloud.status == iCloudServiceStatus.Trusted)
 	}
 
 	async getICloudEvents(missedDateRange: DateRange): Promise<iCloudCalendarEvent[]> {
 		return await this._calendarService.events(missedDateRange.start, missedDateRange.end);
+	}
+
+	refreshRequestCookies(requestUrlParams: { url, method, headers, body }){
+		const oldHeader = requestUrlParams.headers;
+		oldHeader.Cookie = this._iCloud.authStore.getHeaders().Cookie;
+		return;
+	}
+
+	checkMaxReconnectAttempt(): boolean{
+		this.reconnectAttempt += 1;
+		return this.reconnectAttempt < this.maxReconnectAttempt;
+	}
+
+	resetReconnectAttempt() {
+		this.reconnectAttempt = 0;
 	}
 }
 

@@ -19,7 +19,7 @@ export class CalendarView extends MarkdownRenderChild {
 
 	onload() {
 		const wrapper = this.containerEl.createEl("div");
-		wrapper.addClass("table-wrapper")
+		wrapper.addClass("tableWrapper")
 		const table = wrapper.createEl("table");
 		this.generateHeaders(table);
 		this.generateRows(table)
@@ -68,7 +68,7 @@ export class CalendarView extends MarkdownRenderChild {
 				const eventView = row.createEl("td");
 				eventView.innerText = event.title;
 				eventView.addClass(this.getPaletteClass());
-				eventView.addClass("event-box")
+				eventView.addClass("eventBox")
 				eventView.setAttr("colspan", event.toCol - event.fromCol)
 				columnIndex = event.toCol;
 			})

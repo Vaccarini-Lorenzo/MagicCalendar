@@ -1,12 +1,9 @@
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import iCloudService from "./index";
 import iCloudMisc from "./iCloudMisc";
 import iCloudController from "../controllers/iCloudController";
 import {Notice} from "obsidian";
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import moment from "moment-timezone";
+import dayjs from "dayjs";
 
 interface iCloudCalendarAlarm {
   messageType: string;
@@ -166,7 +163,7 @@ export class iCloudCalendarService {
     async eventDetails(calendarGuid: string, eventGuid: string) {
         const response = await this.executeRequest<iCloudCalendarEventDetailResponse>(`/eventdetail/${calendarGuid}/${eventGuid}`, {
             lang: "en-us",
-            usertz: dayjs.tz.guess(),
+            usertz: moment.tz.guess(),
             dsid: this.dsid
         });
 
@@ -180,7 +177,7 @@ export class iCloudCalendarService {
 			endDate: dayjs(dayjs().endOf("month")).format(this.dateFormat),
 			dsid: this.dsid,
 			lang: "en-us",
-			usertz: dayjs.tz.guess()
+			usertz: moment.tz.guess(),
 		});
 
 		return {
@@ -195,7 +192,7 @@ export class iCloudCalendarService {
             endDate: dayjs(to ?? dayjs().endOf("month")).format(this.dateFormat),
             dsid: this.dsid,
             lang: "en-us",
-            usertz: dayjs.tz.guess()
+            usertz: moment.tz.guess(),
         });
         return response.Event || [];
     }
@@ -206,7 +203,7 @@ export class iCloudCalendarService {
             endDate: dayjs(dayjs().endOf("month")).format(this.dateFormat),
             dsid: this.dsid,
             lang: "en-us",
-            usertz: dayjs.tz.guess()
+            usertz: moment.tz.guess(),
         });
 
         return response.Collection || [];

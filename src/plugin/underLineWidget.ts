@@ -9,8 +9,8 @@ export class UnderlineWidget extends WidgetType {
 		super();
 		this.innerText = innerText;
 		this.underline = document.createElement("span");
-		this.underlineClass = "underlined-text-static"
-		if(firstLoad) this.underlineClass = "underlined-text-dynamic"
+		this.underlineClass = "underlinedTextStatic"
+		if(firstLoad) this.underlineClass = "underlinedTextDynamic"
 	}
 
 	toDOM(view: EditorView): HTMLElement {

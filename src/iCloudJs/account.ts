@@ -68,22 +68,4 @@ export class iCloudAccountDetailsService {
         this.service = service;
         this.serviceUri = serviceUri;
     }
-
-    private _devices;
-    async getDevices(refresh = false): Promise<iCloudDevices> {
-        if (!refresh && this._devices) return this._devices;
-        const response = await iCloudMisc.wrapRequest(this.serviceUri + "/setup/web/device/getDevices", { headers: this.service.authStore.getHeaders() });
-        const json = await response.json();
-        this._devices = json;
-        return this._devices;
-    }
-
-    private _family;
-    async getFamily(refresh = false): Promise<iCloudFamilyInfo> {
-        if (!refresh && this._family) return this._family;
-        const response = await iCloudMisc.wrapRequest(this.serviceUri + "/setup/web/family/getFamilyDetails", { headers: this.service.authStore.getHeaders() });
-        const json = await response.json();
-        this._family = json;
-        return this._family;
-    }
 }
