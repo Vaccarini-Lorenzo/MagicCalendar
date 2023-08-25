@@ -5,6 +5,8 @@ import {Sentence} from "../model/sentence";
 import iCloudController from "./iCloudController";
 import {Notice, requestUrl, RequestUrlParam} from "obsidian";
 import {appendFileSync, readFileSync, writeFileSync} from "fs";
+import {DateRange} from "../model/dateRange";
+import cacheController from "./cacheController";
 
 class EventController{
 	// Map that connects the file path to the list of events
@@ -172,6 +174,18 @@ class EventController{
 		} catch (e) {
 			console.warn("Error interacting with the counter server", e);
 		}
+	}
+
+	async getEventsFromRange(dateRange: DateRange): Promise<iCloudCalendarEvent[]> {
+		const cacheCheck = cacheController.checkCache(dateRange);
+		if (cacheCheck.missedDateRanges.length == 0) return cacheCheck.cachedICouldEvents;
+		const iCloudEvents = cacheCheck.cachedICouldEvents;
+		for (let i=0; i<cacheCheck.missedDateRanges.length; i++){
+			const missedDateRange = cacheCheck.missedDateRanges[i];
+			const fetchedICloudEvents = await iCloudController.getICloudEvents(missedDateRange);
+			fetchedICloudEvents.forEach(iCloudEvent => iCloudEvents.push(iCloudEvent));
+		}
+		return iCloudEvents;
 	}
 }
 

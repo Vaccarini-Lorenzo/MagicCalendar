@@ -11,6 +11,7 @@ import safeController from "../controllers/safeController";
 import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
 import {Misc} from "../misc/misc";
+import calendarViewController from "../controllers/calendarViewController";
 
 let statusModal: iCloudStatusModal;
 
@@ -30,6 +31,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.registerEvents();
 
 		this.registerEditorExtension(nlpPlugin)
+
+		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
 
 		await this.checkLogin();
 

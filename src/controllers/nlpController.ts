@@ -283,7 +283,7 @@ class NlpController {
 		const tokenValue = tokens.out();
 		const verbIndex = pos.indexOf("VERB");
 		selectedIntentionalVerb.verb = tokenValue[verbIndex];
-		
+
 		selectedIntentionalVerb.noun = selectedIntentionalVerb.value.split(" ").last();
 		return selectedIntentionalVerb;
 	}
