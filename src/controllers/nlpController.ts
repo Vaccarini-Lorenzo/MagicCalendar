@@ -378,7 +378,7 @@ class NlpController {
 		// In intentional verbs it's possible that the noun matching the pattern is a proper name
 		// In this case it's necessary to discard the proper name found
 		if (selectedEventNoun != undefined && selectedEventNoun.value.toLowerCase() == selectedEventNoun.value){
-			if (selectedIntentionalVerb.index != -1){
+			if (selectedIntentionalVerb != undefined && selectedIntentionalVerb.index != -1){
 				selectedEventNoun.value = `${selectedIntentionalVerb.verb} ${selectedIntentionalVerb.noun}`
 			}
 			return null;
