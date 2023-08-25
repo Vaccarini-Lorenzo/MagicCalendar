@@ -1,16 +1,17 @@
 import {Plugin} from 'obsidian';
 import {iCloudServiceStatus} from "../iCloudJs";
 import {iCloudStatusModal} from "./modal";
+import {PluginValue} from "@codemirror/view";
+import {Misc} from "../misc/misc";
+import {join} from "path";
+import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
+import {randomBytes} from "crypto";
 import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
 import nlpPlugin from "./nlpExtension";
-import {PluginValue} from "@codemirror/view";
-import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
 import iCloudController from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
-import {randomBytes} from "crypto";
 import eventController from "../controllers/eventController";
-import {Misc} from "../misc/misc";
 import calendarViewController from "../controllers/calendarViewController";
 
 let statusModal: iCloudStatusModal;
@@ -85,7 +86,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private injectDependencies() {
 		const basePath = (this.app.vault.adapter as any).basePath
-		const pluginPath =`${basePath}/.obsidian/plugins/ical-obsidian-sync`;
+		const pluginPath = join(basePath, this.manifest.dir)
 		nlpController.injectPath(pluginPath)
 		safeController.injectPath(pluginPath);
 		safeController.injectSettings(this.settings);

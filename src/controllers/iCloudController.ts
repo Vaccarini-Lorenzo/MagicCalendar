@@ -89,6 +89,7 @@ class ICloudController {
 	}
 
 	async getICloudEvents(missedDateRange: DateRange): Promise<iCloudCalendarEvent[]> {
+		if (this._calendarService == undefined) return [];
 		return await this._calendarService.events(missedDateRange.start, missedDateRange.end);
 	}
 

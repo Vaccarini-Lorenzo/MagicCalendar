@@ -8,7 +8,6 @@ import Event from "../model/event";
 import { Misc } from "../misc/misc";
 import iCloudController from "../controllers/iCloudController";
 import { Notice } from "obsidian";
-import nlpController from "../controllers/nlpController";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
@@ -32,7 +31,6 @@ class NLPPlugin implements PluginValue {
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
-			nlpController.test(new Sentence(filePath, line));
 			if(matches == null) return false;
 			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {
@@ -64,7 +62,6 @@ class NLPPlugin implements PluginValue {
 			});
 			return true;
 		})
-		nlpController.print();
 		return builder.finish();
 	}
 
