@@ -131,11 +131,12 @@ class NlpController {
 		// Select an event noun from the list of event nouns
 		let selectedEventNoun = this.selectEventNoun(caseInsensitiveText, eventNouns, selectedDateIndex);
 
-		let selectedIntentionalVerb : {value, index, type, noun};
+		let selectedIntentionalVerb : {value, index, type, verb, noun};
 		if (selectedEventNoun.index == -1){
 			// If an event-related noun is not found, it's worth looking for verbs that express an intention
 			// e.g. I'll meet John tomorrow
-			selectedIntentionalVerb = this.selectIntentionalVerb(mainCustomEntities, caseInsensitiveText, selectedDateIndex);
+			selectedIntentionalVerb = this.selectIntentionalVerb(mainCustomEntities, tokens, caseInsensitiveText, selectedDateIndex);
+			console.log(selectedIntentionalVerb.noun);
 			if (selectedIntentionalVerb.index == -1) return null;
 			selectedEventNoun = {
 				value: selectedIntentionalVerb.noun,
@@ -145,7 +146,7 @@ class NlpController {
 		}
 
 		// Select proper name from the found ones
-		const selectedProperName = this.selectProperName(sentence.value, properNames, selectedEventNoun);
+		const selectedProperName = this.selectProperName(sentence.value, properNames, selectedEventNoun, selectedIntentionalVerb);
 
 		// Find possible common noun associated to the event noun (board meeting)
 		const backwardsAdjAttributes = this.selectAdjAttributes(tokens, pos, selectedEventNoun, selectedProperName, selectedDateIndex, true);
@@ -254,11 +255,12 @@ class NlpController {
 		};
 	}
 
-	private selectIntentionalVerb(customEntities: CustomEntities, text: string, selectedDateIndex: number): {value, index, type, noun} {
+	private selectIntentionalVerb(customEntities: CustomEntities, tokens: Tokens, text: string, selectedDateIndex: number): {value, index, type, verb, noun} {
 		const selectedIntentionalVerb = {
 			value: "",
 			index: -1,
 			type: "",
+			verb: "",
 			noun: ""
 		};
 		const intentionalVerbs = customEntities.out(this._mainNLP.its.detail).filter(detail => ((detail as unknown as Detail).type == "intentionalVerb")) as Detail[];
@@ -277,6 +279,11 @@ class NlpController {
 			}
 		})
 
+		const pos = tokens.out(this._mainNLP.its.pos)
+		const tokenValue = tokens.out();
+		const verbIndex = pos.indexOf("VERB");
+		selectedIntentionalVerb.verb = tokenValue[verbIndex];
+		
 		selectedIntentionalVerb.noun = selectedIntentionalVerb.value.split(" ").last();
 		return selectedIntentionalVerb;
 	}
@@ -347,7 +354,7 @@ class NlpController {
 		return selectedAdjAttributes;
 	}
 
-	private selectProperName(text, properNames, selectedEventNoun) : {value: string, index: number, type: string, parsedValue: string} | null {
+	private selectProperName(text, properNames, selectedEventNoun, selectedIntentionalVerb) : {value: string, index: number, type: string, parsedValue: string} | null {
 		const selectedProperName = {
 			value: "",
 			index: -1,
@@ -378,10 +385,14 @@ class NlpController {
 		});
 		if (selectedProperName.index == -1) return null
 
-		// Check if in the selectedEventNoun is in the form verb - noun and if the noun coincides with the proper name
-		const selectedEventNounSplitted = selectedEventNoun.value.split(" ");
-		const potentialProperNoun = selectedEventNounSplitted[1];
-		if (potentialProperNoun != undefined && potentialProperNoun.toLowerCase() == selectedProperName.value) return null;
+		// In intentional verbs it's possible that the noun matching the pattern is a proper name
+		// In this case it's necessary to discard the proper name found
+		if (selectedEventNoun != undefined && selectedEventNoun.value.toLowerCase() == selectedEventNoun.value){
+			if (selectedIntentionalVerb.index != -1){
+				selectedEventNoun.value = `${selectedIntentionalVerb.verb} ${selectedIntentionalVerb.noun}`
+			}
+			return null;
+		}
 
 		selectedProperName.parsedValue = selectedProperName.value.charAt(0).toUpperCase() + selectedProperName.value.slice(1);
 		if (!hasAdp) selectedProperName.parsedValue = `with ${selectedProperName.parsedValue}`;
