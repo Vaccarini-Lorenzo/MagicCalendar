@@ -30,6 +30,8 @@ export class iCloudStatusModal extends Modal {
 		}
 		else if (this.iCloudStatus == iCloudServiceStatus.Ready || this.iCloudStatus == iCloudServiceStatus.Trusted){
 			this.loadSignedIn();
+		} else {
+			this.loadLogin();
 		}
     }
 
