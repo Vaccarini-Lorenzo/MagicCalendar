@@ -72,13 +72,13 @@ const icloud = new iCloud({
     trustDevice: true
 });
 await icloud.authenticate();
-console.log(icloud.status);
+
 if (icloud.status === "MfaRequested") {
     await icloud.provideMfaCode("123456");
 }
 await icloud.awaitReady;
-console.log(icloud.status);
-console.log("Hello, " + icloud.accountInfo.dsInfo.fullName);
+
+
 ```
  */
 export default class iCloudService extends EventEmitter {

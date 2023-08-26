@@ -1,8 +1,7 @@
 import { RangeSetBuilder } from "@codemirror/state";
 import nplController from "../controllers/nlpController";
 import { HighlightWidget } from "./highlightWidget";
-import { Decoration, DecorationSet, EditorView, PluginSpec, PluginValue, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
-import { UnderlineWidget } from "./underLineWidget";
+import { Decoration, DecorationSet, EditorView, PluginSpec, PluginValue, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { Sentence } from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
@@ -37,7 +36,7 @@ class NLPPlugin implements PluginValue {
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
-				const widget = this.getWidget(matches.selection, match, matchMetadata, (sync) => {
+				const decoration = this.getDecoration(matches.selection, match, matchMetadata, (sync) => {
 					if (!iCloudController.isLoggedIn()){
 						new Notice("You're not logged in! 🥲\nLook for iCalSync in the command palette to log in")
 						return;
@@ -55,9 +54,7 @@ class NLPPlugin implements PluginValue {
 					builder.add(
 						matchMetadata.startsFrom,
 						matchMetadata.endsTo,
-						Decoration.replace({
-							widget,
-						})
+						decoration
 					);
 				} catch (e){
 					// Nothing to see here
@@ -90,18 +87,22 @@ class NLPPlugin implements PluginValue {
 	}
 
 
-	private getWidget(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: (sync: boolean) => void, eventDetailString): WidgetType {
-		let widget: WidgetType = new UnderlineWidget(matchMetadata.capitalizedMatch, this.widgetFirstLoad);
+	private getDecoration(matches: {value, index, type}[], match: {value, index, type}, matchMetadata: { startsFrom; endsTo; capitalizedMatch }, highlightWidgetCallback: (sync: boolean) => void, eventDetailString): Decoration {
+		let decoration = Decoration.mark({
+			tagName: "span",
+			class: "underlinedTextDynamic"
+			});
 		//let widget: WidgetType = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
 		const isExplicitDatePresent = matches.filter(match => match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse").length > 0;
 		// If there is no explicit date, highlight the exactTime/timeRange
 		// e.g.: At 2 o'clock I'll join a meeting  <-  2 o'clock should be highlighted
-		if(isExplicitDatePresent &&  (match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse")){
-			widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
-		} else if (!isExplicitDatePresent && (match.type == "timeRange" || match.type == "exactTime")){
-			widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
+		if((isExplicitDatePresent &&  (match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse")) || (!isExplicitDatePresent && (match.type == "timeRange" || match.type == "exactTime"))){
+			const widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
+			decoration = Decoration.replace({
+				widget
+			});
 		}
-		return widget;
+		return decoration;
 	}
 
 	private getEventDetail(event: Event): {title, dateString, timeString, hasTimeDetails} {

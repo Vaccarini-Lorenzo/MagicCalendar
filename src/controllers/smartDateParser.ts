@@ -8,11 +8,12 @@ class SmartDateParser {
 	constructor() {
 		this._chrono = casual.clone();
 		this._chrono.parsers.push({
-			pattern: () => { return /\d{1,2}(th|nd|rd)/},
+			pattern: () => { return /\d{1,2}(st|nd|rd|th)/},
 			extract: (context, match) => {
-				let parsedDay = match[0].replaceAll("th", "");
+				let parsedDay = match[0].replaceAll("st", "");
 				parsedDay = parsedDay.replaceAll("nd", "");
 				parsedDay = parsedDay.replaceAll("rd", "");
+				parsedDay = parsedDay.replaceAll("th", "");
 				return {
 					day: Number(parsedDay),
 					hour: 0
@@ -27,19 +28,17 @@ class SmartDateParser {
 
 
 	getDates(parsed: ParsedResult[]): DateRange {
-		let startYear, startMonth, startDay, startHour, startMin;
-		startYear = [];
-		startMonth = [];
-		startDay = [];
-		startHour = [];
-		startMin = [];
+		const startYear = [];
+		const startMonth = [];
+		const startDay = [];
+		const startHour = [];
+		const startMin = [];
 
-		let endYear, endMonth, endDay, endHour, endMin;
-		endYear = [];
-		endMonth = [];
-		endDay = [];
-		endHour = [];
-		endMin = [];
+		const endYear = [];
+		const endMonth = [];
+		const endDay = [];
+		const endHour = [];
+		const endMin = [];
 
 		if (parsed.length  == 0) return;
 
