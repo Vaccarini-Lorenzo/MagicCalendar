@@ -1,5 +1,4 @@
 import {Plugin} from 'obsidian';
-import {iCloudServiceStatus} from "../iCloudJs";
 import {iCloudStatusModal} from "./modal";
 import {PluginValue} from "@codemirror/view";
 import {Misc} from "../misc/misc";
@@ -9,19 +8,25 @@ import {randomBytes} from "crypto";
 import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
 import nlpPlugin from "./nlpExtension";
-import iCloudController from "../controllers/iCloudController";
+import {ICloudController} from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import eventController from "../controllers/eventController";
 import calendarViewController from "../controllers/calendarViewController";
+import {CloudEventFactory} from "../model/events/cloudEventFactory";
+import {CalendarType} from "../model/cloudCalendar/calendarType";
+import {CloudController} from "../controllers/cloudController";
+import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 
 let statusModal: iCloudStatusModal;
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
-	iCloudStatus: iCloudServiceStatus;
+	cloudController: CloudController;
 	appSetting: AppSetting;
 	settings: SettingInterface;
 
 	async onload() {
+
+		this.cloudController = new ICloudController();
 
 		await this.initSettings();
 
@@ -52,24 +57,23 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		await this.saveData(this.settings);
 	}
 
-	private updateStatus(status: iCloudServiceStatus){
-		this.iCloudStatus = status;
+	private updateStatus(status: CloudStatus){
 		statusModal.updateModal(status);
-		if (this.iCloudStatus == iCloudServiceStatus.Trusted || this.iCloudStatus == iCloudServiceStatus.Ready){
-			iCloudController.preloadData().then(() => {
-				this.appSetting.updateCalendarDropdown(iCloudController.getCalendarNames());
+		if (status == CloudStatus.LOGGED){
+			this.cloudController.preloadData().then(() => {
+				this.appSetting.updateCalendarDropdown(this.cloudController.getCalendarNames());
 			});
 		}
 	}
 	
 	private async submitCallback(username: string, pw: string, ref: any): Promise<boolean> {
-		const status = await iCloudController.tryAuthentication(username, pw);
+		const status = await this.cloudController.tryAuthentication({username, pw});
 		ref.updateStatus(status);
-		return status != iCloudServiceStatus.Error
+		return status != CloudStatus.ERROR;
 	}
 
 	private async mfaCallback(code: string, ref: any){
-		const status = await iCloudController.MFACallback(code);
+		const status = await this.cloudController.MFACallback(code);
 		ref.updateStatus(status);
 		statusModal.open();
 	}
@@ -90,22 +94,23 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		nlpController.injectPath(pluginPath)
 		safeController.injectPath(pluginPath);
 		safeController.injectSettings(this.settings);
-		iCloudController.injectPath(pluginPath);
-		iCloudController.injectSettings(this.settings);
+		this.cloudController.injectPath(pluginPath);
+		this.cloudController.injectSettings(this.settings);
 		eventController.injectPath(pluginPath);
+		eventController.injectCloudController(this.cloudController);
+		eventController.injectCloudControllerFactory(new CloudEventFactory(CalendarType.ICALENDAR));
 	}
 
 	private initState() {
 		nplController.init();
 		eventController.init();
 		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
-		this.iCloudStatus = iCloudServiceStatus.NotStarted;
 		Misc.app = this.app;
 	}
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
-			const iCloudStatus = await iCloudController.tryAuthentication("", "");
+			const iCloudStatus = await this.cloudController.tryAuthentication({username: "", password: ""});
 			this.updateStatus(iCloudStatus);
 		}
 	}
@@ -130,6 +135,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	public updateSettings(){
 		safeController.injectSettings(this.settings);
-		iCloudController.injectSettings(this.settings);
+		this.cloudController.injectSettings(this.settings);
 	}
 }

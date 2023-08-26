@@ -1,23 +1,18 @@
-import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "./sentence";
 import eventController from "../controllers/eventController";
+import {CloudEvent} from "./events/cloudEvent";
 
 export default class Event {
-	value: iCloudCalendarEvent;
+	value: CloudEvent;
 	sentence: Sentence;
 	hash: number;
 	processed: boolean;
 
-	constructor(value: iCloudCalendarEvent, sentence: Sentence) {
+	constructor(value: CloudEvent, sentence: Sentence) {
 		this.value = value;
 		this.sentence = sentence;
 		this.hash = this.computeHash();
 		this.processed = false;
-	}
-
-	injectICloudComponents({tz, pGuid}){
-		this.value.tz = tz;
-		this.value.pGuid = pGuid;
 	}
 
 	private computeHash(): number{

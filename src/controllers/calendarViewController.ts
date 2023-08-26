@@ -1,9 +1,9 @@
 import eventController from "./eventController";
 import {DateRange} from "../model/dateRange";
-import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {CalendarViewDetail} from "../model/calendarViewDetail";
 import {CalendarView} from "../plugin/calendarView";
 import {Misc} from "../misc/misc";
+import {CloudEvent} from "../model/events/cloudEvent";
 
 class CalendarViewController {
 	async getMarkdownPostProcessor(element, context){
@@ -38,12 +38,12 @@ class CalendarViewController {
 		return matches.filter(match => match.length > 4).first();
 	}
 
-	private async getEventList(codeComponents: { from; to }): Promise<iCloudCalendarEvent[] | []> {
+	private async getEventList(codeComponents: { from; to }): Promise<CloudEvent[] | []> {
 		const dateRange = new DateRange(new Date(codeComponents.from), new Date(codeComponents.to));
 		return await eventController.getEventsFromRange(dateRange);
 	}
 
-	private getCalendarViewData(dateRange: DateRange, eventList: iCloudCalendarEvent[] | []): {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate} {
+	private getCalendarViewData(dateRange: DateRange, eventList: CloudEvent[] | []): {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate} {
 		const calendarViewDetails: CalendarViewDetail[] = [];
 		const noOverlapMap = this.manageEventOverlap(eventList, dateRange);
 		const auxStruct = this.getAuxiliaryStructure(dateRange);
@@ -78,11 +78,11 @@ class CalendarViewController {
 		}
 	}
 
-	private manageEventOverlap(eventList: iCloudCalendarEvent[] | [], dateRange: DateRange) {
+	private manageEventOverlap(eventList: CloudEvent[] | [], dateRange: DateRange) {
 		const date = new Date(dateRange.start);
 		const dayDiff = dateRange.getDayDifference();
 
-		const noOverlapMap = new Map<Date, iCloudCalendarEvent[][]>();
+		const noOverlapMap = new Map<Date, CloudEvent[][]>();
 		for (let i = 0; i <= dayDiff; i++){
 			const dayEvents = this.filterEventsWithStartDate(eventList, date);
 			this.checkOverlaps(dayEvents, noOverlapMap, date);
@@ -91,14 +91,14 @@ class CalendarViewController {
 		return noOverlapMap;
 	}
 
-	private filterEventsWithStartDate(eventList: iCloudCalendarEvent[], date: Date): iCloudCalendarEvent[] {
+	private filterEventsWithStartDate(eventList: CloudEvent[], date: Date): CloudEvent[] {
 		return eventList.filter(event => {
-			const eventDate = Misc.getDateFromICloudArray(event.startDate);
+			const eventDate = event.cloudEventStartDate;
 			return eventDate.toLocaleDateString() == date.toLocaleDateString();
 		})
 	}
 
-	private checkOverlaps(dayEvents: iCloudCalendarEvent[], noOverlapMap, date: Date){
+	private checkOverlaps(dayEvents: CloudEvent[], noOverlapMap, date: Date){
 		const sortedDayEvents = Misc.sortICloudCalendarEventList(dayEvents);
 		const toCheckList = [...sortedDayEvents];
 		const eventRows = [];
@@ -106,7 +106,7 @@ class CalendarViewController {
 		sortedDayEvents.forEach((dayEvent, dayEventsIndex) => {
 			if (!toCheckList.contains(dayEvent)) return;
 			toCheckList.remove(dayEvent);
-			const noOverlapList: iCloudCalendarEvent[] = [dayEvent];
+			const noOverlapList: CloudEvent[] = [dayEvent];
 			const dateRange = new DateRange(Misc.getDateFromICloudArray(dayEvent.startDate), Misc.getDateFromICloudArray(dayEvent.endDate));
 			for (let i = dayEventsIndex + 1; i < sortedDayEvents.length; i++){
 				const nextEvent = sortedDayEvents[i];
@@ -122,13 +122,13 @@ class CalendarViewController {
 		noOverlapMap.set(new Date(date), eventRows);
 	}
 
-	private propagateListOverlapCheck(noOverlapList: iCloudCalendarEvent[], toCheckList: iCloudCalendarEvent[]) {
+	private propagateListOverlapCheck(noOverlapList: CloudEvent[], toCheckList: CloudEvent[]) {
 
 		noOverlapList.forEach((noOverlapEvent, noOverlapIndex) => {
-			const noOverlapEventDateRange = new DateRange(Misc.getDateFromICloudArray(noOverlapEvent.startDate), Misc.getDateFromICloudArray(noOverlapEvent.endDate));
+			const noOverlapEventDateRange = new DateRange(noOverlapEvent.cloudEventStartDate, noOverlapEvent.cloudEventEndDate);
 			for (let i = noOverlapIndex + 1; i < noOverlapList.length; i++){
 				const check = noOverlapList[i];
-				const checkDateRange = new DateRange(Misc.getDateFromICloudArray(check.startDate), Misc.getDateFromICloudArray(check.endDate));
+				const checkDateRange = new DateRange(check.cloudEventStartDate, check.cloudEventEndDate);
 				if (noOverlapEventDateRange.overlaps(checkDateRange)){
 					noOverlapList.remove(check);
 					toCheckList.push(check);

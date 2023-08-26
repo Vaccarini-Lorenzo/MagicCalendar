@@ -1,10 +1,10 @@
 import {App, Modal, Setting} from "obsidian";
-import {iCloudServiceStatus} from "../iCloudJs";
+import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 
 export class iCloudStatusModal extends Modal {
     submitCredentials: (username: string, pw: string, ref: any) => Promise<boolean>;
 	submitMfa: (code: string, ref: any) => Promise<void>;
-	iCloudStatus: iCloudServiceStatus;
+	cloudStatus: CloudStatus;
 	ref: any;
 
     constructor(app: App,
@@ -14,21 +14,21 @@ export class iCloudStatusModal extends Modal {
         super(app);
         this.submitCredentials = submitCallback;
 		this.submitMfa = submitMfa;
-		this.iCloudStatus = iCloudServiceStatus.NotStarted;
+		this.cloudStatus = CloudStatus.NOT_STARTED;
 		this.ref = ref;
     }
 
     onOpen() {
-		if(this.iCloudStatus == iCloudServiceStatus.NotStarted){
+		if(this.cloudStatus == CloudStatus.NOT_STARTED){
 			this.loadLogin();
 		}
-		else if (this.iCloudStatus == iCloudServiceStatus.MfaRequested){
+		else if (this.cloudStatus == CloudStatus.MFA_REQ){
 			this.loadMFA();
 		}
-		else if (this.iCloudStatus == iCloudServiceStatus.Started){
+		else if (this.cloudStatus == CloudStatus.WAITING){
 			this.loadSigningIn();
 		}
-		else if (this.iCloudStatus == iCloudServiceStatus.Ready || this.iCloudStatus == iCloudServiceStatus.Trusted){
+		else if (this.cloudStatus == CloudStatus.LOGGED){
 			this.loadSignedIn();
 		} else {
 			this.loadLogin();
@@ -110,8 +110,8 @@ export class iCloudStatusModal extends Modal {
 		contentEl.createEl("h1", {text: "You're correctly logged in!"});
 	}
 
-	updateModal(iCloudStatus: iCloudServiceStatus){
-		this.iCloudStatus = iCloudStatus;
+	updateModal(cloudStatus: CloudStatus){
+		this.cloudStatus = cloudStatus;
 		this.onOpen();
 	}
 

@@ -1,6 +1,5 @@
 import {RequestInfo, RequestInit, Response} from "node-fetch";
 import {requestUrl, RequestUrlParam} from "obsidian";
-import iCloudController from "../controllers/iCloudController";
 
 class ICloudMisc {
     private stringifyDateNumber(dateNumber: number): string {
@@ -54,6 +53,10 @@ class ICloudMisc {
 			console.warn("Error requestingUrl:", e);
 			console.warn(e.code);
 			console.warn(e.toString());
+			/*
+
+			This logic must be moved
+
 			if (e.toString() == "Error: Request failed, status 421"){
 				const canTryReconnect = iCloudController.checkMaxReconnectAttempt();
 				if(!canTryReconnect){
@@ -70,6 +73,8 @@ class ICloudMisc {
 			else if(e.toString() == "Error: net::ERR_NAME_NOT_RESOLVED"){
 				console.warn("Internet connection error");
 			}
+
+			 */
 		}
 
 		const setCookieField = requestUrlResponse.headers["set-cookie"] as any;

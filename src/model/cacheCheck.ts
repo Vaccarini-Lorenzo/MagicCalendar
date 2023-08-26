@@ -1,12 +1,12 @@
 import {DateRange} from "./dateRange";
-import {iCloudCalendarEvent} from "../iCloudJs/calendar";
+import {CloudEvent} from "./events/cloudEvent";
 
 export class CacheCheck {
 	missedDateRanges: DateRange[];
-	cachedICouldEvents: iCloudCalendarEvent[];
+	cachedCloudEvents: CloudEvent[];
 
-	constructor(missedDateRanges: DateRange[], cachedICouldEvents: iCloudCalendarEvent[]) {
+	constructor(missedDateRanges: DateRange[], cachedCloudEvents: CloudEvent[]) {
 		this.missedDateRanges = missedDateRanges;
-		this.cachedICouldEvents = cachedICouldEvents;
+		this.cachedCloudEvents = cachedCloudEvents;
 	}
 }

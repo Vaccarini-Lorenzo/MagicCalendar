@@ -1,28 +1,8 @@
-.highlightedTextDynamic {
-	position: relative;
-	color: white;
-	padding: 3px;
-	-webkit-animation: 0.7s highlight 0s 1 normal forwards;
-	background: linear-gradient(90deg, #3c2c54 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 100%;
-	background-position: 100% 0;
-	z-index: unset;
-}
-
 .highlightedTextStatic {
 	background-color: #3c2c54;
 	position: relative;
 	color: white;
 	padding: 3px;
-}
-
-.underlinedTextStatic {
-	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 15%;
-	padding: 2px;
-	background-position: 0 100%;
-	background-repeat: no-repeat;
-	pointer-events: none;
 }
 
 .underlinedTextDynamic {

@@ -1,12 +1,16 @@
 import iCloudService, {iCloudServiceStatus} from "../iCloudJs";
 import Event from "../model/event";
-import {iCloudCalendarCollection, iCloudCalendarEvent, iCloudCalendarService} from "../iCloudJs/calendar";
+import {iCloudCalendarCollection, iCloudCalendarEvent} from "../model/events/iCloudCalendarEvent"
 import {SettingInterface} from "../plugin/appSetting";
 import {DateRange} from "../model/dateRange";
+import {iCloudCalendarService} from "../iCloudJs/calendar";
+import {CloudController} from "./cloudController";
+import {CloudEvent} from "../model/events/cloudEvent";
+import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
+import {Misc} from "../misc/misc";
 
-class ICloudController {
+export class ICloudController extends CloudController {
 	private _iCloud: iCloudService;
-	private _pendingTagsBuffer: number[];
 	private _pluginPath: string;
 	private _calendars: iCloudCalendarCollection[];
 	private _calendarService: iCloudCalendarService;
@@ -17,8 +21,8 @@ class ICloudController {
 	private reconnectAttempt: number;
 
 	constructor() {
+		super();
 		this._tagHash = new Map<number, Event>();
-		this._pendingTagsBuffer = [];
 		this._calendars = [];
 		this._dataLoadingComplete = false;
 		this.maxReconnectAttempt = 5;
@@ -37,27 +41,27 @@ class ICloudController {
 		return this._calendars.map(calendar => calendar.title);
 	}
 
-	async tryAuthentication(username: string, password: string): Promise<iCloudServiceStatus>{
+	async tryAuthentication(auth: any): Promise<CloudStatus>{
 		this._iCloud = new iCloudService({
-			username,
-			password,
+			username: auth.username,
+			password: auth.password,
 			saveCredentials: true,
 			trustDevice: true
 		});
 		try {
 			await this._iCloud.authenticate();
-			return this._iCloud.status;
+			return this.convertToCloudStatus(this._iCloud.status);
 		} catch (e) {
 			console.warn("Error during authentication");
 			console.warn(e.message);
-			return iCloudServiceStatus.Error;
+			return this.convertToCloudStatus(iCloudServiceStatus.Error);
 		}
 	}
 
-	async MFACallback(mfa: string): Promise<iCloudServiceStatus> {
+	async MFACallback(mfa: string): Promise<CloudStatus> {
 		await this._iCloud.provideMfaCode(mfa);
 		await this._iCloud.awaitReady;
-		return this._iCloud.status;
+		return this.convertToCloudStatus(this._iCloud.status);
 	}
 
 	async preloadData() {
@@ -69,15 +73,16 @@ class ICloudController {
 
 	async pushEvent(event: Event): Promise<boolean>{
 		let calendar = this._calendars.first();
+		const iCloudEvent = event.value as iCloudCalendarEvent;
 		if (this.appSettings.calendar != "Log in to select a calendar"){
 			const firstMatchingCalendar = this._calendars.filter(calendar => calendar.title == this.appSettings.calendar)[0];
 			calendar = firstMatchingCalendar ?? calendar;
 		}
-		event.injectICloudComponents({
-			tz: this.appSettings.tz,
-			pGuid: calendar.guid
-		})
-		return await this._calendarService.postEvent(event.value, calendar.ctag);
+
+		iCloudEvent.tz = this.appSettings.tz;
+		iCloudEvent.pGuid = calendar.guid;
+
+		return await this._calendarService.postEvent(iCloudEvent, calendar.ctag);
 	}
 
 	async awaitReady(){
@@ -88,9 +93,16 @@ class ICloudController {
 		return this._iCloud != undefined && (this._iCloud.status == iCloudServiceStatus.Ready || this._iCloud.status == iCloudServiceStatus.Trusted)
 	}
 
-	async getICloudEvents(missedDateRange: DateRange): Promise<iCloudCalendarEvent[]> {
+	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
 		if (this._calendarService == undefined) return [];
-		return await this._calendarService.events(missedDateRange.start, missedDateRange.end);
+		const iCloudEvents = await this._calendarService.events(missedDateRange.start, missedDateRange.end);
+		iCloudEvents.forEach(iCloudEvent => {
+			iCloudEvent.cloudEventUUID = iCloudEvent.pGuid;
+			iCloudEvent.cloudEventTitle = iCloudEvent.title;
+			iCloudEvent.cloudEventStartDate = Misc.getDateFromICloudArray(iCloudEvent.startDate);
+			iCloudEvent.cloudEventEndDate = Misc.getDateFromICloudArray(iCloudEvent.endDate);
+		});
+		return iCloudEvents;
 	}
 
 	refreshRequestCookies(requestUrlParams: { url, method, headers, body }){
@@ -107,7 +119,13 @@ class ICloudController {
 	resetReconnectAttempt() {
 		this.reconnectAttempt = 0;
 	}
-}
 
-const iCloudController = new ICloudController();
-export default iCloudController;
+	private convertToCloudStatus(status: iCloudServiceStatus): CloudStatus {
+		if (status == iCloudServiceStatus.NotStarted) return CloudStatus.NOT_STARTED;
+		if (status == iCloudServiceStatus.Error) return CloudStatus.ERROR;
+		if (status == iCloudServiceStatus.MfaRequested) return CloudStatus.MFA_REQ;
+		if (status == iCloudServiceStatus.Started) return CloudStatus.WAITING;
+		if (status == iCloudServiceStatus.Authenticated || status == iCloudServiceStatus.Ready || status == iCloudServiceStatus.Trusted ) return CloudStatus.LOGGED;
+		return undefined;
+	}
+}

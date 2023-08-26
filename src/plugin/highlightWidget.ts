@@ -6,13 +6,12 @@ export class HighlightWidget extends WidgetType {
 	syncCallback: (sync: boolean) => void;
 	markClass: string;
 
-	constructor(sentenceValue: string, eventDetails:  {title, dateString, timeString, hasTimeDetails}, syncCallback: (sync: boolean) => void, firstLoad: boolean) {
+	constructor(sentenceValue: string, eventDetails:  {title, dateString, timeString, hasTimeDetails}, syncCallback: (sync: boolean) => void) {
 		super();
 		this.sentenceValue = sentenceValue;
 		this.eventDetails = eventDetails;
 		this.syncCallback = syncCallback;
 		this.markClass = "highlightedTextStatic";
-		if(firstLoad) this.markClass = "highlightedTextDynamic";
 	}
 
 	toDOM(view: EditorView): HTMLElement {

@@ -1,12 +1,12 @@
 import Event from "../model/event";
-import iCloudMisc from "../iCloudJs/iCloudMisc";
-import {iCloudCalendarEvent} from "../iCloudJs/calendar";
 import {Sentence} from "../model/sentence";
-import iCloudController from "./iCloudController";
 import {Notice, requestUrl, RequestUrlParam} from "obsidian";
 import {appendFileSync, readFileSync, writeFileSync} from "fs";
 import {DateRange} from "../model/dateRange";
 import cacheController from "./cacheController";
+import {CloudController} from "./cloudController";
+import {CloudEvent} from "../model/events/cloudEvent";
+import {CloudEventFactory} from "../model/events/cloudEventFactory";
 
 class EventController{
 	// Map that connects the file path to the list of events
@@ -15,6 +15,8 @@ class EventController{
 	private readonly _uuidEventMap: Map<string, Event>;
 	private _currentEvent : Event;
 	private _pluginPath: string;
+	private _cloudController: CloudController;
+	private _cloudEventFactory: CloudEventFactory;
 
 	constructor() {
 		this._pathEventMap = new Map<string, Event[]>();
@@ -23,6 +25,14 @@ class EventController{
 
 	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
+	}
+
+	injectCloudController(cloudController: CloudController){
+		this._cloudController = cloudController;
+	}
+
+	injectCloudControllerFactory(cloudEventFactory: CloudEventFactory){
+		this._cloudEventFactory = cloudEventFactory;
 	}
 
 	init(){
@@ -87,31 +97,8 @@ class EventController{
 	}
 
 	createNewEvent(sentence: Sentence): Event {
-		const arrayStartDate = iCloudMisc.getArrayDate(sentence.startDate);
-		const arrayEndDate = iCloudMisc.getArrayDate(sentence.endDate);
-		const guid = this.generateNewUUID();
-
-		const value = {
-			title: sentence.eventNoun,
-			duration: sentence.duration,
-			description : "",
-			guid,
-			location: "",
-			startDate: arrayStartDate,
-			endDate: arrayEndDate,
-			localStartDate: arrayStartDate,
-			localEndDate: arrayEndDate,
-			extendedDetailsAreIncluded: true,
-			allDay: false,
-			isJunk: false,
-			recurrenceMaster: false,
-			recurrenceException: false,
-			hasAttachments: false,
-			icon: 0,
-			changeRecurring: null
-		} as iCloudCalendarEvent;
-
-		const newEvent = new Event(value, sentence);
+		const cloudEvent = this._cloudEventFactory.getNewCloudEvent(sentence);
+		const newEvent = new Event(cloudEvent, sentence);
 		this._currentEvent = newEvent;
 		return newEvent;
 	}
@@ -124,29 +111,17 @@ class EventController{
 			fileEvents.push(this._currentEvent);
 			this._pathEventMap.set(filePath, fileEvents)
 		}
-		this._uuidEventMap.set(this._currentEvent.value.guid, this._currentEvent);
+		this._uuidEventMap.set(this._currentEvent.value.cloudUUID, this._currentEvent);
 		this._currentEvent.processed = true;
 		// Syncing local storage - Needed to remember which events have been already processed
 		this.syncLocalStorageEventLog(filePath, this._currentEvent);
 		if (!sync) return;
 		// Request to sync -> Push event to iCloud
-		iCloudController.pushEvent(this._currentEvent).then((status => {
+		this._cloudController.pushEvent(this._currentEvent).then((status => {
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
 		this.updateCounter();
-	}
-
-	private generateNewUUID(): string {
-		const maxIntEightNibbles = 4294967295;
-		const maxIntFourNibbles = 65535;
-		const maxIntTwelveNibbles = 281474976710655;
-		const firstUUID = iCloudMisc.getRandomHex(maxIntEightNibbles);
-		const secondUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
-		const thirdUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
-		const fourthUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
-		const lastUUID = iCloudMisc.getRandomHex(maxIntTwelveNibbles);
-		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
 	}
 
 	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {
@@ -155,7 +130,7 @@ class EventController{
 		try {
 			const pathEventMapData = `{"${eventFilePath}":${JSON.stringify(event)}}\n`;
 			appendFileSync(pathEventMapFilePath, pathEventMapData);
-			const uuidEventMapData = `{"${event.value.guid}":${JSON.stringify(event)}}\n`;
+			const uuidEventMapData = `{"${event.value.cloudUUID}":${JSON.stringify(event)}}\n`;
 			appendFileSync(uuidEventMapFilePath, uuidEventMapData);
 		} catch (e) {
 			console.error("Error syncing local event log");
@@ -176,16 +151,16 @@ class EventController{
 		}
 	}
 
-	async getEventsFromRange(dateRange: DateRange): Promise<iCloudCalendarEvent[]> {
+	async getEventsFromRange(dateRange: DateRange): Promise<CloudEvent[]> {
 		const cacheCheck = cacheController.checkCache(dateRange);
-		if (cacheCheck.missedDateRanges.length == 0) return cacheCheck.cachedICouldEvents;
-		const iCloudEvents = cacheCheck.cachedICouldEvents;
+		if (cacheCheck.missedDateRanges.length == 0) return cacheCheck.cachedCloudEvents;
+		const cloudEvents = cacheCheck.cachedCloudEvents;
 		for (let i=0; i<cacheCheck.missedDateRanges.length; i++){
 			const missedDateRange = cacheCheck.missedDateRanges[i];
-			const fetchedICloudEvents = await iCloudController.getICloudEvents(missedDateRange);
-			fetchedICloudEvents.forEach(iCloudEvent => iCloudEvents.push(iCloudEvent));
+			const fetchedCloudEvents = await this._cloudController.getEvents(missedDateRange);
+			fetchedCloudEvents.forEach(iCloudEvent => cloudEvents.push(iCloudEvent));
 		}
-		return iCloudEvents;
+		return cloudEvents;
 	}
 }
 

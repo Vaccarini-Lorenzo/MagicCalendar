@@ -1,5 +1,6 @@
 import {App} from "obsidian";
-import {iCloudCalendarEvent} from "../iCloudJs/calendar";
+import {CloudEvent} from "../model/events/cloudEvent";
+import iCloudMisc from "../iCloudJs/iCloudMisc";
 
 export class Misc {
 	static app: App;
@@ -23,13 +24,25 @@ export class Misc {
 		return new Date(`${array[1]}-${array[2]}-${array[3]} ${array[4]}:${array[5]}`)
 	}
 
-	static sortICloudCalendarEventList(events: iCloudCalendarEvent[]) {
+	static sortICloudCalendarEventList(events: CloudEvent[]) {
 		const tmpMap = new Map();
 		events.forEach(event => {
-			const startDate = Misc.getDateFromICloudArray(event.startDate);
+			const startDate = event.cloudEventStartDate;
 			tmpMap.set(event, startDate);
 		})
 		const sorted = new Map([...tmpMap].sort((a, b) => a[1] - b[1]));
 		return Array.from(sorted.keys());
+	}
+
+	static generateNewICloudUUID(): string {
+		const maxIntEightNibbles = 4294967295;
+		const maxIntFourNibbles = 65535;
+		const maxIntTwelveNibbles = 281474976710655;
+		const firstUUID = iCloudMisc.getRandomHex(maxIntEightNibbles);
+		const secondUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const thirdUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const fourthUUID = iCloudMisc.getRandomHex(maxIntFourNibbles);
+		const lastUUID = iCloudMisc.getRandomHex(maxIntTwelveNibbles);
+		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
 	}
 }

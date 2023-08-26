@@ -13,6 +13,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
+		"@google-cloud/local-auth": "^2.1.0",
 		"@types/node": "^16.11.6",
 		"@types/node-fetch": "^2.6.2",
 		"@typescript-eslint/eslint-plugin": "^5.43.0",
@@ -22,6 +23,7 @@
 		"codemirror": "^6.0.1",
 		"electron": "^25.3.2",
 		"esbuild": "0.18.17",
+		"googleapis": "^105.0.0",
 		"moment-timezone": "^0.5.43",
 		"node-fetch": "^2.6.7",
 		"obsidian": "latest",
