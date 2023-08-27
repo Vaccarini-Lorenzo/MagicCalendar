@@ -1,5 +1,4 @@
 import {CloudController} from "./cloudController";
-import {SettingInterface} from "../plugin/appSetting";
 import {DateRange} from "../model/dateRange";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
@@ -12,17 +11,17 @@ import {google} from "googleapis";
 import {APIEndpoint} from "googleapis-common";
 import {GoogleCalendar} from "../model/cloudCalendar/googleCalendar";
 import {GoogleCalendarEvent} from "../model/events/googleCalendarEvent";
+import {SettingInterface} from "../plugin/appSetting";
 
-export class GoogleCalendarController extends CloudController {
+export class GoogleCalendarController implements CloudController {
 	private _pluginPath: string;
 	private _credentialsPath: string;
-	private _scopes: string[];
+	private readonly _scopes: string[];
 	private _calendarEndpoint: APIEndpoint;
 	private _calendars: GoogleCalendar[];
 
 	constructor() {
-		super();
-		this._scopes = ['https://www.googleapis.com/auth/calendar.readonly'];
+		this._scopes = ["https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"];
 	}
 
 	async pushEvent(event: Event): Promise<boolean>{return false;}
@@ -54,12 +53,10 @@ export class GoogleCalendarController extends CloudController {
 
 	injectPath(pluginPath: string) {
 		this._pluginPath = pluginPath;
-		this._credentialsPath = join(pluginPath, '.googleOAuthCredentials.json');
+		this._credentialsPath = join(pluginPath, ".googleOAuthCredentials.json");
 	}
 
-	injectSettings(settings: SettingInterface) {
-
-	}
+	injectSettings(settings: SettingInterface) {}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
 		if (auth){

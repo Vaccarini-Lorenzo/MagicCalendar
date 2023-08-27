@@ -15,18 +15,17 @@ import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 import {CloudController} from "../controllers/cloudController";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {GoogleCalendarController} from "../controllers/googleCalendarController";
-
-let statusModal: StatusModal;
+import nlpPlugin from "./nlpExtension";
+import {ICalendarController} from "../controllers/ICalendarController";
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
-	cloudController: CloudController;
-	appSetting: AppSetting;
+	private _cloudController: CloudController;
+	private _appSetting: AppSetting;
 	settings: SettingInterface;
+	private _pluginPath: string;
+	private _statusModal: StatusModal;
 
 	async onload() {
-
-		//TODO: Remove, just for testing purposes
-		this.cloudController = new GoogleCalendarController();
 
 		await this.initSettings();
 
@@ -34,14 +33,29 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 		this.initState();
 
-		this.registerEvents();
-
-		//this.registerEditorExtension(nlpPlugin)
-
-		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
+		this.manageRegistrations();
 
 		await this.checkLogin();
 
+	}
+
+	private async initSettings() {
+		this._appSetting = new AppSetting(this.app, this);
+		await this.loadSettings();
+		this.addSettingTab(this._appSetting);
+		await this.checkEncryption();
+	}
+
+	private injectDependencies() {
+		const basePath = (this.app.vault.adapter as any).basePath
+		this._pluginPath = join(basePath, this.manifest.dir)
+		nlpController.injectPath(this._pluginPath)
+		safeController.injectPath(this._pluginPath);
+		safeController.injectSettings(this.settings);
+		safeController.injectCalendarProvider(this.settings.calendarProvider);
+		eventController.injectPath(this._pluginPath);
+		eventController.injectCloudController(this._cloudController);
+		eventController.injectCloudControllerFactory(new CloudEventFactory(this.settings.calendarProvider));
 	}
 
 	async onunload() {
@@ -58,77 +72,62 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	private updateStatus(status: CloudStatus){
-		statusModal.updateModal(status);
+		this._statusModal.updateModal(status);
 		if (status == CloudStatus.LOGGED){
-			this.cloudController.preloadData().then(() => {
-				this.appSetting.updateCalendarDropdown(this.cloudController.getCalendarNames());
+			this._cloudController.preloadData().then(() => {
+				this._appSetting.updateCalendarDropdown(this._cloudController.getCalendarNames());
 			});
 		}
 	}
 
+	private initState() {
+		Misc.app = this.app;
+		Misc.loadMedia(join(this._pluginPath, ".base64Media.json"));
+		nplController.init();
+		eventController.init();
+		this._statusModal = new StatusModal(this.app, this.selectProviderCallback, this.submitCredentialsCallback, this.submitMfaCallback, this);
+		this.updateStatus(CloudStatus.NOT_STARTED);
+	}
+
 	private async selectProviderCallback(calendarProvider: CalendarProvider, ref: any){
 		ref.settings.calendarProvider = calendarProvider;
+		ref._cloudController = ref.getCloudController(calendarProvider);
+		ref._cloudController.injectPath(ref._pluginPath);
+		ref._cloudController.injectSettings(ref.settings);
 		await ref.saveSettings();
 		ref.updateStatus(CloudStatus.PROVIDER_SELECTED);
 	}
 	
 	private async submitCredentialsCallback(submitObject: any, ref: any): Promise<boolean> {
-		const status = await ref.cloudController.tryAuthentication(submitObject);
+		const status = await ref._cloudController.tryAuthentication(submitObject);
 		ref.updateStatus(status);
 		return status != CloudStatus.ERROR;
 	}
 
 	private async submitMfaCallback(code: string, ref: any){
-		const status = await ref.cloudController.MFACallback(code);
+		const status = await ref._cloudController.MFACallback(code);
 		ref.updateStatus(status);
-		statusModal.open();
+		this._statusModal.open();
 	}
 
-	private registerEvents(){
+	private manageRegistrations(){
+		this.registerEditorExtension(nlpPlugin)
+		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
 		this.addCommand({
 			id: "iCal",
-			name: "Insert iCloud credentials",
+			name: "Select calendar provider",
 			callback: () => {
-				statusModal.open();
+				this._statusModal.open();
 			},
 		});
-	}
-
-	private injectDependencies() {
-		const basePath = (this.app.vault.adapter as any).basePath
-		const pluginPath = join(basePath, this.manifest.dir)
-		nlpController.injectPath(pluginPath)
-		safeController.injectPath(pluginPath);
-		safeController.injectSettings(this.settings);
-		safeController.injectCalendarProvider(this.settings.calendarProvider);
-		this.cloudController.injectPath(pluginPath);
-		this.cloudController.injectSettings(this.settings);
-		eventController.injectPath(pluginPath);
-		eventController.injectCloudController(this.cloudController);
-		eventController.injectCloudControllerFactory(new CloudEventFactory(this.settings.calendarProvider));
-	}
-
-	private initState() {
-		nplController.init();
-		eventController.init();
-		statusModal = new StatusModal(this.app, this.selectProviderCallback, this.submitCredentialsCallback, this.submitMfaCallback, this);
-		this.updateStatus(CloudStatus.NOT_STARTED);
-		Misc.app = this.app;
 	}
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
 			const auth = safeController.getCredentials();
-			const cloudStatus = await this.cloudController.tryAuthentication(auth);
+			const cloudStatus = await this._cloudController.tryAuthentication(auth);
 			this.updateStatus(cloudStatus);
 		}
-	}
-
-	private async initSettings() {
-		this.appSetting = new AppSetting(this.app, this);
-		await this.loadSettings();
-		this.addSettingTab(this.appSetting);
-		await this.checkEncryption();
 	}
 
 	private async checkEncryption(){
@@ -137,13 +136,18 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 			const iv = randomBytes(16);
 			this.settings.key = key.toString("hex");
 			this.settings.iv = iv.toString("hex");
-			this.appSetting.updateEncryption(this.settings.key, this.settings.iv);
+			this._appSetting.updateEncryption(this.settings.key, this.settings.iv);
 			await this.saveSettings();
 		}
 	}
 
 	public updateSettings(){
 		safeController.injectSettings(this.settings);
-		this.cloudController.injectSettings(this.settings);
+		this._cloudController.injectSettings(this.settings);
+	}
+
+	private getCloudController(calendarProvider: CalendarProvider) {
+		if (calendarProvider == CalendarProvider.APPLE) return new ICalendarController();
+		else if (calendarProvider == CalendarProvider.GOOGLE) return new GoogleCalendarController();
 	}
 }

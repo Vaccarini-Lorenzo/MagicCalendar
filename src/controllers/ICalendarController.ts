@@ -9,7 +9,7 @@ import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {Misc} from "../misc/misc";
 
-export class ICloudController extends CloudController {
+export class ICalendarController implements CloudController {
 	private _iCloud: iCloudService;
 	private _pluginPath: string;
 	private _calendars: iCloudCalendarCollection[];
@@ -21,7 +21,6 @@ export class ICloudController extends CloudController {
 	private reconnectAttempt: number;
 
 	constructor() {
-		super();
 		this._tagHash = new Map<number, Event>();
 		this._calendars = [];
 		this._dataLoadingComplete = false;

@@ -4,20 +4,20 @@ import {CloudEvent} from "../model/events/cloudEvent";
 import {SettingInterface} from "../plugin/appSetting";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 
-export class CloudController {
-	async pushEvent(event: Event): Promise<boolean>{return false;}
+export interface CloudController {
+	pushEvent(event: Event): Promise<boolean>;
 
-	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {return [];}
+	getEvents(missedDateRange: DateRange): Promise<CloudEvent[]>;
 
-	injectPath(pluginPath: string) {}
+	injectPath(pluginPath: string);
 
-	injectSettings(settings: SettingInterface) {}
+	injectSettings?(settings: SettingInterface);
 
-	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {return CloudStatus.ERROR;}
+	tryAuthentication(auth: Map<string,string>): Promise<CloudStatus>;
 
-	async MFACallback(code: string): Promise<CloudStatus> {return CloudStatus.ERROR;}
+	MFACallback?(code: string): Promise<CloudStatus>;
 
-	async preloadData() {}
+	preloadData();
 
-	getCalendarNames() {return [];}
+	getCalendarNames();
 }

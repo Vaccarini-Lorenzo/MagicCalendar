@@ -9,6 +9,20 @@ if you want to view the source visit the plugins github repository
 */`
 
 const prod = process.argv[2] === 'prod';
+const renameImportPlugin = {
+	name: 'rename-import-plugin',
+	setup(build) {
+		build.onResolve({ filter: /punycode/ }, (args) => {
+			// Change the import path to "punycode" (without trailing slash)
+			return { path: 'punycode', namespace: 'rename-import-ns' };
+		});
+
+		build.onLoad({ filter: /^punycode(\/|$)/, namespace: 'rename-import-ns' }, async (args) => {
+			// Load the original file content and return it as-is
+			return { contents: `export * from "${args.path}"` };
+		});
+	},
+};
 
 esbuild.build({
 	banner: {
@@ -39,13 +53,14 @@ esbuild.build({
 	],
 	format: 'cjs',
 	logLevel: 'info',
-	minify: prod ? true: false,
-	minifySyntax: prod ? true: false,
-	minifyWhitespace: prod ? true: false,
-	minifyIdentifiers: prod ? true: false,
+	minify: prod,
+	minifySyntax: prod,
+	minifyWhitespace: prod,
+	minifyIdentifiers: prod,
 	outfile: 'main.js',
 	sourcemap: prod ? true: "inline",
 	target: 'es2016',
 	treeShaking: true,
+	plugins: [renameImportPlugin]
 	})
 	.catch(() => process.exit(1));
