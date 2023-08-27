@@ -3,17 +3,17 @@ import {CloudEvent} from "./cloudEvent";
 import iCloudMisc from "../../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "./iCloudCalendarEvent";
 import {Misc} from "../../misc/misc";
-import {CalendarType} from "../cloudCalendar/calendarType";
+import {CalendarProvider} from "../cloudCalendar/calendarProvider";
 
 export class CloudEventFactory {
-	calendarType: CalendarType;
+	calendarType: CalendarProvider;
 
-	constructor(calendarType: CalendarType) {
+	constructor(calendarType: CalendarProvider) {
 		this.calendarType = calendarType;
 	}
 
 	getNewCloudEvent(sentence: Sentence): CloudEvent {
-		if (this.calendarType == CalendarType.ICALENDAR) return this.getICloudCalendarEvent(sentence);
+		if (this.calendarType == CalendarProvider.APPLE) return this.getICloudCalendarEvent(sentence);
 	}
 
 	private getICloudCalendarEvent(sentence: Sentence): iCloudCalendarEvent {

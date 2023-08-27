@@ -1,17 +1,22 @@
 import {App, Modal, Setting} from "obsidian";
+import {Misc} from "src/misc/misc";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
 export class iCloudStatusModal extends Modal {
     submitCredentials: (username: string, pw: string, ref: any) => Promise<boolean>;
 	submitMfa: (code: string, ref: any) => Promise<void>;
 	cloudStatus: CloudStatus;
+	selectedProvider: CalendarProvider;
 	ref: any;
 
     constructor(app: App,
 				submitCallback: (username: string, pw: string, ref: any) => Promise<boolean>,
 				submitMfa: (code: string, ref: any) => Promise<void>,
-				ref: any){
+				ref: any,
+				selectedProvider?: CalendarProvider){
         super(app);
+		this.selectedProvider = selectedProvider;
         this.submitCredentials = submitCallback;
 		this.submitMfa = submitMfa;
 		this.cloudStatus = CloudStatus.NOT_STARTED;
@@ -20,7 +25,13 @@ export class iCloudStatusModal extends Modal {
 
     onOpen() {
 		if(this.cloudStatus == CloudStatus.NOT_STARTED){
+			this.loadServiceProviderSelection();
+		}
+		if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.APPLE){
 			this.loadLogin();
+		}
+		if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.GOOGLE){
+			//this.loadLogin();
 		}
 		else if (this.cloudStatus == CloudStatus.MFA_REQ){
 			this.loadMFA();
@@ -34,6 +45,25 @@ export class iCloudStatusModal extends Modal {
 			this.loadLogin();
 		}
     }
+
+	loadServiceProviderSelection(){
+		const { contentEl } = this;
+		contentEl.createEl("h1", {text: "Select your service provider"});
+		const serviceProviderRow = contentEl.createEl("div");
+		serviceProviderRow.addClass("serviceProviderRow");
+		const appleButton = serviceProviderRow.createEl("div");
+		appleButton.addClass("serviceProviderButton");
+		appleButton.onClickEvent(() => console.log("HERE!"));
+		const appleIcon = appleButton.createEl("img");
+		appleIcon.addClass("serviceIcon");
+		appleIcon.setAttribute("src", Misc.getBase64AppleIcon());
+		const googleButton = serviceProviderRow.createEl("div");
+		googleButton.addClass("serviceProviderButton");
+		googleButton.onClickEvent(() => console.log("Google"));
+		const googleIcon = googleButton.createEl("img");
+		googleIcon.addClass("serviceIcon");
+		googleIcon.setAttribute("src", Misc.getBase64GoogleIcon());
+	}
 
 	loadLogin(){
 		let username: string;

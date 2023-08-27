@@ -13,7 +13,7 @@ import safeController from "../controllers/safeController";
 import eventController from "../controllers/eventController";
 import calendarViewController from "../controllers/calendarViewController";
 import {CloudEventFactory} from "../model/events/cloudEventFactory";
-import {CalendarType} from "../model/cloudCalendar/calendarType";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 import {CloudController} from "../controllers/cloudController";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 
@@ -98,7 +98,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.cloudController.injectSettings(this.settings);
 		eventController.injectPath(pluginPath);
 		eventController.injectCloudController(this.cloudController);
-		eventController.injectCloudControllerFactory(new CloudEventFactory(CalendarType.ICALENDAR));
+		eventController.injectCloudControllerFactory(new CloudEventFactory(CalendarProvider.APPLE));
 	}
 
 	private initState() {
