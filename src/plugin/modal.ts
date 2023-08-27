@@ -3,22 +3,23 @@ import {Misc} from "src/misc/misc";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
-export class iCloudStatusModal extends Modal {
-    submitCredentials: (username: string, pw: string, ref: any) => Promise<boolean>;
-	submitMfa: (code: string, ref: any) => Promise<void>;
+export class StatusModal extends Modal {
+	selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void;
+    submitCredentialsCallback: (submitObject: any, ref: any) => Promise<boolean>;
+	submitMfaCallback: (code: string, ref: any) => Promise<void>;
 	cloudStatus: CloudStatus;
 	selectedProvider: CalendarProvider;
 	ref: any;
 
     constructor(app: App,
-				submitCallback: (username: string, pw: string, ref: any) => Promise<boolean>,
-				submitMfa: (code: string, ref: any) => Promise<void>,
-				ref: any,
-				selectedProvider?: CalendarProvider){
+				selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void,
+				submitCredentialsCallback: (submitObject: any, ref: any) => Promise<boolean>,
+				submitMfaCallback: (code: string, ref: any) => Promise<void>,
+				ref: any){
         super(app);
-		this.selectedProvider = selectedProvider;
-        this.submitCredentials = submitCallback;
-		this.submitMfa = submitMfa;
+		this.selectProviderCallback = selectProviderCallback;
+        this.submitCredentialsCallback = submitCredentialsCallback;
+		this.submitMfaCallback = submitMfaCallback;
 		this.cloudStatus = CloudStatus.NOT_STARTED;
 		this.ref = ref;
     }
@@ -27,11 +28,11 @@ export class iCloudStatusModal extends Modal {
 		if(this.cloudStatus == CloudStatus.NOT_STARTED){
 			this.loadServiceProviderSelection();
 		}
-		if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.APPLE){
-			this.loadLogin();
+		else if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.APPLE){
+			this.loadAppleLogin();
 		}
-		if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.GOOGLE){
-			//this.loadLogin();
+		else if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.GOOGLE){
+			this.loadGoogleLogin();
 		}
 		else if (this.cloudStatus == CloudStatus.MFA_REQ){
 			this.loadMFA();
@@ -42,30 +43,39 @@ export class iCloudStatusModal extends Modal {
 		else if (this.cloudStatus == CloudStatus.LOGGED){
 			this.loadSignedIn();
 		} else {
-			this.loadLogin();
+			this.loadServiceProviderSelection();
 		}
     }
 
 	loadServiceProviderSelection(){
 		const { contentEl } = this;
+		contentEl.empty();
 		contentEl.createEl("h1", {text: "Select your service provider"});
 		const serviceProviderRow = contentEl.createEl("div");
 		serviceProviderRow.addClass("serviceProviderRow");
 		const appleButton = serviceProviderRow.createEl("div");
 		appleButton.addClass("serviceProviderButton");
-		appleButton.onClickEvent(() => console.log("HERE!"));
 		const appleIcon = appleButton.createEl("img");
 		appleIcon.addClass("serviceIcon");
 		appleIcon.setAttribute("src", Misc.getBase64AppleIcon());
 		const googleButton = serviceProviderRow.createEl("div");
 		googleButton.addClass("serviceProviderButton");
-		googleButton.onClickEvent(() => console.log("Google"));
 		const googleIcon = googleButton.createEl("img");
 		googleIcon.addClass("serviceIcon");
 		googleIcon.setAttribute("src", Misc.getBase64GoogleIcon());
+
+		appleButton.onClickEvent(() => {
+			this.selectedProvider = CalendarProvider.APPLE;
+			this.selectProviderCallback(this.selectedProvider, this.ref);
+		})
+
+		googleButton.onClickEvent(() => {
+			this.selectedProvider = CalendarProvider.GOOGLE;
+			this.selectProviderCallback(this.selectedProvider, this.ref);
+		})
 	}
 
-	loadLogin(){
+	loadAppleLogin(){
 		let username: string;
 		let pw: string;
 		const { contentEl } = this;
@@ -86,7 +96,7 @@ export class iCloudStatusModal extends Modal {
 					.setButtonText("Submit")
 					.setCta()
 					.onClick(() => {
-						this.submitCredentials(username, pw, this.ref).then(success => {
+						this.submitCredentialsCallback({username, pw}, this.ref).then(success => {
 							if (!success) this.error();
 						})
 						this.loading();
@@ -94,7 +104,21 @@ export class iCloudStatusModal extends Modal {
 
 		contentEl.createEl("h6", {text: "Why do I need to insert my iCloud credentials?"})
 		contentEl.createEl("p", {text: "Unfortunately iCloud doesn't support OAuth and the only way to authenticate is trough iCloud credentials. Your credentials will be stored EXCLUSIVELY in your local device, encrypted."})
+	}
 
+	loadGoogleLogin(){
+		const { contentEl } = this;
+		new Setting(contentEl)
+			.addButton((btn) =>
+				btn
+					.setButtonText("Submit")
+					.setCta()
+					.onClick(() => {
+						this.submitCredentialsCallback(null, this.ref).then(success => {
+							if (!success) this.error();
+						})
+						this.loading();
+					}));
 	}
 
 	loading(){
@@ -124,14 +148,13 @@ export class iCloudStatusModal extends Modal {
 				btn
 					.setButtonText("Submit")
 					.setCta()
-					.onClick(() => this.submitMfa(mfa, this.ref)));
+					.onClick(() => this.submitMfaCallback(mfa, this.ref)));
 	}
 
 	loadSigningIn(){
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl("h1", {text: "Signing in..."});
-		contentEl.createEl("h3", {text: "If the CORS proxy server is offline it may take a little bit, be patient"});
 	}
 
 	loadSignedIn(){

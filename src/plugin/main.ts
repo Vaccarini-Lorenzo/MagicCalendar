@@ -1,5 +1,5 @@
 import {Plugin} from 'obsidian';
-import {iCloudStatusModal} from "./modal";
+import {StatusModal} from "./modal";
 import {PluginValue} from "@codemirror/view";
 import {Misc} from "../misc/misc";
 import {join} from "path";
@@ -8,7 +8,6 @@ import {randomBytes} from "crypto";
 import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
 import nlpPlugin from "./nlpExtension";
-import {ICloudController} from "../controllers/iCloudController";
 import safeController from "../controllers/safeController";
 import eventController from "../controllers/eventController";
 import calendarViewController from "../controllers/calendarViewController";
@@ -16,8 +15,9 @@ import {CloudEventFactory} from "../model/events/cloudEventFactory";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 import {CloudController} from "../controllers/cloudController";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
+import {GoogleCalendarController} from "../controllers/googleCalendarController";
 
-let statusModal: iCloudStatusModal;
+let statusModal: StatusModal;
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
 	cloudController: CloudController;
@@ -26,7 +26,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	async onload() {
 
-		this.cloudController = new ICloudController();
+		//TODO: Remove, just for testing purposes
+		this.cloudController = new GoogleCalendarController();
 
 		await this.initSettings();
 
@@ -36,7 +37,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 		this.registerEvents();
 
-		this.registerEditorExtension(nlpPlugin)
+		//this.registerEditorExtension(nlpPlugin)
 
 		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
 
@@ -46,11 +47,11 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	async onunload() {
 		// Release any resources configured by the plugin.
-		//proxy.stop();
 	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		console.log()
 	}
 
 	async saveSettings() {
@@ -65,15 +66,21 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 			});
 		}
 	}
+
+	private async selectProviderCallback(calendarProvider: CalendarProvider, ref: any){
+		ref.settings.calendarProvider = calendarProvider;
+		await ref.saveSettings();
+		ref.updateStatus(CloudStatus.PROVIDER_SELECTED);
+	}
 	
-	private async submitCallback(username: string, pw: string, ref: any): Promise<boolean> {
-		const status = await this.cloudController.tryAuthentication({username, pw});
+	private async submitCredentialsCallback(submitObject: any, ref: any): Promise<boolean> {
+		const status = await ref.cloudController.tryAuthentication(submitObject);
 		ref.updateStatus(status);
 		return status != CloudStatus.ERROR;
 	}
 
-	private async mfaCallback(code: string, ref: any){
-		const status = await this.cloudController.MFACallback(code);
+	private async submitMfaCallback(code: string, ref: any){
+		const status = await ref.cloudController.MFACallback(code);
 		ref.updateStatus(status);
 		statusModal.open();
 	}
@@ -98,18 +105,19 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		this.cloudController.injectSettings(this.settings);
 		eventController.injectPath(pluginPath);
 		eventController.injectCloudController(this.cloudController);
-		eventController.injectCloudControllerFactory(new CloudEventFactory(CalendarProvider.APPLE));
+		eventController.injectCloudControllerFactory(new CloudEventFactory(this.settings.calendarProvider));
 	}
 
 	private initState() {
 		nplController.init();
 		eventController.init();
-		statusModal = new iCloudStatusModal(this.app, this.submitCallback, this.mfaCallback, this);
+		statusModal = new StatusModal(this.app, this.selectProviderCallback, this.submitCredentialsCallback, this.submitMfaCallback, this);
+		this.updateStatus(CloudStatus.NOT_STARTED);
 		Misc.app = this.app;
 	}
 
 	async checkLogin() {
-		if(safeController.checkSafe()){
+		if(safeController.checkSafe(this.settings.calendarProvider)){
 			const iCloudStatus = await this.cloudController.tryAuthentication({username: "", password: ""});
 			this.updateStatus(iCloudStatus);
 		}

@@ -1,6 +1,6 @@
-import {readFileSync, writeFile, writeFileSync} from "fs";
 import crypto from "crypto";
 import {SettingInterface} from "../plugin/appSetting";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
 class SafeController {
 	_pluginPath: string;
@@ -8,6 +8,7 @@ class SafeController {
 	settings: SettingInterface;
 	_username: string;
 	_pw: string;
+	_token: string;
 	_key: Buffer;
 	_iv: Buffer;
 	_algorithm: string;
@@ -24,12 +25,19 @@ class SafeController {
 		this._algorithm = "aes-256-cbc";
 	}
 
-	checkSafe(): boolean{
-		const username = localStorage.getItem("iCalSyncUsername");
-		const pw = localStorage.getItem("iCalSyncPassword");
-		if (username == undefined || pw == undefined) return false;
-		this._username = username;
-		this._pw = pw;
+	checkSafe(calendarProvider: CalendarProvider): boolean{
+		if (calendarProvider == CalendarProvider.NOT_SELECTED) return false;
+		if (calendarProvider == CalendarProvider.APPLE){
+			const username = localStorage.getItem("iCalSyncUsername");
+			const pw = localStorage.getItem("iCalSyncPassword");
+			if (username == undefined || pw == undefined) return false;
+			this._username = username;
+			this._pw = pw;
+			return true;
+		}
+		const token = localStorage.getItem("googleCalendarToken");
+		if (token == undefined) return false;
+		this._token = token;
 		return true;
 	}
 

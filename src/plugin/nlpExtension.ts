@@ -27,6 +27,7 @@ class NLPPlugin implements PluginValue {
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
+			// This fails because eventCloudFactory is not implemented yet for google
 			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);

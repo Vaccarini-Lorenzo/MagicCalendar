@@ -2,13 +2,15 @@ import EventEmitter from "events";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { iCloudAuthenticationStore } from "./authStore";
-import { AUTH_ENDPOINT, AUTH_HEADERS, DEFAULT_HEADERS, SETUP_ENDPOINT } from "./consts";
-import { iCloudAccountDetailsService } from "./account";
-import { iCloudCalendarService } from "./calendar";
-import { AccountInfo } from "./types";
+import {iCloudAuthenticationStore} from "./authStore";
+import {AUTH_ENDPOINT, AUTH_HEADERS, DEFAULT_HEADERS, SETUP_ENDPOINT} from "./consts";
+import {iCloudAccountDetailsService} from "./account";
+import {iCloudCalendarService} from "./calendar";
+import {AccountInfo} from "./types";
 import iCloudMisc from "./iCloudMisc";
 import safeController from "../controllers/safeController";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
+
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -149,7 +151,7 @@ export default class iCloudService extends EventEmitter {
 
         if (!username) {
             try {
-                const saved = safeController.checkSafe();
+                const saved = safeController.checkSafe(CalendarProvider.APPLE);
                 if (!saved) throw new Error("Username was not provided and could not be found in keychain");
 				const credentials = safeController.getCredentials();
                 username = credentials.username;

@@ -1,19 +1,22 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
 import iCalObsidianSync from "./main";
 import moment from "moment-timezone";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
 export interface SettingInterface {
 	tz: string;
 	calendar: string;
 	key: string;
 	iv: string;
+	calendarProvider: CalendarProvider;
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	tz: moment.tz.guess(),
 	calendar: "none",
 	key: "none",
-	iv: "none"
+	iv: "none",
+	calendarProvider: CalendarProvider.NOT_SELECTED
 };
 
 export class AppSetting extends PluginSettingTab {
@@ -62,7 +65,7 @@ export class AppSetting extends PluginSettingTab {
 		else new Setting(containerEl)
 			.setName("Calendar")
 			.addDropdown(dropdown => {
-				this.calendarNames.forEach((calendarName, i) => dropdown.addOption(calendarName, calendarName))
+				this.calendarNames.forEach((calendarName) => dropdown.addOption(calendarName, calendarName))
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
 				})
