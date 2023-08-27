@@ -41,10 +41,10 @@ export class ICloudController extends CloudController {
 		return this._calendars.map(calendar => calendar.title);
 	}
 
-	async tryAuthentication(auth: any): Promise<CloudStatus>{
+	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus>{
 		this._iCloud = new iCloudService({
-			username: auth.username,
-			password: auth.password,
+			username: auth.get("iCalSyncUsername"),
+			password: auth.get("iCalSyncPassword"),
 			saveCredentials: true,
 			trustDevice: true
 		});

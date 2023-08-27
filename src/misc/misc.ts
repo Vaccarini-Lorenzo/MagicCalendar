@@ -24,14 +24,11 @@ export class Misc {
 		return new Date(`${array[1]}-${array[2]}-${array[3]} ${array[4]}:${array[5]}`)
 	}
 
-	static sortICloudCalendarEventList(events: CloudEvent[]) {
-		const tmpMap = new Map();
-		events.forEach(event => {
-			const startDate = event.cloudEventStartDate;
-			tmpMap.set(event, startDate);
-		})
-		const sorted = new Map([...tmpMap].sort((a, b) => a[1] - b[1]));
-		return Array.from(sorted.keys());
+	static sortCloudEventList(events: CloudEvent[]) {
+		const sorted = events.sort(function (a, b){
+			return a.cloudEventStartDate.getTime() - b.cloudEventEndDate.getTime()
+		});
+		return sorted;
 	}
 
 	static generateNewICloudUUID(): string {

@@ -13,7 +13,7 @@ export class CloudController {
 
 	injectSettings(settings: SettingInterface) {}
 
-	async tryAuthentication(auth: any): Promise<CloudStatus> {return CloudStatus.ERROR;}
+	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {return CloudStatus.ERROR;}
 
 	async MFACallback(code: string): Promise<CloudStatus> {return CloudStatus.ERROR;}
 

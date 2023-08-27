@@ -9,8 +9,6 @@ import {iCloudCalendarService} from "./calendar";
 import {AccountInfo} from "./types";
 import iCloudMisc from "./iCloudMisc";
 import safeController from "../controllers/safeController";
-import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
-
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -149,17 +147,6 @@ export default class iCloudService extends EventEmitter {
         username = username || this.options.username;
         password = password || this.options.password;
 
-        if (!username) {
-            try {
-                const saved = safeController.checkSafe(CalendarProvider.APPLE);
-                if (!saved) throw new Error("Username was not provided and could not be found in keychain");
-				const credentials = safeController.getCredentials();
-                username = credentials.username;
-				password = credentials.password;
-            } catch (e) {
-                throw new Error("Error fetching cred" + e.toString());
-            }
-        }
         if (typeof (username as any) !== "string") throw new TypeError("authenticate(username?: string, password?: string): 'username' was " + (username || JSON.stringify(username)).toString());
         this.options.username = username;
         // hide password from console.log
@@ -270,7 +257,10 @@ export default class iCloudService extends EventEmitter {
 
                     this._setState(iCloudServiceStatus.Ready);
                     try {
-                        if (this.options.saveCredentials) safeController.storeCredentials(this.options.username.toString(), this.options.password.toString());
+						const credentialMap = new Map<string, string>();
+						credentialMap.set("iCalSyncUsername", this.options.username.toString());
+						credentialMap.set("iCalSyncPassword", this.options.password.toString());
+						if (this.options.saveCredentials) safeController.storeCredentials(credentialMap);
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);
                     }

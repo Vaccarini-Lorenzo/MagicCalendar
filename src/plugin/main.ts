@@ -7,7 +7,6 @@ import {AppSetting, DEFAULT_SETTINGS, SettingInterface} from "./appSetting";
 import {randomBytes} from "crypto";
 import nplController from "../controllers/nlpController";
 import nlpController from "../controllers/nlpController";
-import nlpPlugin from "./nlpExtension";
 import safeController from "../controllers/safeController";
 import eventController from "../controllers/eventController";
 import calendarViewController from "../controllers/calendarViewController";
@@ -101,6 +100,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		nlpController.injectPath(pluginPath)
 		safeController.injectPath(pluginPath);
 		safeController.injectSettings(this.settings);
+		safeController.injectCalendarProvider(this.settings.calendarProvider);
 		this.cloudController.injectPath(pluginPath);
 		this.cloudController.injectSettings(this.settings);
 		eventController.injectPath(pluginPath);
@@ -117,9 +117,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	async checkLogin() {
-		if(safeController.checkSafe(this.settings.calendarProvider)){
-			const iCloudStatus = await this.cloudController.tryAuthentication({username: "", password: ""});
-			this.updateStatus(iCloudStatus);
+		if(safeController.checkSafe()){
+			const auth = safeController.getCredentials();
+			const cloudStatus = await this.cloudController.tryAuthentication(auth);
+			this.updateStatus(cloudStatus);
 		}
 	}
 

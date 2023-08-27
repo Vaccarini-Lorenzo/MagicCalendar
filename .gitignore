@@ -25,3 +25,5 @@ data.json
 .env
 
 ical-obsidian-sync/*
+
+.googleOAuthCredentials.json

@@ -1,6 +1,6 @@
 import {CloudEvent} from "./cloudEvent";
 
-class GoogleCalendarEvent extends CloudEvent {
+export class GoogleCalendarEvent extends CloudEvent {
 	kind: string;
 	etag: string;
 	id: string;

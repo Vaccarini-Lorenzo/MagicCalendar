@@ -25,6 +25,6 @@
 		"src/**/*.ts"
 	],
 	"exclude": [
-      "CORSProxy/proxyServer.js", "src/proxy.ts"
+      "CORSProxy/proxyServer.js", "src/proxy.ts", "node_modules"
     ]
 }
