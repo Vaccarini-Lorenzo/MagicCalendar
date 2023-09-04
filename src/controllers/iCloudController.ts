@@ -3,6 +3,7 @@ import Event from "../model/event";
 import {iCloudCalendarCollection, iCloudCalendarEvent, iCloudCalendarService} from "../iCloudJs/calendar";
 import {SettingInterface} from "../plugin/appSetting";
 import {DateRange} from "../model/dateRange";
+import {RequestUrlParam} from "obsidian";
 
 class ICloudController {
 	private _iCloud: iCloudService;
@@ -93,7 +94,7 @@ class ICloudController {
 		return await this._calendarService.events(missedDateRange.start, missedDateRange.end);
 	}
 
-	refreshRequestCookies(requestUrlParams: { url, method, headers, body }){
+	refreshRequestCookies(requestUrlParams: RequestUrlParam){
 		const oldHeader = requestUrlParams.headers;
 		oldHeader.Cookie = this._iCloud.authStore.getHeaders().Cookie;
 		return;

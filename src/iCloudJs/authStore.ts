@@ -76,7 +76,7 @@ export class iCloudAuthenticationStore {
 
             const headers = Array.from(authResponse.headers.values());
             const aaspCookie = headers.find((v) => v.includes("aasp="));
-            this.aasp = aaspCookie.split("aasp=")[1].split(";")[0];
+            this.aasp = aaspCookie.split("aasp=")[1].split(";")[0].replace(",", "");
             return this.validateAuthSecrets();
         } catch (e) {
             console.warn("[icloud] Unable to process auth secrets:", e.toString());
