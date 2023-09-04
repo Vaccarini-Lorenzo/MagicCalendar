@@ -5,7 +5,6 @@ import {iCloudCalendarEvent} from "./iCloudCalendarEvent";
 import {Misc} from "../../misc/misc";
 import {CalendarProvider} from "../cloudCalendar/calendarProvider";
 import {GoogleCalendarEvent} from "./googleCalendarEvent";
-import moment, {tz} from "moment-timezone";
 import {SettingInterface} from "../../plugin/appSetting";
 
 export class CloudEventFactory {

@@ -43,10 +43,8 @@ export class GoogleCalendarController implements CloudController {
 			timeMax: missedDateRange.end.toISOString(),
 			timeMin: missedDateRange.start.toISOString()
 		});
-		console.log(googleEventResponse);
+
 		const googleEvents = googleEventResponse.data.items as GoogleCalendarEvent[];
-		console.log(googleEvents);
-		console.log(missedDateRange);
 
 		googleEvents.forEach(googleEvent => {
 			googleEvent.cloudUUID = googleEvent.id;
@@ -54,8 +52,6 @@ export class GoogleCalendarController implements CloudController {
 			googleEvent.cloudEventStartDate = new Date(googleEvent.start.dateTime);
 			googleEvent.cloudEventEndDate = new Date(googleEvent.end.dateTime);
 		})
-
-		console.log(googleEvents);
 
 		return googleEvents;
 	}
@@ -79,7 +75,6 @@ export class GoogleCalendarController implements CloudController {
 			keyfilePath: this._credentialsPath,
 		});
 		if (oAuth2Client.credentials) {
-			console.log(oAuth2Client);
 			const credentialMap = new Map<string, string>();
 			credentialMap.set("clientId", oAuth2Client._clientId);
 			credentialMap.set("clientSecret", oAuth2Client._clientSecret);
@@ -96,7 +91,6 @@ export class GoogleCalendarController implements CloudController {
 
 	async preloadData() {
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
-		console.log("calendarResponse", calendarResponse);
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
 		this._currentCalendar = this._calendars.first();
 	}
@@ -110,7 +104,6 @@ export class GoogleCalendarController implements CloudController {
 		const clientId = auth.get("clientId");
 		const clientSecret = auth.get("clientSecret");
 		const refreshToken = auth.get("refreshToken");
-		console.log(tokenType);
 		try {
 			const oAuth2Client = google.auth.fromJSON({type: tokenType, client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken}) as OAuth2Client;
 			this._calendarEndpoint = google.calendar({version: 'v3', auth: oAuth2Client});

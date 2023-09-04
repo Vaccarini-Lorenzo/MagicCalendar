@@ -11,9 +11,8 @@ class CalendarViewController {
 		const codeComponents = calendarViewController.checkCodeBlocks(codeblocks);
 		if (codeComponents == null) return;
 		const eventList = await calendarViewController.getEventList(codeComponents);
-		console.log("eventList", eventList);
 		const calendarViewData = calendarViewController.getCalendarViewData( new DateRange(new Date(codeComponents.from), new Date(codeComponents.to)), eventList);
-		console.log("calendarViewData", calendarViewData);
+
 		context.addChild(new CalendarView(codeComponents.codeBlock, calendarViewData));
 	}
 

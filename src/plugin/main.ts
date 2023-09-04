@@ -84,6 +84,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		if(safeController.checkSafe()){
 			const auth = safeController.getCredentials();
 			this.inferCalendar(auth);
+			console.log(auth);
 			const cloudStatus = await this._cloudController.tryAuthentication(auth);
 			this.updateStatus(cloudStatus);
 		}

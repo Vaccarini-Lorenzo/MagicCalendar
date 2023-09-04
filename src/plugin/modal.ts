@@ -96,7 +96,10 @@ export class StatusModal extends Modal {
 					.setButtonText("Submit")
 					.setCta()
 					.onClick(() => {
-						this.submitCredentialsCallback({username, pw}, this.ref).then(success => {
+						const auth = new Map<string, string>();
+						auth.set("iCalSyncUsername", username);
+						auth.set("iCalSyncPassword", pw);
+						this.submitCredentialsCallback(auth, this.ref).then(success => {
 							if (!success) this.error();
 						})
 						this.loading();
