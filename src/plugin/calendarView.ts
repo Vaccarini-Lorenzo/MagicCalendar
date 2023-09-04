@@ -19,8 +19,9 @@ export class CalendarView extends MarkdownRenderChild {
 
 	onload() {
 		const wrapper = this.containerEl.createEl("div");
-		wrapper.addClass("tableWrapper")
+		wrapper.addClass("icalTableWrapper")
 		const table = wrapper.createEl("table");
+		table.addClass("icalTable");
 		this.generateHeaders(table);
 		this.generateRows(table)
 		this.generateHeaders(table);
@@ -28,9 +29,9 @@ export class CalendarView extends MarkdownRenderChild {
 	}
 
 	private generateHeaders(table: HTMLTableElement){
-		table.createEl("th")
+		table.createEl("th").addClass("icalTh");
 		for (let column = 0; column < this.calendarViewData.numOfCols; column++){
-			table.createEl("th")
+			table.createEl("th").addClass("icalTh")
 		}
 	}
 
@@ -48,6 +49,7 @@ export class CalendarView extends MarkdownRenderChild {
 	private initRow(table: HTMLElement, date: Date, needsLabel: boolean): HTMLElement{
 		const row = table.createEl("tr");
 		const leftLabel = row.createEl("td");
+		leftLabel.addClass("icalTd");
 		if (!needsLabel) return row;
 		leftLabel.innerText  = date.toLocaleDateString();
 		date.setDate(date.getDate() + 1);
@@ -63,19 +65,20 @@ export class CalendarView extends MarkdownRenderChild {
 
 			calendarEventDetails.forEach(event => {
 				for (let i = columnIndex; i < event.fromCol; i++){
-					row.createEl("td");
+					row.createEl("td").addClass("icalTd");
 				}
 				const eventView = row.createEl("td");
 				eventView.innerText = event.title;
 				eventView.addClass(this.getPaletteClass());
-				eventView.addClass("eventBox")
+				eventView.addClass("icalEventBox");
+				eventView.addClass("icalTd");
 				eventView.setAttr("colspan", event.toCol - event.fromCol)
 				columnIndex = event.toCol;
 			})
 		}
 
 		for (let i = columnIndex; i < this.calendarViewData.numOfCols; i++){
-			row.createEl("td");
+			row.createEl("td").addClass("icalTd");
 		}
 	}
 

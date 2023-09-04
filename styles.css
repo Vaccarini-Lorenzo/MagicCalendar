@@ -60,19 +60,19 @@
 }
 
 /* Navigation list */
-ul.navUL {
+ul.icalNavUL {
 	margin: 0;
 	padding: 0;
 	display: inline-block;
 }
 
-ul.navUL span {
+ul.icalNavUL span {
 	display: block;
 	position: relative;
 	text-decoration: none;
 }
 
-.hoverBubble {
+.icalHoverBubble {
 	font-size: 70%;
 	width: max-content;
 	background: #d5d5d5;
@@ -89,28 +89,28 @@ ul.navUL span {
 	justify-content: center;
 }
 
-.hoverBubble p {
+.icalHoverBubble p {
 	text-align: center;
 	display: flex;
 	flex-direction: column;
 	padding: 5px;
 }
 
-.hoverBubble button {
+.icalHoverBubble button {
 	display: block;
 	margin: 0 auto;
 	text-align: center;
 }
 
-.bubblePosition {
+.icalBubblePosition {
 	top: 100%;
 	height: inherit;
 	left: 0;
 	bottom: auto;
 }
 
-.hoverBubble:after,
-.bubblePosition:after {
+.icalHoverBubble:after,
+.icalBubblePosition:after {
 	border: 9px solid transparent;
 	border-top-color: #d5d5d5;
 	top: -15px;
@@ -124,7 +124,7 @@ ul.navUL span {
 	rotate: 180deg;
 }
 
-.gridContainer {
+.icalGridContainer {
 	/*border:1px solid #000;*/
 	display: grid;
 	grid-template-columns: auto auto;
@@ -132,21 +132,21 @@ ul.navUL span {
 }
 
 /* Bubble hover */
-ul.navUL span:hover .hoverBubble {
+ul.icalNavUL span:hover .icalHoverBubble {
 	opacity: 1;
 	visibility: visible;
 	transition: all 0.25s;
 	z-index: 5;
 }
 
-.gridRow {
+.icalGridRow {
 	/*	border:1px solid #000; */
 	display: grid;
 	grid-template-columns: auto auto;
 	padding: 10px 0 0 0;
 }
 
-.syncButton.syncButton {
+.icalSyncButton.icalSyncButton {
 	padding: 0;
 	text-align: center;
 	background-color: #1c1c1c;
@@ -154,26 +154,26 @@ ul.navUL span:hover .hoverBubble {
 	margin: 5%;
 }
 
-.iconBar {
+.icalIconBar {
 	/*border:1px solid #000;*/
 	font-size: 170%;
 	margin: -5px;
 	align-self: center;
 }
 
-.eventDataBar {
+.icalEventDataBar {
 	font-size: 85%;
 	align-self: center;
 	white-space: initial;
 }
 
-.tableWrapper {
+.icalTableWrapper {
 	width: 100rem;
 	overflow: auto;
 }
 
 
-table {
+.icalTable {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent;
@@ -182,7 +182,7 @@ table {
 	max-width: 100px;
 }
 
-th {
+.icalTh {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent!important;
@@ -191,7 +191,7 @@ th {
 	font-weight: normal;
 }
 
-td {
+.icalTd {
 	border-top: transparent!important;
 	border-bottom: white;
 	border-left: transparent!important;
@@ -201,11 +201,11 @@ td {
 	transition: transform .5s ease;
 }
 
-td:hover {
+.icalTd:hover {
 	transform: scale(1.12);
 }
 
-.eventBox {
+.icalEventBox {
 	box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);
 }
 
