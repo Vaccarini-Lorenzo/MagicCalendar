@@ -28,7 +28,6 @@ class ICloudMisc {
 
     getArrayDate(date: Date) {
         const dateComponents = this.getDateComponents(date);
-        // TODO: Understand wtf is this
         const arbitrary = 240;
         const monthString = dateComponents.month.toString().length == 1 ? "0" + dateComponents.month.toString() : dateComponents.month.toString();
         const completeDate = Number(`${dateComponents.year}${monthString}${dateComponents.day}`)
@@ -44,17 +43,39 @@ class ICloudMisc {
 			url: url.toString(),
 			method: init.method ?? "GET",
 			headers: init.headers,
-			body: init.body
-		}
+			body: init.body,
+			throw: false
+		} as RequestUrlParam
 
 		let requestUrlResponse;
-		try{
-			requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
-		} catch (e){
-			console.warn("Error requestingUrl:", e);
-			console.warn(e.code);
-			console.warn(e.toString());
-			if (e.toString() == "Error: Request failed, status 421"){
+		let responseInit;
+		try {
+			requestUrlResponse = await requestUrl(requestUrlParam);
+			const setCookieField = requestUrlResponse.headers["set-cookie"] as any;
+			let setCookieString = "";
+
+			if (setCookieField != undefined){
+				setCookieField.forEach(setCookie => {
+					setCookieString += `${setCookie.split(";")[0]}, `
+				})
+				requestUrlResponse.headers["forward-cookie"] = setCookieString;
+			}
+			responseInit = {
+				headers: requestUrlResponse.headers,
+				status: requestUrlResponse.status,
+				statusText: requestUrlResponse.status.toString(),
+				url: url.toString()
+			};
+
+			if (requestUrlResponse.status == 204){
+				responseInit.status = 200;
+			}
+
+			if (requestUrlResponse.status != 200){
+				console.warn("requestUrlResponse status: ", requestUrlResponse.status);
+			}
+
+			if (requestUrlResponse.status == 421){
 				const canTryReconnect = iCloudController.checkMaxReconnectAttempt();
 				if(!canTryReconnect){
 					console.warn("Can't reconnect - max attempts reached");
@@ -67,35 +88,17 @@ class ICloudMisc {
 				iCloudController.refreshRequestCookies(requestUrlParam);
 				requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
 			}
-			else if(e.toString() == "Error: net::ERR_NAME_NOT_RESOLVED"){
+		} catch (e) {
+			if(e.toString() == "Error: net::ERR_NAME_NOT_RESOLVED"){
 				console.warn("Internet connection error");
 			}
 		}
-
-		const setCookieField = requestUrlResponse.headers["set-cookie"] as any;
-		let setCookieString = "";
-
-		if (setCookieField != undefined){
-			setCookieField.forEach(setCookie => {
-				setCookieString += `${setCookie.split(";")[0]}, `
-			})
-			requestUrlResponse.headers["forward-cookie"] = setCookieString;
-		}
-
-		const responseInit = {
-			headers: requestUrlResponse.headers,
-			status: requestUrlResponse.status,
-			statusText: requestUrlResponse.status.toString(),
-			url: url.toString()
-		};
-
-		const responseWrapper = new Response(requestUrlResponse.arrayBuffer, responseInit)
+		let responseWrapper;
+		if (requestUrlResponse.arrayBuffer) responseWrapper = new Response(requestUrlResponse.arrayBuffer, responseInit)
+		else responseWrapper = new Response(responseInit)
 		return responseWrapper;
 	}
 }
 
 const iCloudMisc = new ICloudMisc();
 export default iCloudMisc;
-
-
-
