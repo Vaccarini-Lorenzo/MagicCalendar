@@ -55,12 +55,8 @@ export class CloudEventFactory {
 
 	private createGoogleCalendarEvent(sentence: Sentence): GoogleCalendarEvent {
 		const cloudUUID = Misc.generateGoogleCloudUUID();
-		const utcOffset = tz(sentence.startDate.toISOString()).format("z")
-		// TODO: Idk, here the format is wrong
-		const startDateTime = `${sentence.startDate.toISOString().split(".")[0]}${utcOffset}`
-		const endDateTime = `${sentence.endDate.toISOString().split(".")[0]}${utcOffset}`
-
-		console.log(startDateTime);
+		const startDateTime = `${sentence.startDate.toISOString()}`
+		const endDateTime = `${sentence.endDate.toISOString()}`
 
 		const googleCalendarEvent = {
 			cloudUUID,

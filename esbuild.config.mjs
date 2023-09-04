@@ -58,7 +58,7 @@ esbuild.build({
 	minifyWhitespace: prod,
 	minifyIdentifiers: prod,
 	outfile: 'main.js',
-	sourcemap: prod ? true: "inline",
+	sourcemap: prod ? false: "inline",
 	target: 'es2016',
 	treeShaking: true,
 	plugins: [renameImportPlugin]

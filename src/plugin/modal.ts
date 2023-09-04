@@ -107,18 +107,10 @@ export class StatusModal extends Modal {
 	}
 
 	loadGoogleLogin(){
-		const { contentEl } = this;
-		new Setting(contentEl)
-			.addButton((btn) =>
-				btn
-					.setButtonText("Submit")
-					.setCta()
-					.onClick(() => {
-						this.submitCredentialsCallback(null, this.ref).then(success => {
-							if (!success) this.error();
-						})
-						this.loading();
-					}));
+		this.submitCredentialsCallback(null, this.ref).then(success => {
+			if (!success) this.error();
+		})
+		this.loading();
 	}
 
 	loading(){

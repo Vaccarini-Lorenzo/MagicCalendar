@@ -1,6 +1,7 @@
 import {casual, Chrono, Component, ParsedResult} from "chrono-node";
 import {ParsedComponents} from "chrono-node/dist/cjs/types";
 import {DateRange} from "../model/dateRange";
+import {IndexedAccessType} from "typedoc";
 
 class SmartDateParser {
 	private _chrono: Chrono;
@@ -66,8 +67,6 @@ class SmartDateParser {
 		components.forEach((c, i) => components[i] = c.filter(value => value != null));
 
 		const firstValidStartParser = parsed.filter(p => p.start != undefined)[0];
-
-		// TODO: Probably here we need to decrement month? But again why the displayed text is okay?
 
 		const start = new Date(
 			components[0].length == 0 ? firstValidStartParser.start.get("year") : components[0][0],
