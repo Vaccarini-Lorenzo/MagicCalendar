@@ -4,6 +4,7 @@ import path from "path";
 import { Cookie } from "tough-cookie";
 import { iCloudServiceSetupOptions } from "./index";
 import { AUTH_HEADERS, DEFAULT_HEADERS } from "./consts";
+import safeController from "../controllers/safeController";
 
 export class iCloudAuthenticationStore {
     /**
@@ -43,7 +44,7 @@ export class iCloudAuthenticationStore {
      */
     loadTrustToken(account: string) {
         try {
-            this.trustToken = fs.readFileSync(this.tknFile + "-" + Buffer.from(account.toLowerCase()).toString("base64"), "utf8");
+            this.trustToken = safeController.decrypt(localStorage.getItem("trustToken"));
         } catch (e) {
             console.debug("[icloud] Unable to load trust token:", e.toString());
         }
@@ -53,12 +54,7 @@ export class iCloudAuthenticationStore {
      * @param account The account to write the trust token for
      */
     writeTrustToken(account: string) {
-        try {
-            if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
-            writeFileSync(this.tknFile + "-" + Buffer.from(account.toLowerCase()).toString("base64"), this.trustToken);
-        } catch (e) {
-            console.warn("[icloud] Unable to write trust token:", e.toString());
-        }
+		localStorage.setItem("trustToken", safeController.encrypt(this.trustToken))
     }
 
     /**

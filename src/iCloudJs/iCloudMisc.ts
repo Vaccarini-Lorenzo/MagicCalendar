@@ -102,6 +102,3 @@ class ICloudMisc {
 
 const iCloudMisc = new ICloudMisc();
 export default iCloudMisc;
-
-
-
