@@ -12,7 +12,8 @@ class ICloudMisc {
 
     private getDateComponents(date: Date): {[key:string]: number}{
         const year = date.getFullYear();
-        const month = date.getMonth();
+		// TODO: Check if this makes sense
+        const month = date.getMonth() + 1;
         const day = date.getDate();
         const hour = date.getHours();
         const minutes = date.getMinutes();
@@ -27,7 +28,6 @@ class ICloudMisc {
 
     getArrayDate(date: Date) {
         const dateComponents = this.getDateComponents(date);
-        // TODO: Understand wtf is this
         const arbitrary = 240;
         const monthString = dateComponents.month.toString().length == 1 ? "0" + dateComponents.month.toString() : dateComponents.month.toString();
         const completeDate = Number(`${dateComponents.year}${monthString}${dateComponents.day}`)

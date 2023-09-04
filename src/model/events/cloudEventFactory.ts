@@ -4,19 +4,24 @@ import iCloudMisc from "../../iCloudJs/iCloudMisc";
 import {iCloudCalendarEvent} from "./iCloudCalendarEvent";
 import {Misc} from "../../misc/misc";
 import {CalendarProvider} from "../cloudCalendar/calendarProvider";
+import {GoogleCalendarEvent} from "./googleCalendarEvent";
+import moment, {tz} from "moment-timezone";
+import {SettingInterface} from "../../plugin/appSetting";
 
 export class CloudEventFactory {
-	calendarType: CalendarProvider;
+	settings: SettingInterface;
 
-	constructor(calendarType: CalendarProvider) {
-		this.calendarType = calendarType;
+	constructor(settings: SettingInterface) {
+		this.settings = settings;
 	}
 
-	getNewCloudEvent(sentence: Sentence): CloudEvent {
-		if (this.calendarType == CalendarProvider.APPLE) return this.getICloudCalendarEvent(sentence);
+	createNewCloudEvent(sentence: Sentence): CloudEvent {
+		if (this.settings.calendarProvider == CalendarProvider.APPLE) return this.createICloudCalendarEvent(sentence);
+		else if (this.settings.calendarProvider == CalendarProvider.GOOGLE) return this.createGoogleCalendarEvent(sentence);
+		else if (this.settings.calendarProvider == CalendarProvider.NOT_SELECTED) return this.createGenericCalendarEvent(sentence);
 	}
 
-	private getICloudCalendarEvent(sentence: Sentence): iCloudCalendarEvent {
+	private createICloudCalendarEvent(sentence: Sentence): iCloudCalendarEvent {
 		const arrayStartDate = iCloudMisc.getArrayDate(sentence.startDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(sentence.endDate);
 		const guid = Misc.generateNewICloudUUID();
@@ -46,5 +51,42 @@ export class CloudEventFactory {
 		} as iCloudCalendarEvent;
 
 		return iCloudCalendarEvent;
+	}
+
+	private createGoogleCalendarEvent(sentence: Sentence): GoogleCalendarEvent {
+		const cloudUUID = Misc.generateGoogleCloudUUID();
+		const utcOffset = tz(sentence.startDate.toISOString()).format("z")
+		// TODO: Idk, here the format is wrong
+		const startDateTime = `${sentence.startDate.toISOString().split(".")[0]}${utcOffset}`
+		const endDateTime = `${sentence.endDate.toISOString().split(".")[0]}${utcOffset}`
+
+		console.log(startDateTime);
+
+		const googleCalendarEvent = {
+			cloudUUID,
+			cloudEventTitle: sentence.eventNoun,
+			cloudEventStartDate: sentence.startDate,
+			cloudEventEndDate: sentence.endDate,
+			summary: sentence.eventNoun,
+			start: { dateTime: startDateTime, timeZone: this.settings.tz},
+			end: { dateTime: endDateTime, timeZone: this.settings.tz },
+			reminders: { useDefault: true }
+		} as GoogleCalendarEvent;
+
+		return googleCalendarEvent;
+	}
+
+	private createGenericCalendarEvent(sentence: Sentence): CloudEvent{
+		const cloudUUID = Misc.generateGoogleCloudUUID();
+		return {
+			cloudUUID,
+			cloudEventTitle: sentence.eventNoun,
+			cloudEventStartDate: sentence.startDate,
+			cloudEventEndDate: sentence.endDate,
+		} as CloudEvent
+	}
+
+	injectSettings(settings: SettingInterface) {
+		this.settings = settings;
 	}
 }

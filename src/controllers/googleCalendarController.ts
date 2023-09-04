@@ -19,16 +19,25 @@ export class GoogleCalendarController implements CloudController {
 	private readonly _scopes: string[];
 	private _calendarEndpoint: APIEndpoint;
 	private _calendars: GoogleCalendar[];
+	private _currentCalendar: GoogleCalendar;
+	private _settings: SettingInterface;
 
 	constructor() {
 		this._scopes = ["https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"];
+		this._calendars = [];
 	}
 
-	async pushEvent(event: Event): Promise<boolean>{return false;}
+	async pushEvent(event: Event): Promise<boolean>{
+		const googleEventInsertResponse = await this._calendarEndpoint.events.insert({
+			calendarId: this._currentCalendar.summary,
+			resource: event.value as GoogleCalendarEvent
+		})
+		return googleEventInsertResponse.status == 200;
+	}
 
 	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
 		const googleEventResponse = await this._calendarEndpoint.events.list({
-			calendarId: "primary",
+			calendarId: this._currentCalendar.summary,
 			orderBy: "startTime",
 			singleEvents: true,
 			timeMax: missedDateRange.end.toISOString(),
@@ -56,7 +65,10 @@ export class GoogleCalendarController implements CloudController {
 		this._credentialsPath = join(pluginPath, ".googleOAuthCredentials.json");
 	}
 
-	injectSettings(settings: SettingInterface) {}
+	injectSettings(settings: SettingInterface) {
+		this._settings = settings;
+		this._currentCalendar = this._calendars.filter(calendar => calendar.summary == this._settings.calendar).first();
+	}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
 		if (auth){
@@ -86,6 +98,7 @@ export class GoogleCalendarController implements CloudController {
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
 		console.log("calendarResponse", calendarResponse);
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
+		this._currentCalendar = this._calendars.first();
 	}
 
 	getCalendarNames() {

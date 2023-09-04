@@ -45,6 +45,12 @@ export class Misc {
 		return `${firstUUID}-${secondUUID}-${thirdUUID}-${fourthUUID}-${lastUUID}`
 	}
 
+	static generateGoogleCloudUUID(): string {
+		const maxIntEightNibbles = 4294967295;
+		const firstUUID = iCloudMisc.getRandomHex(maxIntEightNibbles);
+		return `${firstUUID}`
+	}
+
 	static loadMedia(mediaPath: string){
 		const jsonBase64Media = readFileSync(mediaPath).toString();
 		Misc.base64Media = JSON.parse(jsonBase64Media);

@@ -97,13 +97,17 @@ class EventController{
 	}
 
 	createNewEvent(sentence: Sentence): Event {
-		const cloudEvent = this._cloudEventFactory.getNewCloudEvent(sentence);
+		const cloudEvent = this._cloudEventFactory.createNewCloudEvent(sentence);
 		const newEvent = new Event(cloudEvent, sentence);
 		this._currentEvent = newEvent;
 		return newEvent;
 	}
 
 	processEvent(filePath: string, sync: boolean){
+		if (this._cloudController == undefined){
+			new Notice("Please select your calendar provider first!");
+			return;
+		}
 		const fileEvents = this._pathEventMap.get(filePath);
 		if (fileEvents == undefined){
 			this._pathEventMap.set(filePath, [this._currentEvent])
@@ -121,7 +125,7 @@ class EventController{
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
-		this.updateCounter();
+		//this.updateCounter();
 	}
 
 	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {

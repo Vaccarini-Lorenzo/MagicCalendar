@@ -27,7 +27,6 @@ class NLPPlugin implements PluginValue {
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
 			if(matches == null) return false;
-			// This fails because eventCloudFactory is not implemented yet for google
 			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
@@ -103,8 +102,8 @@ class NLPPlugin implements PluginValue {
 		const startDate = event.value.cloudEventStartDate;
 		const endDate = event.value.cloudEventEndDate;
 
-		const startDateString = `${startDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(startDate.getMonth())}/${Misc.fromSingleToDoubleDigit(startDate.getDate())}`
-		const endDateString = `${endDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(endDate.getMonth())}/${Misc.fromSingleToDoubleDigit(endDate.getDate())}`;
+		const startDateString = `${startDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(startDate.getMonth() + 1)}/${Misc.fromSingleToDoubleDigit(startDate.getDate())}`
+		const endDateString = `${endDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(endDate.getMonth() + 1)}/${Misc.fromSingleToDoubleDigit(endDate.getDate())}`;
 		const startTimeString = `${Misc.fromSingleToDoubleDigit(startDate.getHours())}:${Misc.fromSingleToDoubleDigit(startDate.getMinutes())}`;
 		const endTimeString = `${Misc.fromSingleToDoubleDigit(endDate.getHours())}:${Misc.fromSingleToDoubleDigit(endDate.getMinutes())}`
 
