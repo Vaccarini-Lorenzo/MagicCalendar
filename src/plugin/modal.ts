@@ -6,7 +6,7 @@ import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 export class StatusModal extends Modal {
 	selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void;
     submitCredentialsCallback: (submitObject: any, ref: any) => Promise<boolean>;
-	submitMfaCallback: (code: string, ref: any) => Promise<void>;
+	submitMfaCallback: (code: string, ref: any) => Promise<boolean>;
 	cloudStatus: CloudStatus;
 	selectedProvider: CalendarProvider;
 	ref: any;
@@ -14,7 +14,7 @@ export class StatusModal extends Modal {
     constructor(app: App,
 				selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void,
 				submitCredentialsCallback: (submitObject: any, ref: any) => Promise<boolean>,
-				submitMfaCallback: (code: string, ref: any) => Promise<void>,
+				submitMfaCallback: (code: string, ref: any) => Promise<boolean>,
 				ref: any){
         super(app);
 		this.selectProviderCallback = selectProviderCallback;
@@ -38,10 +38,10 @@ export class StatusModal extends Modal {
 			this.loadMFA();
 		}
 		else if (this.cloudStatus == CloudStatus.WAITING){
-			this.loadSigningIn();
+			this.loadLoggingIn();
 		}
 		else if (this.cloudStatus == CloudStatus.LOGGED){
-			this.loadSignedIn();
+			this.loadLoggedIn();
 		} else {
 			this.loadServiceProviderSelection();
 		}
@@ -50,18 +50,19 @@ export class StatusModal extends Modal {
 	loadServiceProviderSelection(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Select your service provider"});
+		contentEl.addClass("icalModalSize");
+		contentEl.createEl("h1", {text: "Select your service provider"}).addClass("icalSettingTitle");
 		const serviceProviderRow = contentEl.createEl("div");
-		serviceProviderRow.addClass("serviceProviderRow");
+		serviceProviderRow.addClass("icalServiceProviderRow");
 		const appleButton = serviceProviderRow.createEl("div");
-		appleButton.addClass("serviceProviderButton");
+		appleButton.addClass("icalServiceProviderButton");
 		const appleIcon = appleButton.createEl("img");
-		appleIcon.addClass("serviceIcon");
+		appleIcon.addClass("icalServiceIcon");
 		appleIcon.setAttribute("src", Misc.getBase64AppleIcon());
 		const googleButton = serviceProviderRow.createEl("div");
-		googleButton.addClass("serviceProviderButton");
+		googleButton.addClass("icalServiceProviderButton");
 		const googleIcon = googleButton.createEl("img");
-		googleIcon.addClass("serviceIcon");
+		googleIcon.addClass("icalServiceIcon");
 		googleIcon.setAttribute("src", Misc.getBase64GoogleIcon());
 
 		appleButton.onClickEvent(() => {
@@ -80,17 +81,34 @@ export class StatusModal extends Modal {
 		let pw: string;
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Insert your iCloud credentials"});
-		new Setting(contentEl)
-			.setName("username")
+		const flexBox = contentEl.createEl("div");
+		flexBox.addClass("icalTitleFlexBox");
+		const goBackButton = new Setting(flexBox).addButton((btn) =>
+			btn
+				.setIcon("arrow-big-left")
+				.setCta()
+				.onClick(() => {
+					this.selectedProvider = CalendarProvider.NOT_SELECTED;
+					this.selectProviderCallback(this.selectedProvider, this.ref);
+					this.loadServiceProviderSelection();
+				}));
+		goBackButton.settingEl.addClass("icalGoBackButton");
+		const title = flexBox.createEl("h1", {text: "Insert your iCloud credentials"});
+		title.addClass("icalSettingTitle");
+		flexBox.createEl("div");
+
+		const usernameSetting = new Setting(contentEl)
+			.setName("iCloud username")
 			.addText((text) => text.onChange((newText) => username = newText));
-		new Setting(contentEl)
-			.setName("pw")
+		usernameSetting.settingEl.addClass("icalSetting")
+		const passwordSetting = new Setting(contentEl)
+			.setName("iCloud password")
 			.addText((text) => text.onChange((newText) => {
 				pw = newText;
 				text.inputEl.type = "password";
 			}))
-		new Setting(contentEl)
+		passwordSetting.settingEl.addClass("icalSetting")
+		const submitButton = new Setting(contentEl)
 			.addButton((btn) =>
 				btn
 					.setButtonText("Submit")
@@ -104,9 +122,7 @@ export class StatusModal extends Modal {
 						})
 						this.loading();
 					}));
-
-		contentEl.createEl("h6", {text: "Why do I need to insert my iCloud credentials?"})
-		contentEl.createEl("p", {text: "Unfortunately iCloud doesn't support OAuth and the only way to authenticate is trough iCloud credentials. Your credentials will be stored EXCLUSIVELY in your local device, encrypted."})
+		submitButton.settingEl.addClass("icalSetting")
 	}
 
 	loadGoogleLogin(){
@@ -119,43 +135,64 @@ export class StatusModal extends Modal {
 	loading(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Logging in..."});
-		contentEl.createEl("h2", {text: "If you activated 2FA in your iCloud account you might be asked to insert a code"});
+		contentEl.createEl("h1", {text: "Logging in..."}).addClass("icalSettingTitle");
 	}
 
 	error(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "There has been an error logging in..."});
-		contentEl.createEl("b", {text: `For more information check the console [cmd + alt + I]`});
+		contentEl.createEl("h1", {text: "There has been an error logging in..."}).addClass("icalSettingTitle");
+		contentEl.createEl("b", {text: `For more information check the console [cmd + alt + I]`}).addClass("icalSetting");
 	}
 
 	loadMFA(){
 		let mfa: string;
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Insert the 2FA code"});
-		new Setting(contentEl)
+		contentEl.createEl("h1", {text: "Insert the 2FA code"}).addClass("icalSettingTitle");
+		const codeSetting = new Setting(contentEl)
 			.setName("code")
 			.addText((text) => text.onChange((newText) => mfa = newText));
-		new Setting(contentEl)
+		codeSetting.settingEl.addClass("icalSetting");
+		const submitButton = new Setting(contentEl)
 			.addButton((btn) =>
 				btn
 					.setButtonText("Submit")
 					.setCta()
-					.onClick(() => this.submitMfaCallback(mfa, this.ref)));
+					.onClick(() => this.submitMfaCallback(mfa, this.ref).then(success => {
+						if (!success) this.error();
+						else this.loadLoggedIn();
+					})));
+		submitButton.settingEl.addClass("icalSetting");
 	}
 
-	loadSigningIn(){
+	loadLoggingIn(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Signing in..."});
+		contentEl.createEl("h1", {text: "Logging in..."}).addClass("icalSettingTitle");
 	}
 
-	loadSignedIn(){
+	loadLoggedIn(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "You're correctly logged in!"});
+		contentEl.createEl("h1", {text: "All set!"}).addClass("icalSettingTitle");
+		const loginStatusRow = contentEl.createEl("div");
+		loginStatusRow.addClass("icalLoggedInSummaryRow");
+		loginStatusRow.createEl("h5", {text: "Status: "});
+		loginStatusRow.createEl("h5", {text: " Correctly logged-in 🟢"})
+		const calendarProviderRow = contentEl.createEl("div");
+		calendarProviderRow.addClass("icalLoggedInSummaryRow");
+		calendarProviderRow.createEl("h5", {text: `Calendar provider:`});
+		calendarProviderRow.createEl("h5", {text: `${CalendarProvider[this.selectedProvider]}`});
+		new Setting(contentEl).addButton((btn) =>
+			btn
+				.setButtonText("Change calendar")
+				.setCta()
+				.onClick(() => {
+					this.selectedProvider = CalendarProvider.NOT_SELECTED;
+					this.selectProviderCallback(this.selectedProvider, this.ref);
+					this.loadServiceProviderSelection();
+				}));
 	}
 
 	updateModal(cloudStatus: CloudStatus){

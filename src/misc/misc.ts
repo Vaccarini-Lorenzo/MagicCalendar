@@ -6,6 +6,7 @@ import {readFileSync} from "fs";
 export class Misc {
 	static app: App;
 	static base64Media: {appleIcon, googleIcon};
+	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 
 	static isLowerCase(str) {
 		return str === str.toLowerCase() &&
@@ -27,10 +28,9 @@ export class Misc {
 	}
 
 	static sortCloudEventList(events: CloudEvent[]) {
-		const sorted = events.sort(function (a, b){
+		return events.sort(function (a, b) {
 			return a.cloudEventStartDate.getTime() - b.cloudEventEndDate.getTime()
 		});
-		return sorted;
 	}
 
 	static generateNewICloudUUID(): string {

@@ -71,12 +71,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	private manageRegistrations(){
 		this.registerEditorExtension(nlpPlugin)
 		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
-		this.addCommand({
-			id: "iCal",
-			name: "Select calendar provider",
-			callback: () => {
-				this._statusModal.open();
-			},
+		this.addRibbonIcon("calendar-clock", "iCalSync", () => {
+			this._statusModal.open();
 		});
 	}
 
@@ -84,7 +80,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		if(safeController.checkSafe()){
 			const auth = safeController.getCredentials();
 			this.inferCalendar(auth);
-			console.log(auth);
 			const cloudStatus = await this._cloudController.tryAuthentication(auth);
 			this.updateStatus(cloudStatus);
 		}
@@ -101,7 +96,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		console.log()
 	}
 
 	async saveSettings() {
@@ -117,11 +111,19 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		}
 		if (status == CloudStatus.PROVIDER_SELECTED || status == CloudStatus.LOGGED){
 			eventController.injectCloudController(this._cloudController);
+			this._statusModal.selectedProvider = this.settings.calendarProvider;
 		}
 	}
 
 	private async selectProviderCallback(calendarProvider: CalendarProvider, ref: any){
 		ref.settings.calendarProvider = calendarProvider;
+		if (calendarProvider == CalendarProvider.NOT_SELECTED){
+			ref._cloudController = undefined;
+			ref.deleteCredentials();
+			await ref.saveSettings();
+			ref.updateStatus(CloudStatus.NOT_STARTED);
+			return;
+		}
 		ref._cloudController = ref.getCloudController(calendarProvider);
 		ref._cloudController.injectPath(ref._pluginPath);
 		ref._cloudController.injectSettings(ref.settings);
@@ -136,10 +138,10 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		return status != CloudStatus.ERROR;
 	}
 
-	private async submitMfaCallback(code: string, ref: any){
+	private async submitMfaCallback(code: string, ref: any): Promise<boolean> {
 		const status = await ref._cloudController.MFACallback(code);
 		ref.updateStatus(status);
-		this._statusModal.open();
+		return status != CloudStatus.ERROR;
 	}
 
 	private async checkEncryption(){
@@ -162,5 +164,12 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	private getCloudController(calendarProvider: CalendarProvider) {
 		if (calendarProvider == CalendarProvider.APPLE) return new ICalendarController();
 		else if (calendarProvider == CalendarProvider.GOOGLE) return new GoogleCalendarController();
+	}
+
+	private deleteCredentials(){
+		console.log(Misc.credentialKeyList);
+		Misc.credentialKeyList.forEach(key => {
+			if(localStorage.getItem(key) != undefined) localStorage.removeItem(key);
+		})
 	}
 }

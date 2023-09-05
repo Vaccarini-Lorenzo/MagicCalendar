@@ -207,12 +207,12 @@ export default class iCloudService extends EventEmitter {
             AUTH_ENDPOINT + "verify/trusteddevice/securitycode",
             { headers: this.authStore.getMfaHeaders(), method: "POST", body: JSON.stringify(authData) }
         );
-        if (authResponse.status == 204) {
+        if (authResponse.status == 200) {
             this._setState(iCloudServiceStatus.Authenticated);
             if (this.options.trustDevice) this._getTrustToken().then(this._getiCloudCookies.bind(this));
             else this._getiCloudCookies();
         } else {
-            throw new Error("Invalid status code: " + authResponse.status + " " + await authResponse.text());
+			this._setState(iCloudServiceStatus.Error);
         }
     }
 

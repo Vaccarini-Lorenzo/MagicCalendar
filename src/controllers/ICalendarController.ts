@@ -8,6 +8,7 @@ import {CloudController} from "./cloudController";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {Misc} from "../misc/misc";
+import {RequestUrlParam} from "obsidian";
 
 export class ICalendarController implements CloudController {
 	private _iCloud: iCloudService;
@@ -58,9 +59,15 @@ export class ICalendarController implements CloudController {
 	}
 
 	async MFACallback(mfa: string): Promise<CloudStatus> {
-		await this._iCloud.provideMfaCode(mfa);
-		await this._iCloud.awaitReady;
-		return this.convertToCloudStatus(this._iCloud.status);
+		try{
+			await this._iCloud.provideMfaCode(mfa);
+			await this._iCloud.awaitReady;
+			console.log(this._iCloud.status);
+			return this.convertToCloudStatus(this._iCloud.status);
+		} catch (e) {
+			console.warn(e);
+			return CloudStatus.ERROR;
+		}
 	}
 
 	async preloadData() {
@@ -104,7 +111,7 @@ export class ICalendarController implements CloudController {
 		return iCloudEvents;
 	}
 
-	refreshRequestCookies(requestUrlParams: { url, method, headers, body }){
+	refreshRequestCookies(requestUrlParams: RequestUrlParam){
 		const oldHeader = requestUrlParams.headers;
 		oldHeader.Cookie = this._iCloud.authStore.getHeaders().Cookie;
 		return;
