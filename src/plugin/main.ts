@@ -112,6 +112,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		if (status == CloudStatus.PROVIDER_SELECTED || status == CloudStatus.LOGGED){
 			eventController.injectCloudController(this._cloudController);
 			this._statusModal.selectedProvider = this.settings.calendarProvider;
+			this.updateSettings();
 		}
 	}
 
@@ -167,7 +168,6 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	private deleteCredentials(){
-		console.log(Misc.credentialKeyList);
 		Misc.credentialKeyList.forEach(key => {
 			if(localStorage.getItem(key) != undefined) localStorage.removeItem(key);
 		})

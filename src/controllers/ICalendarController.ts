@@ -62,7 +62,6 @@ export class ICalendarController implements CloudController {
 		try{
 			await this._iCloud.provideMfaCode(mfa);
 			await this._iCloud.awaitReady;
-			console.log(this._iCloud.status);
 			return this.convertToCloudStatus(this._iCloud.status);
 		} catch (e) {
 			console.warn(e);

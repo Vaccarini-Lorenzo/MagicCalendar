@@ -179,11 +179,14 @@ export class StatusModal extends Modal {
 		const loginStatusRow = contentEl.createEl("div");
 		loginStatusRow.addClass("icalLoggedInSummaryRow");
 		loginStatusRow.createEl("h5", {text: "Status: "});
-		loginStatusRow.createEl("h5", {text: " Correctly logged-in 🟢"})
+		loginStatusRow.createEl("h5", {text: " Logged in 🟢"})
 		const calendarProviderRow = contentEl.createEl("div");
 		calendarProviderRow.addClass("icalLoggedInSummaryRow");
 		calendarProviderRow.createEl("h5", {text: `Calendar provider:`});
-		calendarProviderRow.createEl("h5", {text: `${CalendarProvider[this.selectedProvider]}`});
+		if (this.selectedProvider == undefined) return;
+		let calendarProviderString = CalendarProvider[this.selectedProvider].toLowerCase();
+		calendarProviderString = calendarProviderString.charAt(0).toUpperCase() + calendarProviderString.substring(1);
+		calendarProviderRow.createEl("h5", {text: `${calendarProviderString}`});
 		new Setting(contentEl).addButton((btn) =>
 			btn
 				.setButtonText("Change calendar")
