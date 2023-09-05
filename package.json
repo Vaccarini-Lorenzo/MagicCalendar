@@ -1,10 +1,10 @@
 {
 	"name": "obsidian-sample-plugin",
-	"version": "1.1.3",
+	"version": "1.1.5",
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs prod",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"cp-folder": "cp main.js ical-obsidian-sync && cp manifest.json ical-obsidian-sync && cp styles.css  ical-obsidian-sync && cp .noun_patterns.txt ical-obsidian-sync && cp .proper_name_patterns.txt ical-obsidian-sync && cp .googleOAuthCredentials.json ical-obsidian-sync && cp .base64Media.json ical-obsidian-sync",
 		"dev-pack": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs && npm run cp-folder",
