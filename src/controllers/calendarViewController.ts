@@ -9,27 +9,33 @@ import {MarkdownView} from "obsidian";
 class CalendarViewController {
 	async getMarkdownPostProcessor(element, context){
 		const codeblocks = element.querySelectorAll("code");
-		const codeComponents = calendarViewController.checkCodeBlocks(codeblocks);
-		if (codeComponents == null) return;
-		const eventList = await calendarViewController.getEventList(codeComponents);
-		const calendarViewData = calendarViewController.getCalendarViewData( new DateRange(new Date(codeComponents.from), new Date(codeComponents.to)), eventList);
-
-		context.addChild(new CalendarView(codeComponents.codeBlock, calendarViewData));
+		const codeComponents = calendarViewController.processCodeBlocks(codeblocks);
+		if (codeComponents.length == 0) return null;
+		for (let i=0; i<codeComponents.length; i++){
+			const codeComponent = codeComponents[i];
+			const eventList = await calendarViewController.getEventList(codeComponent);
+			const calendarViewData = calendarViewController.getCalendarViewData(new DateRange(new Date(codeComponent.from), new Date(codeComponent.to)), eventList);
+			context.addChild(new CalendarView(codeComponent.codeBlock, calendarViewData));
+		}
 	}
 
-	checkCodeBlocks(codeBlocks): {codeBlock, from, to} | null {
-		if (codeBlocks.length == 0) return null;
-		const codeBlock = codeBlocks.item(0);
-		const codeText = codeBlock.innerText.replaceAll(" ", "");
-		const isCal = codeText.substring(0, 6) == "<ical>";
-		if (!isCal) return null;
-		let from = calendarViewController.matchRegex("from:", codeText);
-		if(from == undefined) return null;
-		from = from.replaceAll("from:", "");
-		let to = calendarViewController.matchRegex("to:", codeText);
-		if(to == undefined) to = from;
-		else to = to.replaceAll("to:", "");
-		return {codeBlock, from, to};
+	processCodeBlocks(codeBlocks): {codeBlock, from, to}[] {
+		const codeComponents = [];
+		if (codeBlocks.length == 0) return codeComponents;
+		codeBlocks.forEach(codeBlock => {
+			const codeText = codeBlock.innerText.replaceAll(" ", "");
+			const isCal = codeText.substring(0, 6) == "<ical>";
+			if (!isCal) return null;
+			let from = calendarViewController.matchRegex("from:", codeText);
+			if(from == undefined) return null;
+			from = from.replaceAll("from:", "");
+			let to = calendarViewController.matchRegex("to:", codeText);
+			if(to == undefined) to = from;
+			else to = to.replaceAll("to:", "");
+			codeComponents.push({codeBlock, from, to})
+		})
+
+		return codeComponents;
 	}
 
 	postProcessorUpdate() {
@@ -61,6 +67,7 @@ class CalendarViewController {
 
 	private getCalendarViewData(dateRange: DateRange, eventList: CloudEvent[] | []): {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate} {
 		const calendarViewDetails: CalendarViewDetail[] = [];
+		console.log(eventList);
 		const noOverlapMap = this.manageEventOverlap(eventList, dateRange);
 		const auxStruct = this.getAuxiliaryStructure(dateRange);
 		const rowNeedsLabelMap = new Map<number, boolean>();
@@ -121,35 +128,46 @@ class CalendarViewController {
 
 		sortedDayEvents.forEach((dayEvent, dayEventsIndex) => {
 			if (!toCheckList.contains(dayEvent)) return;
+			console.log("iteration: ", dayEventsIndex);
+			toCheckList.forEach(a => console.log(a.cloudEventTitle));
 			toCheckList.remove(dayEvent);
 			const noOverlapList: CloudEvent[] = [dayEvent];
 			const dateRange = new DateRange(dayEvent.cloudEventStartDate, dayEvent.cloudEventEndDate);
 			for (let i = dayEventsIndex + 1; i < sortedDayEvents.length; i++){
 				const nextEvent = sortedDayEvents[i];
+				if (!toCheckList.contains(nextEvent)) continue;
 				const nextDateRange = new DateRange(nextEvent.cloudEventStartDate, nextEvent.cloudEventEndDate);
 				if (dateRange.overlaps(nextDateRange)) continue;
 				toCheckList.remove(nextEvent);
+				console.log("removing", nextEvent.cloudEventTitle, "from toCheckList")
 				noOverlapList.push(nextEvent);
 			}
 			this.propagateListOverlapCheck(noOverlapList, toCheckList);
 			eventRows.push(noOverlapList);
-
 		})
 		noOverlapMap.set(new Date(date), eventRows);
+		console.log(Array.from(noOverlapMap.entries()));
 	}
 
 	private propagateListOverlapCheck(noOverlapList: CloudEvent[], toCheckList: CloudEvent[]) {
+		console.log("propagating overlap check")
 		noOverlapList.forEach((noOverlapEvent, noOverlapIndex) => {
 			const noOverlapEventDateRange = new DateRange(noOverlapEvent.cloudEventStartDate, noOverlapEvent.cloudEventEndDate);
 			for (let i = noOverlapIndex + 1; i < noOverlapList.length; i++){
 				const check = noOverlapList[i];
 				const checkDateRange = new DateRange(check.cloudEventStartDate, check.cloudEventEndDate);
+				console.log("checking overlap:", noOverlapEvent.cloudEventTitle, check.cloudEventTitle);
 				if (noOverlapEventDateRange.overlaps(checkDateRange)){
+					console.log("OVERLAP!")
 					noOverlapList.remove(check);
 					toCheckList.push(check);
+					console.log("ADDING", check.cloudEventTitle, "to toCheckList")
+					// The list size has reduced
+					i--;
 				}
 			}
 		})
+
 	}
 
 	private fillCalendarViewDetails(noOverlapMap, rowNeedsLabelMap, auxStruct, calendarViewDetails): number {
