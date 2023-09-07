@@ -4,6 +4,7 @@ import {CalendarViewDetail} from "../model/calendarViewDetail";
 import {CalendarView} from "../plugin/calendarView";
 import {Misc} from "../misc/misc";
 import {CloudEvent} from "../model/events/cloudEvent";
+import {MarkdownView} from "obsidian";
 
 class CalendarViewController {
 	async getMarkdownPostProcessor(element, context){
@@ -29,6 +30,20 @@ class CalendarViewController {
 		if(to == undefined) to = from;
 		else to = to.replaceAll("to:", "");
 		return {codeBlock, from, to};
+	}
+
+	postProcessorUpdate() {
+		for (const leaf of app.workspace.getLeavesOfType("markdown")) {
+			const view = <MarkdownView>leaf.view;
+			console.log(view);
+			for (const section of view.previewMode.renderer.sections.filter(s => s.el.querySelector('.icalTable'))) {
+				// This code flags the section containing your element as an element that has to be rerendered
+				section.rendered = false;
+				section.html = '';
+			}
+			// Rerender all flagged elements
+			view.previewMode.renderer.queueRender();
+		}
 	}
 
 	private matchRegex(prefix, text): string | undefined{
