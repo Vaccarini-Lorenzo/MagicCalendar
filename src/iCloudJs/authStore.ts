@@ -19,7 +19,10 @@ export class iCloudAuthenticationStore {
 
 
     trustToken?: string;
-    sessionId?: string;
+	pushToken?:string;
+	pushTokenTTL?: number;
+	APSNClientID?: string;
+	sessionId?: string;
     sessionToken?: string;
     scnt?: string;
     aasp?: string;

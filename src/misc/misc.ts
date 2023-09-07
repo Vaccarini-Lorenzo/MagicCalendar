@@ -33,7 +33,7 @@ export class Misc {
 		});
 	}
 
-	static generateNewICloudUUID(): string {
+	static generateICloudUUID(): string {
 		const maxIntEightNibbles = 4294967295;
 		const maxIntFourNibbles = 65535;
 		const maxIntTwelveNibbles = 281474976710655;

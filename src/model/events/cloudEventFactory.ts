@@ -23,16 +23,16 @@ export class CloudEventFactory {
 	private createICloudCalendarEvent(sentence: Sentence): iCloudCalendarEvent {
 		const arrayStartDate = iCloudMisc.getArrayDate(sentence.startDate);
 		const arrayEndDate = iCloudMisc.getArrayDate(sentence.endDate);
-		const guid = Misc.generateNewICloudUUID();
+		const guid = Misc.generateICloudUUID();
 
-		const iCloudCalendarEvent = {
+		return {
 			cloudUUID: guid,
 			cloudEventTitle: sentence.eventNoun,
 			cloudEventStartDate: sentence.startDate,
 			cloudEventEndDate: sentence.endDate,
 			title: sentence.eventNoun,
 			duration: sentence.duration,
-			description : "",
+			description: "",
 			guid,
 			location: "",
 			startDate: arrayStartDate,
@@ -48,8 +48,6 @@ export class CloudEventFactory {
 			icon: 0,
 			changeRecurring: null
 		} as iCloudCalendarEvent;
-
-		return iCloudCalendarEvent;
 	}
 
 	private createGoogleCalendarEvent(sentence: Sentence): GoogleCalendarEvent {
@@ -57,18 +55,16 @@ export class CloudEventFactory {
 		const startDateTime = `${sentence.startDate.toISOString()}`
 		const endDateTime = `${sentence.endDate.toISOString()}`
 
-		const googleCalendarEvent = {
+		return {
 			cloudUUID,
 			cloudEventTitle: sentence.eventNoun,
 			cloudEventStartDate: sentence.startDate,
 			cloudEventEndDate: sentence.endDate,
 			summary: sentence.eventNoun,
-			start: { dateTime: startDateTime, timeZone: this.settings.tz},
-			end: { dateTime: endDateTime, timeZone: this.settings.tz },
-			reminders: { useDefault: true }
+			start: {dateTime: startDateTime, timeZone: this.settings.tz},
+			end: {dateTime: endDateTime, timeZone: this.settings.tz},
+			reminders: {useDefault: true}
 		} as GoogleCalendarEvent;
-
-		return googleCalendarEvent;
 	}
 
 	private createGenericCalendarEvent(sentence: Sentence): CloudEvent{

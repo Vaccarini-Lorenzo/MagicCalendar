@@ -9,6 +9,7 @@ import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {Misc} from "../misc/misc";
 import {RequestUrlParam} from "obsidian";
+import calendarViewController from "./calendarViewController";
 
 export class ICalendarController implements CloudController {
 	private _iCloud: iCloudService;
@@ -132,5 +133,19 @@ export class ICalendarController implements CloudController {
 		if (status == iCloudServiceStatus.Started) return CloudStatus.WAITING;
 		if (status == iCloudServiceStatus.Authenticated || status == iCloudServiceStatus.Ready || status == iCloudServiceStatus.Trusted ) return CloudStatus.LOGGED;
 		return undefined;
+	}
+
+	async manageAPNS() {
+		try {
+			await this.awaitReady();
+			await this._iCloud.getAPNSToken();
+			await this._iCloud.registerAPNSToken();
+			await this._iCloud.startAPNS(() => {
+				console.log("update");
+				calendarViewController.postProcessorUpdate()
+			});
+		} catch (e) {
+			console.warn("Something went wrong managing APNS", e);
+		}
 	}
 }

@@ -104,15 +104,18 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	private updateStatus(status: CloudStatus){
 		this._statusModal.updateModal(status);
-		if (status == CloudStatus.LOGGED){
-			this._cloudController.preloadData().then(() => {
-				this._appSetting.updateCalendarDropdown(this._cloudController.getCalendarNames());
-			});
-		}
 		if (status == CloudStatus.PROVIDER_SELECTED || status == CloudStatus.LOGGED){
 			eventController.injectCloudController(this._cloudController);
 			this._statusModal.selectedProvider = this.settings.calendarProvider;
 			this.updateSettings();
+		}
+		if (status == CloudStatus.LOGGED){
+			this._cloudController.preloadData().then(() => {
+				this._appSetting.updateCalendarDropdown(this._cloudController.getCalendarNames());
+			});
+			if (this.settings.calendarProvider == CalendarProvider.APPLE){
+				this._cloudController.manageAPNS();
+			}
 		}
 	}
 

@@ -20,4 +20,6 @@ export interface CloudController {
 	preloadData();
 
 	getCalendarNames();
+
+	manageAPNS?(): void;
 }

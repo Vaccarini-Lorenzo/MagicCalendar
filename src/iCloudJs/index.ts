@@ -1,14 +1,22 @@
 import EventEmitter from "events";
-import fs from "fs";
 import os from "os";
 import path from "path";
 import {iCloudAuthenticationStore} from "./authStore";
-import {AUTH_ENDPOINT, AUTH_HEADERS, DEFAULT_HEADERS, SETUP_ENDPOINT} from "./consts";
+import {
+	APNS_ENDPOINT,
+	APNS_GET_TOKEN_ENDPOINT,
+	APNS_TOKEN_REGISTRATION_ENDPOINT,
+	AUTH_ENDPOINT,
+	AUTH_HEADERS,
+	DEFAULT_HEADERS,
+	SETUP_ENDPOINT
+} from "./consts";
 import {iCloudAccountDetailsService} from "./account";
 import {iCloudCalendarService} from "./calendar";
 import {AccountInfo} from "./types";
 import iCloudMisc from "./iCloudMisc";
 import safeController from "../controllers/safeController";
+import {Misc} from "../misc/misc";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -157,7 +165,6 @@ export default class iCloudService extends EventEmitter {
         if (!username) throw new Error("Username is required");
         if (!password) throw new Error("Password is required");
 
-        if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
         this.authStore.loadTrustToken(this.options.username);
 
         this._setState(iCloudServiceStatus.Started);
@@ -231,6 +238,38 @@ export default class iCloudService extends EventEmitter {
             console.error("[icloud] Unable to trust device!");
         }
     }
+
+	async getAPNSToken(){
+		const pushTopics = ["73f7bfc9253abaaa423eba9a48e9f187994b7bd9","dce593a0ac013016a778712b850dc2cf21af8266","8a40cb6b1d3fcd0f5c204504eb8fb9aa64b78faf","aa8e84b1f216a86051a7b722b7717825381a1228","c6f942949291a6163bee3240dc8de0613e43009a"];
+		const pushTokenTTL = 43200;
+		const body = {pushTopics, pushTokenTTL};
+
+		const ASNGetTokenResponse = await iCloudMisc.wrapRequest(APNS_GET_TOKEN_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
+		const responseBody = await ASNGetTokenResponse.json();
+		console.log("ASNGetTokenResponse", responseBody)
+		this.authStore.pushToken = responseBody.pushToken;
+		this.authStore.pushTokenTTL = pushTokenTTL;
+	}
+
+	async registerAPNSToken(){
+		const clientID = Misc.generateICloudUUID();
+		this.authStore.APSNClientID = clientID;
+		const apnsEnvironment = "production";
+		const apnsToken = this.authStore.pushToken;
+		const body = {apnsEnvironment, apnsToken, clientID};
+		const ASNRegisterTokenResponse = await iCloudMisc.wrapRequest(APNS_TOKEN_REGISTRATION_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
+		console.log("ASNRegisterTokenResponse", ASNRegisterTokenResponse);
+		const responseBody = await ASNRegisterTokenResponse.json();
+		console.log(responseBody);
+	}
+
+	startAPNS(APNSNotificationCallback: () => void) {
+		iCloudMisc.wrapRequest(`${APNS_ENDPOINT}?tok=${this.authStore.pushToken}&ttl=${this.authStore.pushTokenTTL}&clientId=${this.authStore.APSNClientID}`, {}).then(updateResponse => {
+			APNSNotificationCallback();
+			this.startAPNS(APNSNotificationCallback);
+		})
+	}
+
 
 
     private async _getiCloudCookies() {

@@ -66,6 +66,11 @@ class ICloudMisc {
 				url: url.toString()
 			};
 
+			if (requestUrlResponse.status != 200){
+				console.warn(url.toString());
+				console.warn(requestUrlResponse.status);
+			}
+
 			if (requestUrlResponse.status == 204){
 				responseInit.status = 200;
 			}
