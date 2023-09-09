@@ -141,7 +141,6 @@ export class ICalendarController implements CloudController {
 			await this._iCloud.getAPNSToken();
 			await this._iCloud.registerAPNSToken();
 			await this._iCloud.startAPNS(() => {
-				console.log("update");
 				calendarViewController.postProcessorUpdate()
 			});
 		} catch (e) {

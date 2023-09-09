@@ -10,7 +10,9 @@ declare module 'obsidian' {
 				el: HTMLElement;
 				rendered: boolean;
 				html: string;
+				computed: boolean;
 			}[]; // Typing for sections property
+			text: string;
 		};
 	}
 }
