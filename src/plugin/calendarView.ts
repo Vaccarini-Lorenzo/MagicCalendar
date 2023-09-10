@@ -8,14 +8,10 @@ export class CalendarView extends MarkdownRenderChild {
 	constructor(containerEl: HTMLElement, calendarViewData: {numOfCols, numOfRows, rowNeedsLabelMap, calendarViewDetails, startDate}) {
 		super(containerEl);
 		this.calendarViewData = calendarViewData;
-	}
-
-	replaceContainerEL(containerEl: HTMLElement){
-		this.containerEl = containerEl;
+		this.calendarViewHTML = new CalendarViewHTML(this.containerEl, this.calendarViewData);
 	}
 
 	onload() {
-		this.calendarViewHTML = new CalendarViewHTML(this.containerEl, this.calendarViewData);
 		this.containerEl.replaceWith(this.calendarViewHTML.html);
 	}
 }

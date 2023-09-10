@@ -5,22 +5,21 @@ import {CalendarView} from "../plugin/calendarView";
 import {Misc} from "../misc/misc";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {MarkdownView} from "obsidian";
-import {CalendarViewHTML} from "../plugin/calendarViewHTML";
 
 class CalendarViewController {
-
-	el: HTMLElement;
 
 	async getMarkdownPostProcessor(element, context){
 		const codeblocks = element.querySelectorAll("code");
 		const codeComponents = calendarViewController.processCodeBlocks(codeblocks);
+		calendarViewController.removeOldNodes(element);
 		if (codeComponents.length == 0) return null;
 		for (let i=0; i<codeComponents.length; i++){
 			const codeComponent = codeComponents[i];
 			const eventList = await calendarViewController.getEventList(codeComponent);
 			const calendarViewData = calendarViewController.getCalendarViewData(new DateRange(new Date(codeComponent.from), new Date(codeComponent.to)), eventList);
-			calendarViewController.el = element;
-			context.addChild(new CalendarView(codeComponent.codeBlock, calendarViewData));
+			if (!codeComponent.codeBlock) return null;
+			const calendarView = new CalendarView(codeComponent.codeBlock, calendarViewData);
+			context.addChild(calendarView);
 		}
 	}
 
@@ -44,42 +43,21 @@ class CalendarViewController {
 	}
 
 	async postProcessorUpdate() {
-		for (const leaf of app.workspace.getLeavesOfType("markdown")) {
-			const view = <MarkdownView>leaf.view;
-			console.log(view);
-			const text = view.previewMode.renderer.text;
-			for (const section of view.previewMode.renderer.sections.filter(s => s.el.querySelector('.icalTable'))) {
-				console.log("found");
-				const codeBlocks = calendarViewController.generateCodeBlock(text);
-				const codeComponents = calendarViewController.processCodeBlocks(codeBlocks);
-				const codeComponent = codeComponents[0];
-				const eventList = await calendarViewController.getEventList(codeComponent);
-				const calendarViewData = calendarViewController.getCalendarViewData(new DateRange(new Date(codeComponent.from), new Date(codeComponent.to)), eventList);
-				const newCalendarViewHTML = new CalendarViewHTML(calendarViewController.el, calendarViewData).html;
-				calendarViewController.substituteSectionEl(section, newCalendarViewHTML);
-			}
-			// Rerender all flagged elements
-			view.previewMode.renderer.queueRender();
-		}
+		const markdownLeaves = app.workspace.getLeavesOfType("markdown")
+			.filter(leaf => (leaf.view as MarkdownView).previewMode.renderer.sections
+				.filter(s => s.el.querySelector('table.icalTable')));
+		if (markdownLeaves.length == 0) return;
+		const leaf = markdownLeaves[0];
+		const view = <MarkdownView>leaf.view;
+		const sections = view.previewMode.renderer.sections.filter(s => s.el.querySelector('table.icalTable'));
+		if (sections.length == 0) return;
+		sections[0].rendered = false;
+		view.previewMode.renderer.queueRender();
 	}
 
-	private substituteSectionEl(section: {el: HTMLElement, rendered: boolean, html: string, computed: boolean}, newCalendarViewHTML: HTMLElement) {
-		const sectionEl = section.el;
-		const oldTable = sectionEl.querySelector('table.icalTable');
-		if (oldTable){
-			oldTable.parentNode.replaceChild(newCalendarViewHTML, oldTable);
-		}
-	}
-
-	generateCodeBlock(inputString: string): { innerText: string }[] {
-		// Matches that start with "```<ical>" and end with "```"
-		const regex = /```(<ical>.*?)```/g;
-		const matches = [...inputString.matchAll(regex)];
-
-		// Extract the matched strings and format them into objects
-		return matches.map((match) => ({
-			innerText: match[1].trim(),
-		}));
+	private removeOldNodes(element) {
+		const oldNodes = Array.from(element.querySelectorAll('p').values()).filter(p => (p as HTMLElement).querySelectorAll("table.icalTable").length > 0) as HTMLElement[];
+		oldNodes.forEach(oldNode => oldNode.parentNode.removeChild(oldNode));
 	}
 
 	private matchRegex(prefix, text): string | undefined{
@@ -224,6 +202,7 @@ class CalendarViewController {
 
 		return rowIndex;
 	}
+
 }
 
 const calendarViewController = new CalendarViewController();
