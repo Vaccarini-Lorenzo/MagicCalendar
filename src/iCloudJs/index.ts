@@ -246,7 +246,7 @@ export default class iCloudService extends EventEmitter {
 
 		const ASNGetTokenResponse = await iCloudMisc.wrapRequest(APNS_GET_TOKEN_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
 		const responseBody = await ASNGetTokenResponse.json();
-		console.log("ASNGetTokenResponse", responseBody)
+		
 		this.authStore.pushToken = responseBody.pushToken;
 		this.authStore.pushTokenTTL = pushTokenTTL;
 	}
@@ -258,16 +258,15 @@ export default class iCloudService extends EventEmitter {
 		const apnsToken = this.authStore.pushToken;
 		const body = {apnsEnvironment, apnsToken, clientID};
 		const ASNRegisterTokenResponse = await iCloudMisc.wrapRequest(APNS_TOKEN_REGISTRATION_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
-		console.log("ASNRegisterTokenResponse", ASNRegisterTokenResponse);
+		
 		const responseBody = await ASNRegisterTokenResponse.json();
-		console.log(responseBody);
+		
 	}
 
 	startAPNS(APNSNotificationCallback: () => void) {
 		iCloudMisc.wrapRequest(`${APNS_ENDPOINT}?tok=${this.authStore.pushToken}&ttl=${this.authStore.pushTokenTTL}&clientId=${this.authStore.APSNClientID}`, {}).then(updateResponse => {
 			APNSNotificationCallback();
-			updateResponse.json().then(json => console.log("updateResponse", json));
-			this.startAPNS(APNSNotificationCallback);
+			updateResponse.json().then(json => this.startAPNS(APNSNotificationCallback));
 		})
 	}
 

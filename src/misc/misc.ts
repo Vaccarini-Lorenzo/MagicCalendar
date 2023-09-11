@@ -8,6 +8,7 @@ export class Misc {
 	static base64Media: {appleIcon, googleIcon};
 	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
+	static bindListeners: {type:string, eventCallback: (event) => void}[] = [];
 
 	static isLowerCase(str) {
 		return str === str.toLowerCase() &&
@@ -63,5 +64,19 @@ export class Misc {
 
 	static getBase64GoogleIcon(): string {
 		return Misc.base64Media.googleIcon;
+	}
+
+	static generateCellID(dateString: string, i: number): string {
+		const millisInHalfHour = 1800000;
+		const milliSurplus = millisInHalfHour * (i + 1);
+		const cellDate = new Date(dateString.replace(/ - \d+/, ''));
+		cellDate.setTime(cellDate.getTime() + milliSurplus);
+		return cellDate.toISOString();
+	}
+
+	static cellIndexFromID(id: string): number{
+		const cellDate = new Date(id);
+		const minutes = cellDate.getMinutes() + cellDate.getHours() * 60;
+		return Math.round(minutes / 30);
 	}
 }
