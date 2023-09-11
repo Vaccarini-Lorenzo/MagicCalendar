@@ -7,6 +7,7 @@ export class Misc {
 	static app: App;
 	static base64Media: {appleIcon, googleIcon};
 	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
+	static dragEvent: any;
 
 	static isLowerCase(str) {
 		return str === str.toLowerCase() &&

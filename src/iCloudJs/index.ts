@@ -266,11 +266,10 @@ export default class iCloudService extends EventEmitter {
 	startAPNS(APNSNotificationCallback: () => void) {
 		iCloudMisc.wrapRequest(`${APNS_ENDPOINT}?tok=${this.authStore.pushToken}&ttl=${this.authStore.pushTokenTTL}&clientId=${this.authStore.APSNClientID}`, {}).then(updateResponse => {
 			APNSNotificationCallback();
+			updateResponse.json().then(json => console.log("updateResponse", json));
 			this.startAPNS(APNSNotificationCallback);
 		})
 	}
-
-
 
     private async _getiCloudCookies() {
         try {

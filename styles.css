@@ -198,11 +198,7 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	border-right: transparent!important;
 	font-size: 50%;
 	border-radius: 0.5rem;
-	transition: transform .5s ease;
-}
-
-.icalTd:hover {
-	transform: scale(1.12);
+	user-select: none;
 }
 
 .icalEventBox {
