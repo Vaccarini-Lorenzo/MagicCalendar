@@ -4,8 +4,10 @@ import {CalendarView} from "../plugin/calendarView";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {MarkdownView} from "obsidian";
 import {CalendarViewData} from "../model/calendarViewData";
+import {Misc} from "../misc/misc";
 
 class CalendarViewController {
+	cloudEventUUIDMap: Map<string, CloudEvent> = new Map<string, CloudEvent>();
 
 	async getMarkdownPostProcessor(element, context){
 		const codeblocks = element.querySelectorAll("code");
@@ -15,11 +17,17 @@ class CalendarViewController {
 		for (let i=0; i<codeComponents.length; i++){
 			const codeComponent = codeComponents[i];
 			const eventList = await calendarViewController.getEventList(codeComponent);
+			eventList.forEach((cloudEvent) => calendarViewController.cloudEventUUIDMap.set(cloudEvent.cloudEventUUID, cloudEvent));
 			const calendarViewData = new CalendarViewData(new DateRange(new Date(codeComponent.from), new Date(codeComponent.to)), eventList);
 			if (!codeComponent.codeBlock) return null;
-			const calendarView = new CalendarView(codeComponent.codeBlock, calendarViewData);
+			const calendarView = new CalendarView(codeComponent.codeBlock, calendarViewData, calendarViewController.dropCallback);
 			context.addChild(calendarView);
 		}
+	}
+
+	dropCallback(cloudEventUUID: string, updateMap: Map<string, string>){
+		const cloudEvent = calendarViewController.cloudEventUUIDMap.get(cloudEventUUID) as CloudEvent;
+		eventController.updateCloudEvent(cloudEvent, updateMap);
 	}
 
 	processCodeBlocks(codeBlocks): {codeBlock, from, to}[] {
@@ -71,8 +79,6 @@ class CalendarViewController {
 		const dateRange = new DateRange(new Date(codeComponents.from), new Date(codeComponents.to));
 		return await eventController.getEventsFromRange(dateRange);
 	}
-
-
 }
 
 const calendarViewController = new CalendarViewController();

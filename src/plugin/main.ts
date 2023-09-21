@@ -16,7 +16,7 @@ import {CloudController} from "../controllers/cloudController";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {GoogleCalendarController} from "../controllers/googleCalendarController";
 import nlpPlugin from "./nlpExtension";
-import {ICalendarController} from "../controllers/ICalendarController";
+import {ICalendarController} from "../controllers/iCalendarController";
 
 export default class iCalObsidianSync extends Plugin implements PluginValue{
 	private _cloudController: CloudController;
@@ -91,7 +91,9 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	async onunload() {
-		// Release any resources configured by the plugin.
+		Misc.bindListeners.forEach(bindListener => {
+			bindListener.doc.removeEventListener(bindListener.type, bindListener.eventCallback);
+		})
 	}
 
 	async loadSettings() {

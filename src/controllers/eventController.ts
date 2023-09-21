@@ -115,13 +115,13 @@ class EventController{
 			fileEvents.push(this._currentEvent);
 			this._pathEventMap.set(filePath, fileEvents)
 		}
-		this._uuidEventMap.set(this._currentEvent.value.cloudUUID, this._currentEvent);
+		this._uuidEventMap.set(this._currentEvent.value.cloudEventUUID, this._currentEvent);
 		this._currentEvent.processed = true;
 		// Syncing local storage - Needed to remember which events have been already processed
 		this.syncLocalStorageEventLog(filePath, this._currentEvent);
 		if (!sync) return;
 		// Request to sync -> Push event to iCloud
-		this._cloudController.pushEvent(this._currentEvent).then((status => {
+		this._cloudController.pushEvent(this._currentEvent.value).then((status => {
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
@@ -134,7 +134,7 @@ class EventController{
 		try {
 			const pathEventMapData = `{"${eventFilePath}":${JSON.stringify(event)}}\n`;
 			appendFileSync(pathEventMapFilePath, pathEventMapData);
-			const uuidEventMapData = `{"${event.value.cloudUUID}":${JSON.stringify(event)}}\n`;
+			const uuidEventMapData = `{"${event.value.cloudEventUUID}":${JSON.stringify(event)}}\n`;
 			appendFileSync(uuidEventMapFilePath, uuidEventMapData);
 		} catch (e) {
 			console.error("Error syncing local event log");
@@ -165,6 +165,14 @@ class EventController{
 			fetchedCloudEvents.forEach(iCloudEvent => cloudEvents.push(iCloudEvent));
 		}
 		return cloudEvents;
+	}
+
+	async updateCloudEvent(cloudEvent: CloudEvent, updateMap: Map<string, string>) {
+		this._cloudEventFactory.updateCloudEvent(cloudEvent, updateMap);
+		this._cloudController.pushEvent(cloudEvent).then((status => {
+			if (status) new Notice("📅 The event has been synchronized!")
+			else new Notice("🤷 There has been an error updating the event...")
+		}));
 	}
 }
 

@@ -77,17 +77,18 @@ export class ICalendarController implements CloudController {
 		this._dataLoadingComplete = true;
 	}
 
-	async pushEvent(event: Event): Promise<boolean>{
+	async pushEvent(cloudEvent: CloudEvent): Promise<boolean>{
 		let calendar = this._calendars.first();
-		const iCloudEvent = event.value as iCloudCalendarEvent;
+		const iCloudEvent = cloudEvent as iCloudCalendarEvent;
+		iCloudEvent.tz = this.appSettings.tz;
 		if (this.appSettings.calendar != "Log in to select a calendar"){
 			const firstMatchingCalendar = this._calendars.filter(calendar => calendar.title == this.appSettings.calendar)[0];
 			calendar = firstMatchingCalendar ?? calendar;
 		}
-
-		iCloudEvent.tz = this.appSettings.tz;
+		if (iCloudEvent.pGuid != undefined){
+			calendar = this._calendars.filter(calendar => calendar.guid == iCloudEvent.pGuid)[0];
+		}
 		iCloudEvent.pGuid = calendar.guid;
-
 		return await this._calendarService.postEvent(iCloudEvent, calendar.ctag);
 	}
 
@@ -103,7 +104,7 @@ export class ICalendarController implements CloudController {
 		if (this._calendarService == undefined) return [];
 		const iCloudEvents = await this._calendarService.events(missedDateRange.start, missedDateRange.end);
 		iCloudEvents.forEach(iCloudEvent => {
-			iCloudEvent.cloudEventUUID = iCloudEvent.pGuid;
+			iCloudEvent.cloudEventUUID = iCloudEvent.guid;
 			iCloudEvent.cloudEventTitle = iCloudEvent.title;
 			iCloudEvent.cloudEventStartDate = Misc.getDateFromICloudArray(iCloudEvent.startDate);
 			iCloudEvent.cloudEventEndDate = Misc.getDateFromICloudArray(iCloudEvent.endDate);

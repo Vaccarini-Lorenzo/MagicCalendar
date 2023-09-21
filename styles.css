@@ -1,28 +1,97 @@
-.highlightedTextDynamic {
-	position: relative;
-	color: white;
-	padding: 3px;
-	-webkit-animation: 0.7s highlight 0s 1 normal forwards;
-	background: linear-gradient(90deg, #3c2c54 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 100%;
-	background-position: 100% 0;
-	z-index: unset;
+/* SETTINGS */
+
+.icalServiceProviderRow {
+	width: 500px;
+	/*border:10px solid white;*/
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: space-evenly;
+	align-self: auto;
 }
 
+.icalServiceIcon {
+	margin: 30px;
+}
+
+.icalServiceProviderButton {
+	position: relative;
+	align-self: center;
+	height: 150px;
+	width: 150px;
+	background: #fff;
+	border-radius: 20px;
+	box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	transition: transform .5s ease;
+}
+
+.icalServiceProviderButton:hover {
+	transform: scale(1.05);
+}
+
+.icalModalSize {
+	/*border:10px solid white;*/
+	width: 600px;
+	height: 300px;
+	position: relative;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	margin: auto;
+	max-width: 100%;
+	max-height: 100%;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+.icalTitleFlexBox{
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 0 auto;
+	width: 100%;
+}
+
+.icalGoBackButton {
+	justify-content: flex-start;
+	align-self: flex-start;
+	margin: 0;
+	padding: 0;
+	transform: translate(-5%, 35%);
+}
+
+.icalSettingTitle {
+	margin: 10px 0 50px 0;
+}
+
+.icalSetting {
+	width: 100%;
+	align-self: flex-start;
+}
+
+.icalLoggedInSummaryRow {
+	width: 70%;
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: flex-start;
+	text-align: left;
+}
+
+
+
+
+
+/* TEXT HIGHLIGHT */
 .highlightedTextStatic {
 	background-color: #3c2c54;
 	position: relative;
 	color: white;
 	padding: 3px;
-}
-
-.underlinedTextStatic {
-	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 15%;
-	padding: 2px;
-	background-position: 0 100%;
-	background-repeat: no-repeat;
-	pointer-events: none;
 }
 
 .underlinedTextDynamic {
@@ -59,7 +128,12 @@
 	}
 }
 
-/* Navigation list */
+
+
+
+
+
+/* TEXT HOVER BUBBLE */
 ul.icalNavUL {
 	margin: 0;
 	padding: 0;
@@ -167,6 +241,10 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	white-space: initial;
 }
 
+
+
+/* INLINE EVENT VIEW */
+
 .icalTableWrapper {
 	width: 100rem;
 	overflow: auto;
@@ -174,103 +252,87 @@ ul.icalNavUL span:hover .icalHoverBubble {
 
 
 .icalTable {
+	border-top: transparent;
+	border-bottom: white;
+	border-left: transparent;
+	border-right: transparent;
 	font-size: 60%;
 	max-width: 100px;
 }
 
 .icalTh {
-	font-size: 80%;
+	border-top: transparent;
+	border-bottom: white;
+	border-left: transparent!important;
+	border-right: transparent!important;
 	font-weight: normal;
+	font-size: 10px!important;
 }
 
 .icalTd {
+	border-top: transparent!important;
+	border-bottom: white;
+	border-left: transparent!important;
+	border-right: transparent!important;
 	font-size: 50%;
 	border-radius: 0.5rem;
 	user-select: none;
+	opacity: 1;
+	transition: transform .5s ease;
+}
+
+.icalTd.dottedBorder {
+	border-left: 1px dotted white!important;
+}
+
+@keyframes glowing-border {
+	0% {
+		border-color: white;
+		box-shadow: 0 0 10px #6a5194;
+	}
+	50% {
+		border-color: white;
+		box-shadow: 0 0 20px #58457c;
+	}
+	100% {
+		border-color: white;
+		box-shadow: 0 0 10px #503d6e;
+	}
+}
+
+.icalTd.hovered {
+	animation: glowing-border 1s infinite;
+	transform: scale(1.12);
+}
+
+.icalShiftedCell {
+	position: relative;
+	transform: translateX(-50%);
 }
 
 .icalEventBox {
 	box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);
 }
 
-.icalServiceProviderRow {
-	width: 500px;
-	/*border:10px solid white;*/
-	display: grid;
-	grid-template-columns: auto auto;
-	justify-content: space-evenly;
-	align-self: auto;
-}
-
-.icalServiceIcon {
-	margin: 30px;
-}
-
-.icalServiceProviderButton {
-	position: relative;
-	align-self: center;
-	height: 150px;
-	width: 150px;
-	background: #fff;
-	border-radius: 20px;
-	box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
-	display: flex;
-	justify-content: center;
-	transition: transform .5s ease;
-}
-
-.icalServiceProviderButton:hover {
-	transform: scale(1.05);
-}
-
-.icalModalSize {
-	/*border:10px solid white;*/
-	width: 600px;
-	height: 300px;
-	position: relative;
-	left: 0;
-	right: 0;
-	top: 0;
-	bottom: 0;
-	margin: auto;
-	max-width: 100%;
-	max-height: 100%;
-	overflow: auto;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	text-align: center;
-}
-
-.icalTitleFlexBox{
-	align-items: center;
-	display: flex;
-	justify-content: space-between;
-	margin: 0 auto;
-	width: 100%;
-}
-
-.icalGoBackButton {
-	justify-content: flex-start;
-	align-self: flex-start;
-	margin: 0;
-	padding: 0;
-	transform: translate(-5%, 35%);
-}
-
-.icalSettingTitle {
-	margin: 10px 0 50px 0;
-}
-
-.icalSetting {
-	width: 100%;
-	align-self: flex-start;
-}
-
-.icalLoggedInSummaryRow {
-	width: 70%;
-	display: grid;
-	grid-template-columns: auto auto;
-	justify-content: flex-start;
-	text-align: left;
-}
+.palette-0 {background-color: #8C54FC;}
+.palette-1 {background-color: #8850F5;}
+.palette-2 {background-color: #8551F0;}
+.palette-3 {background-color: #844DD5;}
+.palette-4 {background-color: #7D4CDC;}
+.palette-5 {background-color: #7A49D7;}
+.palette-6 {background-color: #7747D2;}
+.palette-7 {background-color: #7544C9;}
+.palette-8 {background-color: #713FBB;}
+.palette-9 {background-color: #6F3CAF;}
+.palette-10 {background-color: #6D38A4;}
+.palette-11 {background-color: #6A349B;}
+.palette-12 {background-color: #673092;}
+.palette-13 {background-color: #642C8A;}
+.palette-14 {background-color: #612B81;}
+.palette-15 {background-color: #5E2678;}
+.palette-16 {background-color: #5B236F;}
+.palette-17 {background-color: #581E65;}
+.palette-18 {background-color: #551B5B;}
+.palette-19 {background-color: #521852;}
+.palette-20 {background-color: #4F1549;}
+.palette-21 {background-color: #4C1340;}

@@ -8,7 +8,7 @@ export class Misc {
 	static base64Media: {appleIcon, googleIcon};
 	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
-	static bindListeners: {type:string, eventCallback: (event) => void}[] = [];
+	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
 
 	static isLowerCase(str) {
 		return str === str.toLowerCase() &&
@@ -74,9 +74,28 @@ export class Misc {
 		return cellDate.toISOString();
 	}
 
-	static cellIndexFromID(id: string): number{
+	static cellIndexFromID(id: string, offset?: number): number{
 		const cellDate = new Date(id);
-		const minutes = cellDate.getMinutes() + cellDate.getHours() * 60;
-		return Math.round(minutes / 30);
+		let minutes = cellDate.getMinutes() + cellDate.getHours() * 60;
+		if (offset) minutes += offset * 30;
+				return Math.round(minutes / 30);
 	}
+
+	static getStartDateFromCellID(id: string) {
+		return new Date(id);
+	}
+
+	static getTimeFromColSpan(dragColSpan: string): number {
+		const millisInHalfHour = 1800000;
+		return Number(dragColSpan) * millisInHalfHour;
+	}
+/*
+	static unbindCalendarViewListeners(containerEl: HTMLElement) {
+		Misc.bindListeners.forEach(bindListener => {
+			containerEl.doc.removeEventListener(bindListener.type, bindListener.eventCallback);
+		})
+	}
+
+ */
+
 }

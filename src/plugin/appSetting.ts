@@ -53,6 +53,8 @@ export class AppSetting extends PluginSettingTab {
 				tz.setValue((this.plugin.settings.tz));
 				tz.onChange(async value => {
 					this.plugin.settings.tz = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
 
@@ -68,6 +70,9 @@ export class AppSetting extends PluginSettingTab {
 				this.calendarNames.forEach((calendarName) => dropdown.addOption(calendarName, calendarName))
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
+					await this.plugin.checkLogin();
 				})
 			})
 
@@ -79,6 +84,8 @@ export class AppSetting extends PluginSettingTab {
 				key.setValue(this.plugin.settings.key ?? "none");
 				key.onChange(async value => {
 					this.plugin.settings.key = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
 
@@ -88,19 +95,9 @@ export class AppSetting extends PluginSettingTab {
 				iv.setValue(this.plugin.settings.iv ?? "none");
 				iv.onChange(async value => {
 					this.plugin.settings.iv = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateSettings();
 				})
 			})
-
-		new Setting(containerEl)
-			.addButton((btn) =>
-				btn
-					.setButtonText("Submit changes")
-					.setCta()
-					.onClick(async () => {
-						await this.plugin.saveSettings();
-						this.plugin.updateSettings();
-						await this.plugin.checkLogin();
-					}));
-
 	}
 }

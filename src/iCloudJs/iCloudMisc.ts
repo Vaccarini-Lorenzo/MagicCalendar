@@ -77,7 +77,7 @@ class ICloudMisc {
 
 			if (requestUrlResponse.status != 200){
 				console.warn("requestUrlResponse status: ", requestUrlResponse.status);
-			}
+							}
 
 			if (requestUrlResponse.status == 421){
 				/*

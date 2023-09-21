@@ -25,7 +25,7 @@ export class CalendarViewData {
 
 	private getAuxiliaryStructure(dateRange: DateRange) : {numOfCols, refiner, refinerMinutes, minTimeMilli, milliInDay} {
 		const numOfConsideredHours = 24;
-		// Every 30 mins
+		// Every 60/2 = 30 mins
 		const refiner = 2;
 		const refinerMinutes = 60 / refiner;
 		const numOfCols = numOfConsideredHours * refiner;
@@ -106,7 +106,6 @@ export class CalendarViewData {
 	private fillCalendarViewDetails(noOverlapMap, rowNeedsLabelMap, auxStruct, calendarViewDetails): number {
 		let rowIndex = 0;
 		Array.from(noOverlapMap.entries()).forEach((noOverlapEntry) => {
-			
 			const eventBlocks = noOverlapEntry[1];
 			if (eventBlocks.length == 0){
 				rowNeedsLabelMap.set(rowIndex, true);
@@ -127,14 +126,13 @@ export class CalendarViewData {
 					const toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes
 					const row = rowIndex;
 					const title = noOverlapEvent.cloudEventTitle;
-					const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol)
+					const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol, noOverlapEvent.cloudEventUUID);
 					calendarViewDetails.push(calendarViewDetail);
 				})
 				isOverlap = true;
 				rowIndex += 1;
 			})
 		})
-
 		return rowIndex;
 	}
 }

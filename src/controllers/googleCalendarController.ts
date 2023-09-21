@@ -27,12 +27,16 @@ export class GoogleCalendarController implements CloudController {
 		this._calendars = [];
 	}
 
-	async pushEvent(event: Event): Promise<boolean>{
+	async pushEvent(cloudEvent: CloudEvent): Promise<boolean>{
 		const googleEventInsertResponse = await this._calendarEndpoint.events.insert({
 			calendarId: this._currentCalendar.summary,
-			resource: event.value as GoogleCalendarEvent
+			resource: cloudEvent as GoogleCalendarEvent
 		})
 		return googleEventInsertResponse.status == 200;
+	}
+
+	async updateEvent(cloudEvent: CloudEvent, updateMap: Map<string, string>): Promise<boolean>{
+		return true;
 	}
 
 	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
@@ -47,7 +51,7 @@ export class GoogleCalendarController implements CloudController {
 		const googleEvents = googleEventResponse.data.items as GoogleCalendarEvent[];
 
 		googleEvents.forEach(googleEvent => {
-			googleEvent.cloudUUID = googleEvent.id;
+			googleEvent.cloudEventUUID = googleEvent.id;
 			googleEvent.cloudEventTitle = googleEvent.summary;
 			googleEvent.cloudEventStartDate = new Date(googleEvent.start.dateTime);
 			googleEvent.cloudEventEndDate = new Date(googleEvent.end.dateTime);
