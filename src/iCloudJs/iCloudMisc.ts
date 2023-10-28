@@ -2,6 +2,12 @@ import {RequestInfo, RequestInit, Response} from "node-fetch";
 import {requestUrl, RequestUrlParam} from "obsidian";
 
 class ICloudMisc {
+	private _refreshCallback: (requestUrlParam: RequestUrlParam) => void;
+
+	injectRefreshCallback(refreshCallback:  (requestUrlParam: RequestUrlParam) => void){
+		this._refreshCallback = refreshCallback;
+	}
+
 	private stringifyDateNumber(dateNumber: number): string {
 		return dateNumber.toString().length == 1 ? "0" + dateNumber.toString() : dateNumber.toString()
 	}
@@ -77,23 +83,12 @@ class ICloudMisc {
 
 			if (requestUrlResponse.status != 200){
 				console.warn("requestUrlResponse status: ", requestUrlResponse.status);
-							}
+			}
 
 			if (requestUrlResponse.status == 421){
-				/*
-				const canTryReconnect = iCloudController.checkMaxReconnectAttempt();
-				if(!canTryReconnect){
-					console.warn("Can't reconnect - max attempts reached");
-					return;
-
-				}
-				console.warn("Refreshing token...");
-				await iCloudController.tryAuthentication("", "")
-				await iCloudController.awaitReady();
-				iCloudController.resetReconnectAttempt();
-				iCloudController.refreshRequestCookies(requestUrlParam);
+				this._refreshCallback(requestUrlParam);
 				requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
-				 */
+				console.warn("Refreshing token...");
 			}
 		} catch (e) {
 			if(e.toString() == "Error: net::ERR_NAME_NOT_RESOLVED"){

@@ -10,6 +10,7 @@ import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {Misc} from "../misc/misc";
 import {RequestUrlParam} from "obsidian";
 import calendarViewController from "./calendarViewController";
+import ICloudMisc from "../iCloudJs/iCloudMisc";
 
 export class ICalendarController implements CloudController {
 	private _iCloud: iCloudService;
@@ -28,6 +29,20 @@ export class ICalendarController implements CloudController {
 		this._dataLoadingComplete = false;
 		this.maxReconnectAttempt = 5;
 		this.reconnectAttempt = 0;
+		const bindCallback = this.refreshCallback.bind(this);
+		ICloudMisc.injectRefreshCallback(bindCallback);
+	}
+
+	async refreshCallback(requestUrlParam: RequestUrlParam){
+		try {
+			await this._iCloud.authenticate();
+			await this.awaitReady();
+			this.refreshRequestCookies(requestUrlParam);
+		} catch (e) {
+			console.warn("Error during authentication");
+			console.warn(e.message);
+			return this.convertToCloudStatus(iCloudServiceStatus.Error);
+		}
 	}
 
 	injectPath(pluginPath: string){
