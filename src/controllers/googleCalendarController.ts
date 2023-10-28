@@ -3,8 +3,6 @@ import {DateRange} from "../model/dateRange";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {OAuth2Client} from "google-auth-library";
-import {join} from "path";
-import {authenticate} from "@google-cloud/local-auth";
 import safeController from "./safeController";
 import {google} from "googleapis";
 import {APIEndpoint} from "googleapis-common";
@@ -15,7 +13,6 @@ import {GoogleAuthenticator} from "./googleAuthenticator";
 
 export class GoogleCalendarController implements CloudController {
 	private _pluginPath: string;
-	private _credentialsPath: string;
 	private readonly _scopes: string[];
 	private _calendarEndpoint: APIEndpoint;
 	private _calendars: GoogleCalendar[];
@@ -63,7 +60,6 @@ export class GoogleCalendarController implements CloudController {
 
 	injectPath(pluginPath: string) {
 		this._pluginPath = pluginPath;
-		this._credentialsPath = join(pluginPath, ".googleOAuthCredentials.json");
 	}
 
 	injectSettings(settings: SettingInterface) {

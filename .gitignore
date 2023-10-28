@@ -24,6 +24,6 @@ data.json
 .c.txt
 .env
 
-ical-obsidian-sync/*
+magic-calendar/*
 
 .googleOAuthCredentials.json
