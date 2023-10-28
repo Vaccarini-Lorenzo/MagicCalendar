@@ -62,6 +62,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	private initState() {
 		Misc.app = this.app;
 		Misc.loadMedia(join(this._pluginPath, ".base64Media.json"));
+		Misc.fetchCred();
 		nplController.init();
 		eventController.init();
 		this._statusModal = new StatusModal(this.app, this.selectProviderCallback, this.submitCredentialsCallback, this.submitMfaCallback, this);
@@ -86,6 +87,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 	}
 
 	private inferCalendar(auth: Map<string, string>) {
+		if (this._cloudController != undefined) return;
 		if (auth.get("tokenType") != undefined) this._cloudController = new GoogleCalendarController();
 		else if (auth.get("iCalSyncUsername") != undefined) this._cloudController = new ICalendarController();
 	}
@@ -161,10 +163,11 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		}
 	}
 
-	public updateSettings(){
+	public async updateSettings(){
 		safeController.injectSettings(this.settings);
 		this._cloudController.injectSettings(this.settings);
 		this._cloudEventFactory.injectSettings(this.settings);
+		await this.saveSettings();
 	}
 
 	private getCloudController(calendarProvider: CalendarProvider) {

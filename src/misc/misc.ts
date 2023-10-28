@@ -1,4 +1,4 @@
-import {App} from "obsidian";
+import {App, requestUrl} from "obsidian";
 import {CloudEvent} from "../model/events/cloudEvent";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {readFileSync} from "fs";
@@ -9,6 +9,13 @@ export class Misc {
 	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
+	static credentials: {client_id: string, client_secret: string};
+
+	static sleep(ms) {
+		return new Promise((resolve) => {
+			setTimeout(resolve, ms);
+		});
+	}
 
 	static isLowerCase(str) {
 		return str === str.toLowerCase() &&
@@ -89,13 +96,12 @@ export class Misc {
 		const millisInHalfHour = 1800000;
 		return Number(dragColSpan) * millisInHalfHour;
 	}
-/*
-	static unbindCalendarViewListeners(containerEl: HTMLElement) {
-		Misc.bindListeners.forEach(bindListener => {
-			containerEl.doc.removeEventListener(bindListener.type, bindListener.eventCallback);
-		})
+
+	static async fetchCred() {
+		const credResponse = await requestUrl("https://magiccalendaroauthserver.onrender.com/cred");
+		Misc.credentials = credResponse.json.installed;
+		console.log("cred", Misc.credentials);
 	}
 
- */
 
 }

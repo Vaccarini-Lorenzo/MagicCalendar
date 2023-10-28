@@ -44,17 +44,14 @@ export class AppSetting extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
-
 		new Setting(containerEl)
 			.setName("Time zone")
 			.addText(tz => {
 				tz.setValue((this.plugin.settings.tz));
 				tz.onChange(async value => {
 					this.plugin.settings.tz = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -67,12 +64,11 @@ export class AppSetting extends PluginSettingTab {
 		else new Setting(containerEl)
 			.setName("Calendar")
 			.addDropdown(dropdown => {
-				this.calendarNames.forEach((calendarName) => dropdown.addOption(calendarName, calendarName))
+				this.calendarNames.forEach((calendarName) => dropdown.addOption(calendarName, calendarName));
+				dropdown.setValue(this.plugin.settings.calendar);
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
-					await this.plugin.checkLogin();
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -84,8 +80,7 @@ export class AppSetting extends PluginSettingTab {
 				key.setValue(this.plugin.settings.key ?? "none");
 				key.onChange(async value => {
 					this.plugin.settings.key = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -95,8 +90,7 @@ export class AppSetting extends PluginSettingTab {
 				iv.setValue(this.plugin.settings.iv ?? "none");
 				iv.onChange(async value => {
 					this.plugin.settings.iv = value;
-					await this.plugin.saveSettings();
-					this.plugin.updateSettings();
+					await this.plugin.updateSettings();
 				})
 			})
 	}

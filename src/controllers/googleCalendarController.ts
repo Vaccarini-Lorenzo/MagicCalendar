@@ -2,16 +2,16 @@ import {CloudController} from "./cloudController";
 import {DateRange} from "../model/dateRange";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
-import {authenticate} from "@google-cloud/local-auth";
 import {OAuth2Client} from "google-auth-library";
 import {join} from "path";
-import Event from "../model/event";
+import {authenticate} from "@google-cloud/local-auth";
 import safeController from "./safeController";
 import {google} from "googleapis";
 import {APIEndpoint} from "googleapis-common";
 import {GoogleCalendar} from "../model/cloudCalendar/googleCalendar";
 import {GoogleCalendarEvent} from "../model/events/googleCalendarEvent";
 import {SettingInterface} from "../plugin/appSetting";
+import {GoogleAuthenticator} from "./googleAuthenticator";
 
 export class GoogleCalendarController implements CloudController {
 	private _pluginPath: string;
@@ -23,6 +23,7 @@ export class GoogleCalendarController implements CloudController {
 	private _settings: SettingInterface;
 
 	constructor() {
+		console.log("constructor");
 		this._scopes = ["https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"];
 		this._calendars = [];
 	}
@@ -66,18 +67,29 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	injectSettings(settings: SettingInterface) {
+		console.log("settings", settings);
 		this._settings = settings;
-		this._currentCalendar = this._calendars.filter(calendar => calendar.summary == this._settings.calendar).first();
+		console.log("this settings", this._settings.calendar);
+		console.log("this calendars", this._calendars);
+		this._currentCalendar = this._calendars.filter(calendar => {
+			return calendar.summary == this._settings.calendar;
+		}).first();
+		console.log("_currentCalendar", this._currentCalendar);
+
 	}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
 		if (auth){
 			return await this.manageTokenValidity(auth);
 		}
+		/*
 		const oAuth2Client = await authenticate({
 			scopes: this._scopes,
 			keyfilePath: this._credentialsPath,
 		});
+		*/
+		const googleAuthenticator = new GoogleAuthenticator(this._scopes);
+		const oAuth2Client = await googleAuthenticator.authenticate();
 		if (oAuth2Client.credentials) {
 			const credentialMap = new Map<string, string>();
 			credentialMap.set("clientId", oAuth2Client._clientId);
@@ -94,9 +106,12 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async preloadData() {
+		console.log("preloading data");
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
+		console.log(calendarResponse);
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
 		this._currentCalendar = this._calendars.first();
+		console.log("this PRELOADED calendars", this._calendars);
 	}
 
 	getCalendarNames() {
