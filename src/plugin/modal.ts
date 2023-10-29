@@ -32,7 +32,7 @@ export class StatusModal extends Modal {
 			this.loadAppleLogin();
 		}
 		else if(this.cloudStatus == CloudStatus.PROVIDER_SELECTED && this.selectedProvider == CalendarProvider.GOOGLE){
-			this.loadGoogleLogin();
+			this.loadGoogleTemporaryScreen();
 		}
 		else if (this.cloudStatus == CloudStatus.MFA_REQ){
 			this.loadMFA();
@@ -123,6 +123,22 @@ export class StatusModal extends Modal {
 						this.loading();
 					}));
 		submitButton.settingEl.addClass("icalSetting")
+	}
+
+	loadGoogleTemporaryScreen(){
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.createEl("h1", {text: "This is still a beta!"}).addClass("icalSettingTitle");
+		contentEl.createEl("b", {text: `At the moment this is still a beta!`}).addClass("icalSetting");
+		contentEl.createEl("b", {text: `The developer is waiting for Google Trust & Safety team's review.`}).addClass("icalSetting");
+		contentEl.createEl("b", {text: `If you want you can still continue`}).addClass("icalSetting");
+		new Setting(contentEl).addButton((btn) =>
+			btn
+				.setButtonText("Continue")
+				.setCta()
+				.onClick(() => {
+					this.loadGoogleLogin();
+				}));
 	}
 
 	loadGoogleLogin(){
