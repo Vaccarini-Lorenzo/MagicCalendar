@@ -18,7 +18,7 @@ import {GoogleCalendarController} from "../controllers/googleCalendarController"
 import nlpPlugin from "./nlpExtension";
 import {ICalendarController} from "../controllers/iCalendarController";
 
-export default class iCalObsidianSync extends Plugin implements PluginValue{
+export default class MagicCalendar extends Plugin implements PluginValue{
 	private _cloudController: CloudController;
 	private _cloudEventFactory: CloudEventFactory;
 	private _appSetting: AppSetting;
@@ -51,7 +51,8 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 		const basePath = (this.app.vault.adapter as any).basePath
 		this._pluginPath = join(basePath, this.manifest.dir)
 		this._cloudEventFactory = new CloudEventFactory(this.settings);
-		nlpController.injectPath(this._pluginPath)
+		nlpController.injectPath(this._pluginPath);
+		nlpController.injectSettings(this.settings);
 		safeController.injectPath(this._pluginPath);
 		safeController.injectSettings(this.settings);
 		safeController.injectCalendarProvider(this.settings.calendarProvider);
@@ -163,6 +164,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 
 	public async updateSettings(){
 		safeController.injectSettings(this.settings);
+		nlpController.injectSettings(this.settings);
 		this._cloudController.injectSettings(this.settings);
 		this._cloudEventFactory.injectSettings(this.settings);
 		await this.saveSettings();

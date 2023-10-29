@@ -1,7 +1,8 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import iCalObsidianSync from "./main";
-import moment from "moment-timezone";
+import {App, PluginSettingTab, Setting, TextAreaComponent, TextComponent} from "obsidian";
+import MagicCalendar from "./main";
+import moment, {tz} from "moment-timezone";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
+import {BannedListHTML} from "./bannedListHTML";
 
 export interface SettingInterface {
 	tz: string;
@@ -9,6 +10,7 @@ export interface SettingInterface {
 	key: string;
 	iv: string;
 	calendarProvider: CalendarProvider;
+	bannedPatterns: string[];
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
@@ -16,17 +18,21 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	calendar: "none",
 	key: "none",
 	iv: "none",
-	calendarProvider: CalendarProvider.NOT_SELECTED
+	calendarProvider: CalendarProvider.NOT_SELECTED,
+	bannedPatterns: []
 };
 
 export class AppSetting extends PluginSettingTab {
-	plugin: iCalObsidianSync;
+	plugin: MagicCalendar;
 	retryLogin: boolean;
 	calendarNames: string[]
 	key: string;
 	iv: string;
+	bannedPatternText: TextComponent;
+	bannedListHTML: BannedListHTML;
 
-	constructor(app: App, plugin: iCalObsidianSync) {
+
+	constructor(app: App, plugin: MagicCalendar) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.calendarNames = [];
@@ -93,5 +99,29 @@ export class AppSetting extends PluginSettingTab {
 					await this.plugin.updateSettings();
 				})
 			})
+
+		new Setting(containerEl)
+			.setName("Ban pattern")
+			.addText(text => {
+				this.bannedPatternText = text;
+				text.setPlaceholder("Banned pattern")
+			})
+			.addButton(button => {
+				button.setIcon("plus");
+				button.onClick(click => {
+					const bannedPattern = this.bannedPatternText.getValue();
+					this.bannedListHTML.append(bannedPattern);
+					this.bannedPatternText.setValue("");
+				})
+			})
+
+		this.bannedListHTML = new BannedListHTML(containerEl, this.updateBannedPatterns.bind(this), this.plugin.settings.bannedPatterns)
+		this.bannedListHTML
+			.build()
+	}
+
+	async updateBannedPatterns(deletedPattern: string){
+		this.plugin.settings.bannedPatterns.remove(deletedPattern);
+		await this.plugin.updateSettings();
 	}
 }

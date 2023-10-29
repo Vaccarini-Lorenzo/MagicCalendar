@@ -83,6 +83,37 @@
 	text-align: left;
 }
 
+.magicCalendarSettingListContainer {
+	max-height: 200px;
+	overflow-y: scroll;
+	border-radius: 5px;
+	float: right; /* This aligns the container to the right */
+	border: none; /* This removes the border */
+}
+
+.magicCalendarSettingListContainer::-webkit-scrollbar {
+	width: 0.5em; /* Adjust as needed */
+}
+
+.magicCalendarSettingListContainer::-webkit-scrollbar-thumb {
+	background-color: #ccc; /* Adjust the color as needed */
+	border-radius: 4px;
+}
+
+.magicCalendarSettingListItem {
+	display: flex;
+	align-items: center;
+	margin: 10px 0;
+}
+
+.magicCalendarSettingListText {
+	flex-grow: 1;
+}
+
+.magicCalendarSettingListDeleteIcon {
+	width: 45px;
+	padding: 10px;
+}
 
 
 

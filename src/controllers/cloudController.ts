@@ -8,7 +8,6 @@ export interface CloudController {
 
 	updateEvent(cloudEvent: CloudEvent): Promise<boolean>;
 
-
 	getEvents(missedDateRange: DateRange): Promise<CloudEvent[]>;
 
 	injectPath(pluginPath: string);

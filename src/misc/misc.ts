@@ -7,7 +7,7 @@ import http from "http";
 
 export class Misc {
 	static app: App;
-	static base64Media: {appleIcon, googleIcon};
+	static base64Media: {appleIcon, googleIcon, deleteIcon};
 	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
@@ -74,6 +74,10 @@ export class Misc {
 
 	static getBase64GoogleIcon(): string {
 		return Misc.base64Media.googleIcon;
+	}
+
+	static getBase64DeleteIcon(): string {
+		return Misc.base64Media.deleteIcon;
 	}
 
 	static generateCellID(dateString: string, i: number): string {

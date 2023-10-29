@@ -40,8 +40,7 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async updateEvent(cloudEvent: CloudEvent): Promise<boolean>{
-		console.log(cloudEvent);
-		const googleEventInsertResponse = await this._calendarEndpoint.events.patch({
+				const googleEventInsertResponse = await this._calendarEndpoint.events.patch({
 			calendarId: this._currentCalendarName,
 			eventId: (cloudEvent as GoogleCalendarEvent).id,
 			resource: cloudEvent as GoogleCalendarEvent
@@ -51,9 +50,7 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
-		console.log("getting events");
-		console.log("calendarId = ", this._currentCalendarName);
-		const googleEventResponse = await this._calendarEndpoint.events.list({
+						const googleEventResponse = await this._calendarEndpoint.events.list({
 			calendarId: this._currentCalendarName,
 			orderBy: "startTime",
 			singleEvents: true,
@@ -78,12 +75,10 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	injectSettings(settings: SettingInterface) {
-		console.log("inject settings");
-		this._settings = settings;
+				this._settings = settings;
 		if (this._calendars.length == 0){
 			this._currentCalendarName = this._settings.calendar;
-			console.log("current calendar is now: ", this._settings.calendar);
-			return;
+						return;
 		}
 		this._currentCalendarName = this._calendars.filter(calendar => {
 			return calendar.summary == this._settings.calendar;
