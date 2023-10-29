@@ -27,7 +27,6 @@ class SmartDateParser {
 		return this._chrono.parse(text);
 	}
 
-
 	getDates(parsed: ParsedResult[]): DateRange {
 		const startYear = [];
 		const startMonth = [];

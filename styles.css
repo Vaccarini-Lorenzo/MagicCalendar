@@ -308,6 +308,10 @@ ul.icalNavUL span:hover .icalHoverBubble {
 .icalShiftedCell {
 	position: relative;
 	transform: translateX(-50%);
+	min-width: 2rem!important;
+	overflow: visible!important;
+	white-space: nowrap;
+	font-size: 12px!important;
 }
 
 .icalEventBox {
