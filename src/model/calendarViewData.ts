@@ -122,8 +122,10 @@ export class CalendarViewData {
 					}
 					const eventStartTime = noOverlapEvent.cloudEventStartDate;
 					const eventEndTime = noOverlapEvent.cloudEventEndDate;
-					const fromCol = eventStartTime.getHours() * auxStruct.refiner + eventStartTime.getMinutes() / auxStruct.refinerMinutes
-					const toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes
+					const fromCol = eventStartTime.getHours() * auxStruct.refiner + eventStartTime.getMinutes() / auxStruct.refinerMinutes;
+					let toCol = eventEndTime.getHours() * auxStruct.refiner + eventEndTime.getMinutes() / auxStruct.refinerMinutes;
+					// Managing events starting and ending at the same time
+					if (fromCol == toCol) toCol = fromCol + 1;
 					const row = rowIndex;
 					const title = noOverlapEvent.cloudEventTitle;
 					const calendarViewDetail = new CalendarViewDetail(title, row, fromCol, toCol, noOverlapEvent.cloudEventUUID);

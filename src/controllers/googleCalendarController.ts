@@ -10,6 +10,8 @@ import {GoogleCalendar} from "../model/cloudCalendar/googleCalendar";
 import {GoogleCalendarEvent} from "../model/events/googleCalendarEvent";
 import {SettingInterface} from "../plugin/appSetting";
 import {GoogleAuthenticator} from "./googleAuthenticator";
+import {Misc} from "../misc/misc";
+import calendarViewController from "./calendarViewController";
 
 export class GoogleCalendarController implements CloudController {
 	private _pluginPath: string;
@@ -18,10 +20,15 @@ export class GoogleCalendarController implements CloudController {
 	private _calendars: GoogleCalendar[];
 	private _currentCalendarName: string;
 	private _settings: SettingInterface;
+	private _channelId: string;
 
 	constructor() {
 		this._scopes = ["https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"];
 		this._calendars = [];
+		this._channelId = Misc.generateGoogleCloudUUID();
+	}
+
+	async managePushNotifications(){
 	}
 
 	async pushEvent(cloudEvent: CloudEvent): Promise<boolean>{
@@ -39,6 +46,7 @@ export class GoogleCalendarController implements CloudController {
 			eventId: (cloudEvent as GoogleCalendarEvent).id,
 			resource: cloudEvent as GoogleCalendarEvent
 		})
+		calendarViewController.postProcessorUpdate();
 		return googleEventInsertResponse.status == 200;
 	}
 

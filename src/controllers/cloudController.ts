@@ -23,5 +23,5 @@ export interface CloudController {
 
 	getCalendarNames();
 
-	manageAPNS?(): void;
+	managePushNotifications(): void;
 }

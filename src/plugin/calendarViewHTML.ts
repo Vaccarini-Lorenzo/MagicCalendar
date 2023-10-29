@@ -132,12 +132,13 @@ export class CalendarViewHTML {
 
 	private createEventCell(row: HTMLElement, calendarViewDetail: CalendarViewDetail, cloudEventUUID: string){
 		const eventCell = row.createEl("td");
+		const colSpan = calendarViewDetail.toCol - calendarViewDetail.fromCol;
 		eventCell.id = Misc.generateCellID(row.id, calendarViewDetail.fromCol);
 		eventCell.innerText = calendarViewDetail.title;
 		eventCell.addClass(this.getPaletteClass());
 		eventCell.addClass("icalEventBox");
 		eventCell.addClass("icalTd");
-		eventCell.setAttr("colspan", calendarViewDetail.toCol - calendarViewDetail.fromCol);
+		eventCell.setAttr("colspan", colSpan);
 		eventCell.setAttr("cloudEventUUID", cloudEventUUID);
 		this.makeCellDraggable(eventCell);
 	}
@@ -148,8 +149,7 @@ export class CalendarViewHTML {
 		cell.ondragenter = () => cell.classList.add("hovered");
 		cell.ondragleave = () => cell.classList.remove("hovered");
 		cell.ondrop = () => cell.setCssStyles({opacity: "1"});
-		cell.onclick = () => {
-					}
+		//cell.onclick = () => {}
 	}
 
 	private getPaletteClass(){
@@ -191,7 +191,7 @@ export class CalendarViewHTML {
 		updatedEndDate.setTime(updatedStartDate.getTime() + Misc.getTimeFromColSpan(dragColSpan))
 		updateMap.set("cloudEventStartDate", updatedStartDate.toISOString());
 		updateMap.set("cloudEventEndDate", updatedEndDate.toISOString());
-				this.dropCallback(cloudEventUUID, updateMap);
+		this.dropCallback(cloudEventUUID, updateMap);
 		//this.swapCells(event);
 	}
 

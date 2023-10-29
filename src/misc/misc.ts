@@ -3,6 +3,7 @@ import {CloudEvent} from "../model/events/cloudEvent";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {readFileSync} from "fs";
 import * as net from "net";
+import http from "http";
 
 export class Misc {
 	static app: App;
@@ -11,6 +12,7 @@ export class Misc {
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
 	static credentials: {client_id: string, client_secret: string};
+	private static notificationPort: number;
 
 	static sleep(ms) {
 		return new Promise((resolve) => {
@@ -112,6 +114,7 @@ export class Misc {
 			});
 		})
 	}
+
 
 
 }

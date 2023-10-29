@@ -117,9 +117,7 @@ export default class iCalObsidianSync extends Plugin implements PluginValue{
 			this._cloudController.preloadData().then(() => {
 				this._appSetting.updateCalendarDropdown(this._cloudController.getCalendarNames());
 			});
-			if (this.settings.calendarProvider == CalendarProvider.APPLE){
-				this._cloudController.manageAPNS();
-			}
+			this._cloudController.managePushNotifications();
 		}
 	}
 

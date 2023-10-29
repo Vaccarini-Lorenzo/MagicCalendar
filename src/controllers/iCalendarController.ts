@@ -155,7 +155,7 @@ export class ICalendarController implements CloudController {
 		return undefined;
 	}
 
-	async manageAPNS() {
+	async managePushNotifications() {
 		try {
 			await this.awaitReady();
 			await this._iCloud.getAPNSToken();
