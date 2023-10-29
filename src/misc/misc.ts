@@ -75,7 +75,7 @@ export class Misc {
 
 	static generateCellID(dateString: string, i: number): string {
 		const millisInHalfHour = 1800000;
-		const milliSurplus = millisInHalfHour * (i + 1);
+		const milliSurplus = millisInHalfHour * i;
 		const cellDate = new Date(dateString.replace(/ - \d+/, ''));
 		cellDate.setTime(cellDate.getTime() + milliSurplus);
 		return cellDate.toISOString();

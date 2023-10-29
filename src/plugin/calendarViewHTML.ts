@@ -182,7 +182,7 @@ export class CalendarViewHTML {
 	drop(event) {
 		event.preventDefault();
 		if (event.target.tagName !== "TD" || Misc.dragEvent.target === event.target) return;
-		if (event.target.parentNode.id != Misc.dragEvent.target.parentNode.id) this.manageChangeRow(event);
+		//if (event.target.parentNode.id != Misc.dragEvent.target.parentNode.id) this.manageChangeRow(event);
 		const cloudEventUUID = Misc.dragEvent.target.attributes.getNamedItem("cloudeventuuid").value;
 		const dragColSpan = Misc.dragEvent.target.attributes.getNamedItem("colspan").value;
 		if (!cloudEventUUID) return;
@@ -192,9 +192,12 @@ export class CalendarViewHTML {
 		updatedEndDate.setTime(updatedStartDate.getTime() + Misc.getTimeFromColSpan(dragColSpan))
 		updateMap.set("cloudEventStartDate", updatedStartDate.toISOString());
 		updateMap.set("cloudEventEndDate", updatedEndDate.toISOString());
+		console.log(updateMap);
 		this.dropCallback(cloudEventUUID, updateMap);
-		this.swapCells(event);
+		//this.swapCells(event);
 	}
+
+	/*
 
 	private manageChangeRow(event){
 		// Event moved from a row to another
@@ -304,4 +307,6 @@ export class CalendarViewHTML {
 			event.target.attributes.setNamedItem(attr);
 		}
 	}
+
+	 */
 }
