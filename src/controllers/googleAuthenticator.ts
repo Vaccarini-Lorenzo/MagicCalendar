@@ -50,24 +50,35 @@ export class GoogleAuthenticator {
 				} catch (e) {
 					reject(e);
 				} finally {
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					console.log("closing server");
 					server.close();
 				}
 			});
 
-			const listenPort = 3000;
+			const listenPort = 0;
 
-			server.listen(listenPort, () => {
-				const address = server.address();
-				// open the browser to the authorize url to start the workflow
-				const authorizeUrl = client.generateAuthUrl({
-					redirect_uri: "http://localhost:3000",
-					access_type: 'offline',
-					scope: this.scopes.join(' '),
+			try {
+				setTimeout(function() {
+					server.close();
+					console.warn("Timeout [30s]: closing oauth server");
+				}, 30000);
+
+				server.listen(listenPort, () => {
+					const address = server.address();
+					// open the browser to the authorize url to start the workflow
+					const authorizeUrl = client.generateAuthUrl({
+						redirect_uri: "http://localhost:3000",
+						access_type: 'offline',
+						scope: this.scopes.join(' '),
+					});
+					open(authorizeUrl);
 				});
-				open(authorizeUrl);
-			});
+			} catch (e) {
+				if (e.code == "EADDRINUSE") {
+					console.warn("Address in use, the server connection will be closed soon...");
+				} else {
+					console.warn("OAuth server error: ", e);
+				}
+			}
 		});
 	}
 }
