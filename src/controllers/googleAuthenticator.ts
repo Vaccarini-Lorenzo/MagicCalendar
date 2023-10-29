@@ -13,8 +13,7 @@ export class GoogleAuthenticator {
 
 		let credentials = Misc.credentials;
 		while (!credentials){
-			console.log("credentials not ready yet...");
-			await Misc.sleep(200);
+						await Misc.sleep(200);
 			credentials = Misc.credentials;
 		}
 		// create an oAuth client to authorize the API call
@@ -23,10 +22,12 @@ export class GoogleAuthenticator {
 			clientSecret: credentials.client_secret,
 		});
 
+		const freePort = await Misc.getPortFree();
+		
 		return new Promise((resolve, reject) => {
 			const server = http.createServer(async (req, res) => {
 				try {
-					const url = new URL(req.url!, "http://localhost:3000");
+					const url = new URL(req.url!, `http://localhost:${freePort}`);
 					const searchParams = url.searchParams;
 					if (searchParams.has('error')) {
 						res.end('Authorization rejected.');
@@ -42,7 +43,7 @@ export class GoogleAuthenticator {
 					const code = searchParams.get('code');
 					const {tokens} = await client.getToken({
 						code: code!,
-						redirect_uri: "http://localhost:3000"
+						redirect_uri: `http://localhost:${freePort}`
 					});
 					client.credentials = tokens;
 					resolve(client);
@@ -54,19 +55,17 @@ export class GoogleAuthenticator {
 				}
 			});
 
-			const listenPort = 0;
-
 			try {
 				setTimeout(function() {
 					server.close();
 					console.warn("Timeout [30s]: closing oauth server");
 				}, 30000);
 
-				server.listen(listenPort, () => {
+				server.listen(freePort, () => {
 					const address = server.address();
 					// open the browser to the authorize url to start the workflow
 					const authorizeUrl = client.generateAuthUrl({
-						redirect_uri: "http://localhost:3000",
+						redirect_uri: `http://localhost:${freePort}`,
 						access_type: 'offline',
 						scope: this.scopes.join(' '),
 					});

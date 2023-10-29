@@ -169,7 +169,7 @@ class EventController{
 
 	async updateCloudEvent(cloudEvent: CloudEvent, updateMap: Map<string, string>) {
 		this._cloudEventFactory.updateCloudEvent(cloudEvent, updateMap);
-		this._cloudController.pushEvent(cloudEvent).then((status => {
+		this._cloudController.updateEvent(cloudEvent).then((status => {
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error updating the event...")
 		}));

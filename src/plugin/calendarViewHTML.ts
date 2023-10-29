@@ -149,8 +149,7 @@ export class CalendarViewHTML {
 		cell.ondragleave = () => cell.classList.remove("hovered");
 		cell.ondrop = () => cell.setCssStyles({opacity: "1"});
 		cell.onclick = () => {
-			console.log(cell.attributes.getNamedItem("cloudEventUUID"));
-		}
+					}
 	}
 
 	private getPaletteClass(){
@@ -192,8 +191,7 @@ export class CalendarViewHTML {
 		updatedEndDate.setTime(updatedStartDate.getTime() + Misc.getTimeFromColSpan(dragColSpan))
 		updateMap.set("cloudEventStartDate", updatedStartDate.toISOString());
 		updateMap.set("cloudEventEndDate", updatedEndDate.toISOString());
-		console.log(updateMap);
-		this.dropCallback(cloudEventUUID, updateMap);
+				this.dropCallback(cloudEventUUID, updateMap);
 		//this.swapCells(event);
 	}
 

@@ -16,30 +16,37 @@ export class GoogleCalendarController implements CloudController {
 	private readonly _scopes: string[];
 	private _calendarEndpoint: APIEndpoint;
 	private _calendars: GoogleCalendar[];
-	private _currentCalendar: GoogleCalendar;
+	private _currentCalendarName: string;
 	private _settings: SettingInterface;
 
 	constructor() {
-		console.log("constructor");
 		this._scopes = ["https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"];
 		this._calendars = [];
 	}
 
 	async pushEvent(cloudEvent: CloudEvent): Promise<boolean>{
 		const googleEventInsertResponse = await this._calendarEndpoint.events.insert({
-			calendarId: this._currentCalendar.summary,
+			calendarId: this._currentCalendarName,
 			resource: cloudEvent as GoogleCalendarEvent
 		})
 		return googleEventInsertResponse.status == 200;
 	}
 
-	async updateEvent(cloudEvent: CloudEvent, updateMap: Map<string, string>): Promise<boolean>{
-		return true;
+	async updateEvent(cloudEvent: CloudEvent): Promise<boolean>{
+		console.log(cloudEvent);
+		const googleEventInsertResponse = await this._calendarEndpoint.events.patch({
+			calendarId: this._currentCalendarName,
+			eventId: (cloudEvent as GoogleCalendarEvent).id,
+			resource: cloudEvent as GoogleCalendarEvent
+		})
+		return googleEventInsertResponse.status == 200;
 	}
 
 	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
+		console.log("getting events");
+		console.log("calendarId = ", this._currentCalendarName);
 		const googleEventResponse = await this._calendarEndpoint.events.list({
-			calendarId: this._currentCalendar.summary,
+			calendarId: this._currentCalendarName,
 			orderBy: "startTime",
 			singleEvents: true,
 			timeMax: missedDateRange.end.toISOString(),
@@ -63,18 +70,20 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	injectSettings(settings: SettingInterface) {
-		console.log("settings", settings);
+		console.log("inject settings");
 		this._settings = settings;
-		console.log("this settings", this._settings.calendar);
-		console.log("this calendars", this._calendars);
-		this._currentCalendar = this._calendars.filter(calendar => {
+		if (this._calendars.length == 0){
+			this._currentCalendarName = this._settings.calendar;
+			console.log("current calendar is now: ", this._settings.calendar);
+			return;
+		}
+		this._currentCalendarName = this._calendars.filter(calendar => {
 			return calendar.summary == this._settings.calendar;
-		}).first();
-		console.log("_currentCalendar", this._currentCalendar);
-
+		}).first().summary;
 	}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
+		//await this._calendarEndpoint.events.watch();
 		if (auth){
 			return await this.manageTokenValidity(auth);
 		}
@@ -102,12 +111,8 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async preloadData() {
-		console.log("preloading data");
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
-		console.log(calendarResponse);
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
-		this._currentCalendar = this._calendars.first();
-		console.log("this PRELOADED calendars", this._calendars);
 	}
 
 	getCalendarNames() {

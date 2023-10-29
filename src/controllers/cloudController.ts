@@ -6,6 +6,9 @@ import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 export interface CloudController {
 	pushEvent(cloudEvent: CloudEvent): Promise<boolean>;
 
+	updateEvent(cloudEvent: CloudEvent): Promise<boolean>;
+
+
 	getEvents(missedDateRange: DateRange): Promise<CloudEvent[]>;
 
 	injectPath(pluginPath: string);

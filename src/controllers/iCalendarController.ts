@@ -107,6 +107,10 @@ export class ICalendarController implements CloudController {
 		return await this._calendarService.postEvent(iCloudEvent, calendar.ctag);
 	}
 
+	async updateEvent(cloudEvent: CloudEvent): Promise<boolean>{
+		return this.pushEvent(cloudEvent);
+	}
+
 	async awaitReady(){
 		await this._iCloud.awaitReady;
 	}

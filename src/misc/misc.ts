@@ -2,6 +2,7 @@ import {App, requestUrl} from "obsidian";
 import {CloudEvent} from "../model/events/cloudEvent";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {readFileSync} from "fs";
+import * as net from "net";
 
 export class Misc {
 	static app: App;
@@ -100,7 +101,16 @@ export class Misc {
 	static async fetchCred() {
 		const credResponse = await requestUrl("https://magiccalendaroauthserver.onrender.com/cred");
 		Misc.credentials = credResponse.json.installed;
-		console.log("cred", Misc.credentials);
+			}
+
+	static async getPortFree():Promise<number> {
+		return new Promise( res => {
+			const srv = net.createServer();
+			srv.listen(0, () => {
+				const port = (srv.address() as net.AddressInfo).port
+				srv.close((err) => res(port))
+			});
+		})
 	}
 
 

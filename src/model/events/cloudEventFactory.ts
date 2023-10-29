@@ -116,7 +116,7 @@ export class CloudEventFactory {
 	private updateGoogleCalendarEvent(cloudEvent: CloudEvent) {
 		const googleCalendarEvent = cloudEvent as GoogleCalendarEvent;
 		const startDateTime = `${cloudEvent.cloudEventStartDate.toISOString()}`
-		const endDateTime = `${cloudEvent.cloudEventStartDate.toISOString()}`
+		const endDateTime = `${cloudEvent.cloudEventEndDate.toISOString()}`
 		googleCalendarEvent.start = {dateTime: startDateTime, timeZone: this.settings.tz};
 		googleCalendarEvent.end = {dateTime: endDateTime, timeZone: this.settings.tz};
 		googleCalendarEvent.summary = cloudEvent.cloudEventTitle;
