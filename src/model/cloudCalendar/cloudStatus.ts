@@ -1,0 +1,8 @@
+export enum CloudStatus {
+	NOT_STARTED,
+	PROVIDER_SELECTED,
+	MFA_REQ,
+	ERROR,
+	LOGGED,
+	WAITING
+}

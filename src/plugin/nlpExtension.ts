@@ -6,17 +6,12 @@ import { Sentence } from "../model/sentence";
 import eventController from "../controllers/eventController";
 import Event from "../model/event";
 import { Misc } from "../misc/misc";
-import iCloudController from "../controllers/iCloudController";
-import { Notice } from "obsidian";
 
 class NLPPlugin implements PluginValue {
 	decorations: DecorationSet;
-	// For animation purposes
-	widgetFirstLoad: boolean;
 
 	constructor(view: EditorView) {
 		this.decorations = this.buildDecorations(view);
-		this.widgetFirstLoad = true;
 	}
 
 	update(update: ViewUpdate) {
@@ -37,18 +32,15 @@ class NLPPlugin implements PluginValue {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
 				if(matchMetadata == null) return;
 				const decoration = this.getDecoration(matches.selection, match, matchMetadata, (sync) => {
+					/*
 					if (!iCloudController.isLoggedIn()){
 						new Notice("You're not logged in! 🥲\nLook for iCalSync in the command palette to log in")
 						return;
 					}
+					 */
 					eventController.processEvent(filePath, sync);
-					this.widgetFirstLoad = true;
 					view.setState(view.state);
 				}, eventDetailString);
-
-				setTimeout((ref) => {
-					if (ref.widgetFirstLoad) ref.widgetFirstLoad = false;
-				}, 500, this);
 
 				try{
 					builder.add(
@@ -97,7 +89,7 @@ class NLPPlugin implements PluginValue {
 		// If there is no explicit date, highlight the exactTime/timeRange
 		// e.g.: At 2 o'clock I'll join a meeting  <-  2 o'clock should be highlighted
 		if((isExplicitDatePresent &&  (match.type == "date" || match.type == "ordinalDate" || match.type == "ordinalDateReverse")) || (!isExplicitDatePresent && (match.type == "timeRange" || match.type == "exactTime"))){
-			const widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback , this.widgetFirstLoad);
+			const widget = new HighlightWidget(matchMetadata.capitalizedMatch, eventDetailString, highlightWidgetCallback);
 			decoration = Decoration.replace({
 				widget
 			});
@@ -106,15 +98,14 @@ class NLPPlugin implements PluginValue {
 	}
 
 	private getEventDetail(event: Event): {title, dateString, timeString, hasTimeDetails} {
-		const title = event.value.title;
-		const startDate = event.value.startDate;
-		const endDate = event.value.endDate;
+		const title = event.value.cloudEventTitle;
+		const startDate = event.value.cloudEventStartDate;
+		const endDate = event.value.cloudEventEndDate;
 
-		// startDate, exactly like endDate is an array as the following [yearMonthDay, year, month, day, hour, min ...]
-		const startDateString = `${startDate[1]}/${Misc.fromSingleToDoubleDigit(startDate[2])}/${Misc.fromSingleToDoubleDigit(startDate[3])}`
-		const endDateString = `${endDate[1]}/${Misc.fromSingleToDoubleDigit(endDate[2])}/${Misc.fromSingleToDoubleDigit(endDate[3])}`;
-		const startTimeString = `${Misc.fromSingleToDoubleDigit(startDate[4])}:${Misc.fromSingleToDoubleDigit(startDate[5])}`;
-		const endTimeString = `${Misc.fromSingleToDoubleDigit(endDate[4])}:${Misc.fromSingleToDoubleDigit(endDate[5])}`
+		const startDateString = `${startDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(startDate.getMonth() + 1)}/${Misc.fromSingleToDoubleDigit(startDate.getDate())}`
+		const endDateString = `${endDate.getFullYear()}/${Misc.fromSingleToDoubleDigit(endDate.getMonth() + 1)}/${Misc.fromSingleToDoubleDigit(endDate.getDate())}`;
+		const startTimeString = `${Misc.fromSingleToDoubleDigit(startDate.getHours())}:${Misc.fromSingleToDoubleDigit(startDate.getMinutes())}`;
+		const endTimeString = `${Misc.fromSingleToDoubleDigit(endDate.getHours())}:${Misc.fromSingleToDoubleDigit(endDate.getMinutes())}`
 
 		let dateString = startDateString;
 		if (startDateString != endDateString) dateString += ` -  ${endDateString}`;

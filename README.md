@@ -1,24 +1,27 @@
-# iCalObsidianSync
-This Obsidian plugin allows to synchronize iCalendar (and soon Google Calendar too!) with your Obsidian notes.
+# MagicCalendar
+This Obsidian plugin allows to synchronize your calendar of choice with Obsidian.
+The plugin is still in beta and at the moment the supported calendars are:
+- Apple Calendar
+- Google Calendar
 
 <p align="center">
-  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/iCalObsidianSync/main/materials/iCalDemo.gif">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/magicCalendarDemo.gif">
 </p>
 
 # Getting started
 ### Installation
 Currently, this plugin is not registered as a standard community plugin for downloading or updating within Obsidian. <br>
 To install it:
-- Check the [latest release](https://github.com/Vaccarini-Lorenzo/iCalObsidianSync/releases/latest)
-- Download ```ical-obsidian-sync.zip```
-- Unzip the file and move the ```ical-obsidian-sync``` folder into your Obsidian plugin folder
+- Check the [latest release](https://github.com/Vaccarini-Lorenzo/MagicCalendar/releases/latest)
+- Download ```magic-calendar.zip```
+- Unzip the file and move the ```magic-calendar``` folder into your Obsidian plugin folder
 - Enable the plugin from your Obsidian settings.
 
 ### Log-in
-To interact with iCalendar you'll need to login into your iCloud account.
+To interact with Apple Calendar you'll need to log-in into your iCloud account.
 Your credentials will be stored <ins>exclusively</ins> in your local device (encrypted).<br> Check the **How it works** section for more informations.<br>
-To login just look for *iCalSync* in your command palette.
-
+Google, on the other hand, supports OAuth2 authentication.
+Just click on the calendar ribbon icon to select your calendar provider and log-in.
 ### Just sync it
 That's it. Just write an event and the plugin will try its best to identify it.
 
@@ -51,9 +54,9 @@ Since Apple doesn't support OAuth, it's necessary to login with email and passwo
 	3) Bugfix: entity overlap
 
 # Currently in development phase
-- **Event inline view**: From version v.1.2.0 will be possible to embed iCalendar events in your notes. The user will be able to interact with the events directly and automatically synchronize the event with their calendar
+- **Event inline view**: From version v.1.2.0 will be possible to embed calendar events in your notes. The user will be able to interact with the events directly and automatically synchronize the event with their calendar
 <p align="center">
-  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/iCalObsidianSync/main/materials/inlineViewDemo.gif">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/inlineViewDemo.gif">
 </p>
 
 - **Google calendar integration**: Project refactor to support multiple calendars

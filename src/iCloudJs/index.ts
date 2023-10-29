@@ -1,14 +1,22 @@
 import EventEmitter from "events";
-import fs from "fs";
 import os from "os";
 import path from "path";
-import { iCloudAuthenticationStore } from "./authStore";
-import { AUTH_ENDPOINT, AUTH_HEADERS, DEFAULT_HEADERS, SETUP_ENDPOINT } from "./consts";
-import { iCloudAccountDetailsService } from "./account";
-import { iCloudCalendarService } from "./calendar";
-import { AccountInfo } from "./types";
+import {iCloudAuthenticationStore} from "./authStore";
+import {
+	APNS_ENDPOINT,
+	APNS_GET_TOKEN_ENDPOINT,
+	APNS_TOKEN_REGISTRATION_ENDPOINT,
+	AUTH_ENDPOINT,
+	AUTH_HEADERS,
+	DEFAULT_HEADERS,
+	SETUP_ENDPOINT
+} from "./consts";
+import {iCloudAccountDetailsService} from "./account";
+import {iCloudCalendarService} from "./calendar";
+import {AccountInfo} from "./types";
 import iCloudMisc from "./iCloudMisc";
 import safeController from "../controllers/safeController";
+import {Misc} from "../misc/misc";
 export type { iCloudAuthenticationStore } from "./authStore";
 export type { AccountInfo } from "./types";
 /**
@@ -147,17 +155,6 @@ export default class iCloudService extends EventEmitter {
         username = username || this.options.username;
         password = password || this.options.password;
 
-        if (!username) {
-            try {
-                const saved = safeController.checkSafe();
-                if (!saved) throw new Error("Username was not provided and could not be found in keychain");
-				const credentials = safeController.getCredentials();
-                username = credentials.username;
-				password = credentials.password;
-            } catch (e) {
-                throw new Error("Error fetching cred" + e.toString());
-            }
-        }
         if (typeof (username as any) !== "string") throw new TypeError("authenticate(username?: string, password?: string): 'username' was " + (username || JSON.stringify(username)).toString());
         this.options.username = username;
         // hide password from console.log
@@ -168,7 +165,6 @@ export default class iCloudService extends EventEmitter {
         if (!username) throw new Error("Username is required");
         if (!password) throw new Error("Password is required");
 
-        if (!fs.existsSync(this.options.dataDirectory)) fs.mkdirSync(this.options.dataDirectory);
         this.authStore.loadTrustToken(this.options.username);
 
         this._setState(iCloudServiceStatus.Started);
@@ -223,7 +219,7 @@ export default class iCloudService extends EventEmitter {
             if (this.options.trustDevice) this._getTrustToken().then(this._getiCloudCookies.bind(this));
             else this._getiCloudCookies();
         } else {
-            throw new Error("Invalid status code: " + authResponse.status + " " + await authResponse.text());
+			this._setState(iCloudServiceStatus.Error);
         }
     }
 
@@ -243,6 +239,36 @@ export default class iCloudService extends EventEmitter {
         }
     }
 
+	async getAPNSToken(){
+		const pushTopics = ["73f7bfc9253abaaa423eba9a48e9f187994b7bd9","dce593a0ac013016a778712b850dc2cf21af8266","8a40cb6b1d3fcd0f5c204504eb8fb9aa64b78faf","aa8e84b1f216a86051a7b722b7717825381a1228","c6f942949291a6163bee3240dc8de0613e43009a"];
+		const pushTokenTTL = 43200;
+		const body = {pushTopics, pushTokenTTL};
+
+		const ASNGetTokenResponse = await iCloudMisc.wrapRequest(APNS_GET_TOKEN_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
+		const responseBody = await ASNGetTokenResponse.json();
+		
+		this.authStore.pushToken = responseBody.pushToken;
+		this.authStore.pushTokenTTL = pushTokenTTL;
+	}
+
+	async registerAPNSToken(){
+		const clientID = Misc.generateICloudUUID();
+		this.authStore.APSNClientID = clientID;
+		const apnsEnvironment = "production";
+		const apnsToken = this.authStore.pushToken;
+		const body = {apnsEnvironment, apnsToken, clientID};
+		const ASNRegisterTokenResponse = await iCloudMisc.wrapRequest(APNS_TOKEN_REGISTRATION_ENDPOINT, {headers: this.authStore.getHeaders(), method: "POST", body: JSON.stringify(body)});
+		
+		const responseBody = await ASNRegisterTokenResponse.json();
+		
+	}
+
+	startAPNS(APNSNotificationCallback: () => void) {
+		iCloudMisc.wrapRequest(`${APNS_ENDPOINT}?tok=${this.authStore.pushToken}&ttl=${this.authStore.pushTokenTTL}&clientId=${this.authStore.APSNClientID}`, {}).then(updateResponse => {
+			APNSNotificationCallback();
+			updateResponse.json().then(json => this.startAPNS(APNSNotificationCallback));
+		})
+	}
 
     private async _getiCloudCookies() {
         try {
@@ -268,7 +294,10 @@ export default class iCloudService extends EventEmitter {
 
                     this._setState(iCloudServiceStatus.Ready);
                     try {
-                        if (this.options.saveCredentials) safeController.storeCredentials(this.options.username.toString(), this.options.password.toString());
+						const credentialMap = new Map<string, string>();
+						credentialMap.set("magicCalendarSyncUsername", this.options.username.toString());
+						credentialMap.set("magicCalendarSyncPassword", this.options.password.toString());
+						if (this.options.saveCredentials) safeController.storeCredentials(credentialMap);
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);
                     }

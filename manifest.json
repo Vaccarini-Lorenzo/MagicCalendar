@@ -1,9 +1,9 @@
 {
-	"id": "ical-obsidian-sync",
-	"name": "iCalSync",
+	"id": "magic-calendar",
+	"name": "MagicCalendar",
 	"version": "1.1.5",
 	"minAppVersion": "0.15.0",
-	"description": "Synchronize iCalendar with your notes",
+	"description": "Al-Powered Obsidian Plugin that leverage Natural Language Processing techinques to find calendar events in Markdown notes, seamlessly synchronizing them with a calendar of choice.",
 	"author": "Vaccarini Lorenzo",
 	"authorUrl": "https://github.com/Vaccarini-Lorenzo",
 	"isDesktopOnly": true

@@ -1,4 +1,3 @@
-import fs, {writeFileSync} from "fs";
 import { Response } from "node-fetch";
 import path from "path";
 import { Cookie } from "tough-cookie";
@@ -20,7 +19,10 @@ export class iCloudAuthenticationStore {
 
 
     trustToken?: string;
-    sessionId?: string;
+	pushToken?:string;
+	pushTokenTTL?: number;
+	APSNClientID?: string;
+	sessionId?: string;
     sessionToken?: string;
     scnt?: string;
     aasp?: string;
@@ -44,7 +46,7 @@ export class iCloudAuthenticationStore {
      */
     loadTrustToken(account: string) {
         try {
-            this.trustToken = safeController.decrypt(localStorage.getItem("trustToken"));
+			this.trustToken = safeController.decrypt(localStorage.getItem("trustToken"));
         } catch (e) {
             console.debug("[icloud] Unable to load trust token:", e.toString());
         }
@@ -54,7 +56,11 @@ export class iCloudAuthenticationStore {
      * @param account The account to write the trust token for
      */
     writeTrustToken(account: string) {
-		localStorage.setItem("trustToken", safeController.encrypt(this.trustToken))
+        try {
+			localStorage.setItem("trustToken", safeController.encrypt(this.trustToken));
+        } catch (e) {
+            console.warn("[icloud] Unable to write trust token:", e.toString());
+        }
     }
 
     /**

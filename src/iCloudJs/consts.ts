@@ -28,3 +28,6 @@ export const AUTH_HEADERS = {
 export const AUTH_ENDPOINT = "https://idmsa.apple.com/appleauth/auth/";
 export const BASE_ENDPOINT = "https://www.icloud.com/";
 export const SETUP_ENDPOINT = "https://setup.icloud.com/setup/ws/1/accountLogin";
+export const APNS_GET_TOKEN_ENDPOINT = "https://p32-pushws.icloud.com/getToken";
+export const APNS_TOKEN_REGISTRATION_ENDPOINT = " https://p115-ckdevice.icloud.com/device/1/com.apple.clouddocs/production/tokens/register";
+export const APNS_ENDPOINT = "https://webcourier.push.apple.com/aps";

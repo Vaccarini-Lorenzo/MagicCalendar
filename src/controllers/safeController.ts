@@ -1,16 +1,21 @@
-import {readFileSync, writeFile, writeFileSync} from "fs";
 import crypto from "crypto";
 import {SettingInterface} from "../plugin/appSetting";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
 class SafeController {
 	_pluginPath: string;
 	_path: string;
 	settings: SettingInterface;
-	_username: string;
-	_pw: string;
+	_credentialsMap: Map<string, string>;
 	_key: Buffer;
 	_iv: Buffer;
 	_algorithm: string;
+	_calendarProvider: CalendarProvider;
+
+
+	constructor() {
+		this._credentialsMap = new Map<string, string>();
+	}
 
 	injectPath(pluginPath: string){
 		this._pluginPath = pluginPath;
@@ -24,29 +29,52 @@ class SafeController {
 		this._algorithm = "aes-256-cbc";
 	}
 
+	injectCalendarProvider(calendarProvider: CalendarProvider){
+		this._calendarProvider = calendarProvider;
+	}
+
 	checkSafe(): boolean{
-		const username = localStorage.getItem("iCalSyncUsername");
-		const pw = localStorage.getItem("iCalSyncPassword");
-		if (username == undefined || pw == undefined) return false;
-		this._username = username;
-		this._pw = pw;
+		if (this._calendarProvider == CalendarProvider.NOT_SELECTED) return false;
+		if (this._calendarProvider == CalendarProvider.APPLE){
+			const username = localStorage.getItem("magicCalendarSyncUsername");
+			const password = localStorage.getItem("magicCalendarSyncPassword");
+			if (username == undefined || password == undefined) return false;
+			this._credentialsMap.set("magicCalendarSyncUsername", username);
+			this._credentialsMap.set("magicCalendarSyncPassword", password);
+			return true;
+		}
+
+		const accessToken = localStorage.getItem("accessToken");
+		const refreshToken = localStorage.getItem("refreshToken");
+		const clientId = localStorage.getItem("clientId");
+		const clientSecret = localStorage.getItem("clientSecret");
+		const tokenType = localStorage.getItem("tokenType");
+
+		if (accessToken == undefined || refreshToken == undefined || clientId == undefined || tokenType == undefined || clientSecret == undefined) return false;
+
+		this._credentialsMap.set("accessToken", accessToken);
+		this._credentialsMap.set("refreshToken", refreshToken);
+		this._credentialsMap.set("clientId", clientId);
+		this._credentialsMap.set("tokenType", tokenType);
+		this._credentialsMap.set("clientSecret", clientSecret);
 		return true;
 	}
 
-	getCredentials(): {username: string, password: string}{
-		const decryptUser = this.decrypt(this._username);
-		const decryptPw = this.decrypt(this._pw);
-		return {
-			username: decryptUser,
-			password: decryptPw
-		}
+	getCredentials(): Map<string, string>{
+		const decryptedMap = new Map<string, string>();
+		Array.from(this._credentialsMap.entries()).forEach(credentialEntry => {
+			const decryptedValue = this.decrypt(credentialEntry[1]);
+			decryptedMap.set(credentialEntry[0], decryptedValue);
+		})
+		return decryptedMap;
 	}
 
-	storeCredentials(username: string, password: string){
-		const encryptUser = this.encrypt(username);
-		const encryptPw = this.encrypt(password);
-		localStorage.setItem("iCalSyncUsername", encryptUser);
-		localStorage.setItem("iCalSyncPassword", encryptPw);
+	storeCredentials(credentials: Map<string, string>){
+		Array.from(credentials.entries()).forEach(credentialEntry => {
+			const encryptedValue = this.encrypt(credentialEntry[1]);
+			this._credentialsMap.set(credentialEntry[0], encryptedValue);
+			localStorage.setItem(credentialEntry[0], encryptedValue);
+		})
 	}
 
 	encrypt(text) {

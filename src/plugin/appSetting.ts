@@ -1,29 +1,37 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import iCalObsidianSync from "./main";
-import moment from "moment-timezone";
+import {App, PluginSettingTab, Setting, TextAreaComponent, TextComponent} from "obsidian";
+import MagicCalendar from "./main";
+import moment, {tz} from "moment-timezone";
+import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
+import {BannedListHTML} from "./bannedListHTML";
 
 export interface SettingInterface {
 	tz: string;
 	calendar: string;
 	key: string;
 	iv: string;
+	calendarProvider: CalendarProvider;
+	bannedPatterns: string[];
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	tz: moment.tz.guess(),
 	calendar: "none",
 	key: "none",
-	iv: "none"
+	iv: "none",
+	calendarProvider: CalendarProvider.NOT_SELECTED,
 };
 
 export class AppSetting extends PluginSettingTab {
-	plugin: iCalObsidianSync;
+	plugin: MagicCalendar;
 	retryLogin: boolean;
 	calendarNames: string[]
 	key: string;
 	iv: string;
+	bannedPatternText: TextComponent;
+	bannedListHTML: BannedListHTML;
 
-	constructor(app: App, plugin: iCalObsidianSync) {
+
+	constructor(app: App, plugin: MagicCalendar) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.calendarNames = [];
@@ -41,15 +49,14 @@ export class AppSetting extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
-
 		new Setting(containerEl)
 			.setName("Time zone")
 			.addText(tz => {
 				tz.setValue((this.plugin.settings.tz));
 				tz.onChange(async value => {
 					this.plugin.settings.tz = value;
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -62,9 +69,11 @@ export class AppSetting extends PluginSettingTab {
 		else new Setting(containerEl)
 			.setName("Calendar")
 			.addDropdown(dropdown => {
-				this.calendarNames.forEach((calendarName, i) => dropdown.addOption(calendarName, calendarName))
+				this.calendarNames.forEach((calendarName) => dropdown.addOption(calendarName, calendarName));
+				dropdown.setValue(this.plugin.settings.calendar);
 				dropdown.onChange(async value => {
 					this.plugin.settings.calendar = value;
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -76,6 +85,7 @@ export class AppSetting extends PluginSettingTab {
 				key.setValue(this.plugin.settings.key ?? "none");
 				key.onChange(async value => {
 					this.plugin.settings.key = value;
+					await this.plugin.updateSettings();
 				})
 			})
 
@@ -85,19 +95,32 @@ export class AppSetting extends PluginSettingTab {
 				iv.setValue(this.plugin.settings.iv ?? "none");
 				iv.onChange(async value => {
 					this.plugin.settings.iv = value;
+					await this.plugin.updateSettings();
 				})
 			})
 
 		new Setting(containerEl)
-			.addButton((btn) =>
-				btn
-					.setButtonText("Submit changes")
-					.setCta()
-					.onClick(async () => {
-						await this.plugin.saveSettings();
-						this.plugin.updateSettings();
-						await this.plugin.checkLogin();
-					}));
+			.setName("Ban pattern")
+			.addText(text => {
+				this.bannedPatternText = text;
+				text.setPlaceholder("Banned pattern")
+			})
+			.addButton(button => {
+				button.setIcon("plus");
+				button.onClick(click => {
+					const bannedPattern = this.bannedPatternText.getValue();
+					this.bannedListHTML.append(bannedPattern);
+					this.bannedPatternText.setValue("");
+				})
+			})
 
+		this.bannedListHTML = new BannedListHTML(containerEl, this.updateBannedPatterns.bind(this), this.plugin.settings.bannedPatterns)
+		this.bannedListHTML
+			.build()
+	}
+
+	async updateBannedPatterns(deletedPattern: string){
+		this.plugin.settings.bannedPatterns.remove(deletedPattern);
+		await this.plugin.updateSettings();
 	}
 }

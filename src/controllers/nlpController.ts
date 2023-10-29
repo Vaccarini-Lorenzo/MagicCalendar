@@ -8,10 +8,12 @@ import {Misc} from "../misc/misc";
 import {Sentence} from "../model/sentence";
 import Event from "../model/event";
 import {DateRange} from "../model/dateRange";
+import {SettingInterface} from "../plugin/appSetting";
 
 class NlpController {
 	private readonly _customPatterns: {name, patterns}[];
 	private readonly _secondaryCustomPatterns: {name, patterns}[];
+	private _setting: SettingInterface;
 	private _pluginPath: string;
 	private _mainNLP;
 	// Secondary NLP to avoid overlap between custom entities
@@ -31,6 +33,10 @@ class NlpController {
 		this._pluginPath = pluginPath;
 	}
 
+	injectSettings?(setting: SettingInterface){
+		this._setting = setting;
+	}
+
 	init(){
 		this.loadPatterns();
 		this._mainNLP.learnCustomEntities(this._customPatterns);
@@ -48,8 +54,7 @@ class NlpController {
 		const parsedProperNames = JSON.parse(properNameData.toString());
 
 		this._customPatterns.push(
-			// All date objects, including "may" and "march", which for some reason are not included (may I do ..., march on the Alps)
-			{name: "date", patterns: ["[|DATE] [|may] [|march] ", "on DATE"]},
+			{name: "date", patterns: ["DATE", "on DATE"]},
 			// 12th of Jan 2023, second of may
 			{name: "ordinalDate", patterns: ["[ORDINAL] [|ADP] [|DATE|may|march] [|DATE]"]},
 			// July the third
@@ -72,6 +77,8 @@ class NlpController {
 			console.warn("Not able to process: NLP module not ready");
 			return null;
 		}
+
+		if (this.bannedPattern(sentence)) return null;
 
 		// How can I uniquely identify a string as an event?
 		// If the string was immutable, it could be easy, but since its structure can be modified
@@ -204,7 +211,7 @@ class NlpController {
 	private filterDates(customEntities: CustomEntities): Detail[] {
 		const its = this._mainNLP.its;
 		return customEntities.out(its.detail).filter(pos => {
-			const p = pos as unknown as Detail;
+						const p = pos as unknown as Detail;
 			return (p.type == "date") || (p.type == "ordinalDate") ||
 				(p.type == "ordinalDateReverse") || (p.type == "timeRange") ||
 				(p.type == "exactTime") || (p.type == "duration")
@@ -436,6 +443,7 @@ class NlpController {
 
 	private parseDates(dates): DateRange {
 		const timeRelatedString = dates.map(e => e.value).toString().replaceAll(",", " ");
+				if (timeRelatedString.indexOf("%") > - 1) return undefined;
 		const parsed = smartDateParser.parse(timeRelatedString) as ParsedResult[];
 		return smartDateParser.getDates(parsed);
 	}
@@ -457,6 +465,13 @@ class NlpController {
 		if (selectedProperName != null) eventTitle += ` ${selectedProperName.parsedValue}`
 		if (purpose != null) eventTitle += ` ${purpose.value}`
 		return eventTitle;
+	}
+
+	private bannedPattern(sentence: Sentence) {
+		// Consider giving the possibility to specify some patterns that the user dont want to match
+		// e.g. [something](...%20The...)
+		// Forbid %20th
+		return this._setting.bannedPatterns.some(bannedPattern => sentence.value.indexOf(bannedPattern) > -1);
 	}
 }
 

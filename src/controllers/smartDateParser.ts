@@ -1,6 +1,7 @@
 import {casual, Chrono, Component, ParsedResult} from "chrono-node";
 import {ParsedComponents} from "chrono-node/dist/cjs/types";
 import {DateRange} from "../model/dateRange";
+import {IndexedAccessType} from "typedoc";
 
 class SmartDateParser {
 	private _chrono: Chrono;
@@ -26,7 +27,6 @@ class SmartDateParser {
 		return this._chrono.parse(text);
 	}
 
-
 	getDates(parsed: ParsedResult[]): DateRange {
 		const startYear = [];
 		const startMonth = [];
@@ -41,6 +41,7 @@ class SmartDateParser {
 		const endMin = [];
 
 		if (parsed.length  == 0) return;
+
 
 		// Pushing either null or a value
 		parsed.forEach(p => {
@@ -68,7 +69,7 @@ class SmartDateParser {
 
 		const start = new Date(
 			components[0].length == 0 ? firstValidStartParser.start.get("year") : components[0][0],
-			components[1].length == 0 ? firstValidStartParser.start.get("month") : components[1][0],
+			components[1].length == 0 ? firstValidStartParser.start.get("month") - 1 : components[1][0] - 1,
 			components[2].length == 0 ? firstValidStartParser.start.get("day") : components[2][0],
 			components[3].length == 0 ? 0 : components[3][0],
 			components[4].length == 0 ? 0 : components[4][0],
@@ -76,7 +77,7 @@ class SmartDateParser {
 
 		const end = new Date(
 			components[5].length == 0 ? start.getFullYear(): components[5][0],
-			components[6].length == 0 ? start.getMonth(): components[6][0],
+			components[6].length == 0 ? start.getMonth(): components[6][0] - 1,
 			components[7].length == 0 ? start.getDate(): components[7][0],
 			components[8].length == 0 ? start.getHours(): components[8][0],
 			components[9].length == 0 ? start.getMinutes(): components[9][0],

@@ -1,42 +1,47 @@
 import {RequestInfo, RequestInit, Response} from "node-fetch";
 import {requestUrl, RequestUrlParam} from "obsidian";
-import iCloudController from "../controllers/iCloudController";
 
 class ICloudMisc {
-    private stringifyDateNumber(dateNumber: number): string {
-        return dateNumber.toString().length == 1 ? "0" + dateNumber.toString() : dateNumber.toString()
-    }
+	private _refreshCallback: (requestUrlParam: RequestUrlParam) => void;
 
-    stringifyDateArray(dateArray: number[]){
-        return `${this.stringifyDateNumber(dateArray[1])}-${this.stringifyDateNumber(dateArray[2])}-${this.stringifyDateNumber(dateArray[3])}`;
-    }
+	injectRefreshCallback(refreshCallback:  (requestUrlParam: RequestUrlParam) => void){
+		this._refreshCallback = refreshCallback;
+	}
 
-    private getDateComponents(date: Date): {[key:string]: number}{
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const day = date.getDate();
-        const hour = date.getHours();
-        const minutes = date.getMinutes();
-        return {
-            year,
-            month,
-            day,
-            hour,
-            minutes
-        }
-    }
+	private stringifyDateNumber(dateNumber: number): string {
+		return dateNumber.toString().length == 1 ? "0" + dateNumber.toString() : dateNumber.toString()
+	}
 
-    getArrayDate(date: Date) {
-        const dateComponents = this.getDateComponents(date);
-        const arbitrary = 240;
-        const monthString = dateComponents.month.toString().length == 1 ? "0" + dateComponents.month.toString() : dateComponents.month.toString();
-        const completeDate = Number(`${dateComponents.year}${monthString}${dateComponents.day}`)
-        return [completeDate, dateComponents.year, dateComponents.month, dateComponents.day, dateComponents.hour, dateComponents.minutes, arbitrary];
-    }
+	stringifyDateArray(dateArray: number[]){
+		return `${this.stringifyDateNumber(dateArray[1])}-${this.stringifyDateNumber(dateArray[2])}-${this.stringifyDateNumber(dateArray[3])}`;
+	}
 
-    getRandomHex(max: number): string{
-        return (Math.floor(Math.random() * max)).toString(16).toUpperCase();
-    }
+	private getDateComponents(date: Date): {[key:string]: number}{
+		const year = date.getFullYear();
+		const month = date.getMonth() + 1;
+		const day = date.getDate();
+		const hour = date.getHours();
+		const minutes = date.getMinutes();
+		return {
+			year,
+			month,
+			day,
+			hour,
+			minutes
+		}
+	}
+
+	getArrayDate(date: Date) {
+		const dateComponents = this.getDateComponents(date);
+		const arbitrary = 240;
+		const monthString = dateComponents.month.toString().length == 1 ? "0" + dateComponents.month.toString() : dateComponents.month.toString();
+		const completeDate = Number(`${dateComponents.year}${monthString}${dateComponents.day}`)
+		return [completeDate, dateComponents.year, dateComponents.month, dateComponents.day, dateComponents.hour, dateComponents.minutes, arbitrary];
+	}
+
+	getRandomHex(max: number): string{
+		return (Math.floor(Math.random() * max)).toString(16).toUpperCase();
+	}
 
 	async wrapRequest(url: RequestInfo, init?: RequestInit): Promise<Response>{
 		const requestUrlParam = {
@@ -67,6 +72,11 @@ class ICloudMisc {
 				url: url.toString()
 			};
 
+			if (requestUrlResponse.status != 200){
+				console.warn(url.toString());
+				console.warn(requestUrlResponse.status);
+			}
+
 			if (requestUrlResponse.status == 204){
 				responseInit.status = 200;
 			}
@@ -76,17 +86,9 @@ class ICloudMisc {
 			}
 
 			if (requestUrlResponse.status == 421){
-				const canTryReconnect = iCloudController.checkMaxReconnectAttempt();
-				if(!canTryReconnect){
-					console.warn("Can't reconnect - max attempts reached");
-					return;
-				}
-				console.warn("Refreshing token...");
-				await iCloudController.tryAuthentication("", "")
-				await iCloudController.awaitReady();
-				iCloudController.resetReconnectAttempt();
-				iCloudController.refreshRequestCookies(requestUrlParam);
+				this._refreshCallback(requestUrlParam);
 				requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
+				console.warn("Refreshing token...");
 			}
 		} catch (e) {
 			if(e.toString() == "Error: net::ERR_NAME_NOT_RESOLVED"){

@@ -1,126 +1,14 @@
 import iCloudService from "./index";
 import iCloudMisc from "./iCloudMisc";
-import iCloudController from "../controllers/iCloudController";
 import {Notice} from "obsidian";
 import moment from "moment-timezone";
 import dayjs from "dayjs";
-
-interface iCloudCalendarAlarm {
-  messageType: string;
-  pGuid: string;
-  guid: string;
-  isLocationBased: boolean;
-  measurement: {
-    hours: number;
-    seconds: number;
-    weeks: number;
-    minutes: number;
-    days: number;
-    before: boolean;
-  }
-}
-
-export interface iCloudCalendarEvent {
-  tz: string;
-  icon: number;
-  recurrenceException: boolean;
-  title: string;
-  tzname: string;
-  duration: number;
-  allDay: boolean;
-  startDateTZOffset: string;
-  pGuid: string;
-  hasAttachments: boolean;
-  birthdayIsYearlessBday: boolean;
-  alarms: string[];
-  lastModifiedDate: number[];
-  readOnly: boolean;
-  localEndDate: number[];
-  recurrence: string;
-  localStartDate: number[];
-  createdDate: number[];
-  extendedDetailsAreIncluded: boolean;
-  guid: string;
-  etag: string;
-  startDate: number[];
-  endDate: number[];
-  birthdayShowAsCompany: boolean;
-  recurrenceMaster: boolean;
-  attachments: any[];
-  shouldShowJunkUIWhenAppropriate: boolean;
-  url: string;
-  isJunk: boolean;
-  description: string;
-  location: string;
-  changeRecurring: string | null;
-}
-
-interface iCloudCalendarRecurrence {
-  guid: string;
-  pGuid: string;
-  freq: string;
-  interval: number;
-  recurrenceMasterStartDate: any[];
-  weekStart: string;
-  frequencyDays: string;
-  weekDays: any[];
-}
-
-interface iCloudCalendarInvitee {
-  commonName: string;
-  isMe: boolean;
-  isOrganizer: boolean;
-  inviteeStatus: string;
-  pGuid: string;
-  guid: string;
-  isSenderMe: boolean;
-  email: string;
-  cutype: string;
-}
-
-export interface iCloudCalendarCollection {
-  title: string;
-  guid: string;
-  ctag: string;
-  order: number;
-  color: string;
-  symbolicColor: string;
-  enabled: boolean;
-  createdDate: number[];
-  isFamily: boolean;
-  lastModifiedDate: number[];
-  shareTitle: string;
-  prePublishedUrl: string;
-  supportedType: string;
-  etag: string;
-  isDefault: boolean;
-  objectType: string;
-  readOnly: boolean;
-  isPublished: boolean;
-  isPrivatelyShared: boolean;
-  extendedDetailsAreIncluded: boolean;
-  shouldShowJunkUIWhenAppropriate: boolean;
-  publishedUrl: string;
-}
-
-interface iCloudCalendarEventDetailResponse {
-  Alarm: Array<iCloudCalendarAlarm>;
-  Event: Array<iCloudCalendarEvent>;
-  Invitee: Array<iCloudCalendarInvitee>;
-  Recurrence: Array<iCloudCalendarRecurrence>;
-}
-
-interface iCloudCalendarStartupResponse {
-  Alarm: Array<iCloudCalendarAlarm>,
-  Event: Array<iCloudCalendarEvent>,
-  Collection: Array<iCloudCalendarCollection>
-}
-
-interface iCloudCalendarEventsResponse {
-  Alarm: Array<iCloudCalendarAlarm>;
-  Event: Array<iCloudCalendarEvent>;
-  Recurrence: Array<iCloudCalendarRecurrence>;
-}
+import {
+	iCloudCalendarEvent,
+	iCloudCalendarEventDetailResponse,
+	iCloudCalendarEventsResponse,
+	iCloudCalendarStartupResponse
+} from "../model/events/iCloudCalendarEvent";
 
 export class iCloudCalendarService {
     service: iCloudService;
@@ -156,8 +44,7 @@ export class iCloudCalendarService {
 
         const response = await iCloudMisc.wrapRequest(url, requestParameters);
 		if (onlyResponseStatus) return response.status;
-		const test = await response.json() as T;
-        return test;
+		return await response.json() as T;
     }
 
     async eventDetails(calendarGuid: string, eventGuid: string) {
@@ -220,8 +107,8 @@ export class iCloudCalendarService {
         const requestStatus = await this.executeRequest(url, queryParams, "POST", body, extraHeaders, true);
 		if (requestStatus == 421){
 			new Notice("Refreshing tokens...");
-			await iCloudController.tryAuthentication("", "");
-			return await this.postEvent(newEvent, calendarCTag);
+			//await iCloudController.tryAuthentication("", "");
+			//return await this.postEvent(newEvent, calendarCTag);
 		}
 		return (requestStatus < 300 && requestStatus >= 200);
 

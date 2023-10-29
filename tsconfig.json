@@ -9,7 +9,7 @@
 		"noImplicitAny": false,
 		"moduleResolution": "node",
 		"importHelpers": true,
-		"isolatedModules": false,
+		"isolatedModules": true,
 		"strictNullChecks": false,
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
@@ -18,13 +18,14 @@
 			"ES5",
 			"ES6",
 			"ES7",
-			"es2021"
+			"es2021",
+			"dom.iterable"
 		]
 	},
 	"include": [
 		"src/**/*.ts"
 	],
 	"exclude": [
-      "CORSProxy/proxyServer.js", "src/proxy.ts"
+      "CORSProxy/proxyServer.js", "src/proxy.ts", "node_modules"
     ]
 }

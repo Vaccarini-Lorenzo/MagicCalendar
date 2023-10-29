@@ -1,28 +1,129 @@
-.highlightedTextDynamic {
-	position: relative;
-	color: white;
-	padding: 3px;
-	-webkit-animation: 0.7s highlight 0s 1 normal forwards;
-	background: linear-gradient(90deg, #3c2c54 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 100%;
-	background-position: 100% 0;
-	z-index: unset;
+/* SETTINGS */
+
+.magicCalendarServiceProviderRow {
+	width: 500px;
+	/*border:10px solid white;*/
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: space-evenly;
+	align-self: auto;
 }
 
+.magicCalendarServiceIcon {
+	margin: 30px;
+}
+
+.magicCalendarServiceProviderButton {
+	position: relative;
+	align-self: center;
+	height: 150px;
+	width: 150px;
+	background: #fff;
+	border-radius: 20px;
+	box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	transition: transform .5s ease;
+}
+
+.magicCalendarServiceProviderButton:hover {
+	transform: scale(1.05);
+}
+
+.magicCalendarModalSize {
+	/*border:10px solid white;*/
+	width: 600px;
+	height: 300px;
+	position: relative;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	margin: auto;
+	max-width: 100%;
+	max-height: 100%;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+.magicCalendarTitleFlexBox{
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin: 0 auto;
+	width: 100%;
+}
+
+.magicCalendarGoBackButton {
+	justify-content: flex-start;
+	align-self: flex-start;
+	margin: 0;
+	padding: 0;
+	transform: translate(-5%, 35%);
+}
+
+.magicCalendarSettingTitle {
+	margin: 10px 0 50px 0;
+}
+
+.magicCalendarSetting {
+	width: 100%;
+	align-self: flex-start;
+	padding: 5px;
+}
+
+.magicCalendarLoggedInSummaryRow {
+	width: 70%;
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: flex-start;
+	text-align: left;
+}
+
+.magicCalendarSettingListContainer {
+	max-height: 200px;
+	overflow-y: scroll;
+	border-radius: 5px;
+	float: right; /* This aligns the container to the right */
+	border: none; /* This removes the border */
+}
+
+.magicCalendarSettingListContainer::-webkit-scrollbar {
+	width: 0.5em; /* Adjust as needed */
+}
+
+.magicCalendarSettingListContainer::-webkit-scrollbar-thumb {
+	background-color: #ccc; /* Adjust the color as needed */
+	border-radius: 4px;
+}
+
+.magicCalendarSettingListItem {
+	display: flex;
+	align-items: center;
+	margin: 10px 0;
+}
+
+.magicCalendarSettingListText {
+	flex-grow: 1;
+}
+
+.magicCalendarSettingListDeleteIcon {
+	width: 45px;
+	padding: 10px;
+}
+
+
+
+
+/* TEXT HIGHLIGHT */
 .highlightedTextStatic {
 	background-color: #3c2c54;
 	position: relative;
 	color: white;
 	padding: 3px;
-}
-
-.underlinedTextStatic {
-	background: linear-gradient(90deg, #503d6e 50%, rgba(255, 255, 255, 0) 50%);
-	background-size: 200% 15%;
-	padding: 2px;
-	background-position: 0 100%;
-	background-repeat: no-repeat;
-	pointer-events: none;
 }
 
 .underlinedTextDynamic {
@@ -59,20 +160,25 @@
 	}
 }
 
-/* Navigation list */
-ul.icalNavUL {
+
+
+
+
+
+/* TEXT HOVER BUBBLE */
+ul.magicCalendarNavUL {
 	margin: 0;
 	padding: 0;
 	display: inline-block;
 }
 
-ul.icalNavUL span {
+ul.magicCalendarNavUL span {
 	display: block;
 	position: relative;
 	text-decoration: none;
 }
 
-.icalHoverBubble {
+.magicCalendarHoverBubble {
 	font-size: 70%;
 	width: max-content;
 	background: #d5d5d5;
@@ -89,28 +195,28 @@ ul.icalNavUL span {
 	justify-content: center;
 }
 
-.icalHoverBubble p {
+.magicCalendarHoverBubble p {
 	text-align: center;
 	display: flex;
 	flex-direction: column;
 	padding: 5px;
 }
 
-.icalHoverBubble button {
+.magicCalendarHoverBubble button {
 	display: block;
 	margin: 0 auto;
 	text-align: center;
 }
 
-.icalBubblePosition {
+.magicCalendarBubblePosition {
 	top: 100%;
 	height: inherit;
 	left: 0;
 	bottom: auto;
 }
 
-.icalHoverBubble:after,
-.icalBubblePosition:after {
+.magicCalendarHoverBubble:after,
+.magicCalendarBubblePosition:after {
 	border: 9px solid transparent;
 	border-top-color: #d5d5d5;
 	top: -15px;
@@ -124,7 +230,7 @@ ul.icalNavUL span {
 	rotate: 180deg;
 }
 
-.icalGridContainer {
+.magicCalendarGridContainer {
 	/*border:1px solid #000;*/
 	display: grid;
 	grid-template-columns: auto auto;
@@ -132,21 +238,21 @@ ul.icalNavUL span {
 }
 
 /* Bubble hover */
-ul.icalNavUL span:hover .icalHoverBubble {
+ul.magicCalendarNavUL span:hover .magicCalendarHoverBubble {
 	opacity: 1;
 	visibility: visible;
 	transition: all 0.25s;
 	z-index: 5;
 }
 
-.icalGridRow {
+.magicCalendarGridRow {
 	/*	border:1px solid #000; */
 	display: grid;
 	grid-template-columns: auto auto;
 	padding: 10px 0 0 0;
 }
 
-.icalSyncButton.icalSyncButton {
+.magicCalendarSyncButton.magicCalendarSyncButton {
 	padding: 0;
 	text-align: center;
 	background-color: #1c1c1c;
@@ -154,26 +260,30 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	margin: 5%;
 }
 
-.icalIconBar {
+.magicCalendarIconBar {
 	/*border:1px solid #000;*/
 	font-size: 170%;
 	margin: -5px;
 	align-self: center;
 }
 
-.icalEventDataBar {
+.magicCalendarEventDataBar {
 	font-size: 85%;
 	align-self: center;
 	white-space: initial;
 }
 
-.icalTableWrapper {
+
+
+/* INLINE EVENT VIEW */
+
+.magicCalendarTableWrapper {
 	width: 100rem;
 	overflow: auto;
 }
 
 
-.icalTable {
+.magicCalendarTable {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent;
@@ -182,30 +292,62 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	max-width: 100px;
 }
 
-.icalTh {
+.magicCalendarTh {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent!important;
 	border-right: transparent!important;
-	font-size: 80%;
 	font-weight: normal;
+	font-size: 10px!important;
 }
 
-.icalTd {
+.magicCalendarTd {
 	border-top: transparent!important;
 	border-bottom: white;
 	border-left: transparent!important;
 	border-right: transparent!important;
 	font-size: 50%;
 	border-radius: 0.5rem;
+	user-select: none;
+	opacity: 1;
 	transition: transform .5s ease;
 }
 
-.icalTd:hover {
+.magicCalendarTd.dottedBorder {
+	border-left: 1px dotted white!important;
+}
+
+@keyframes glowing-border {
+	0% {
+		border-color: white;
+		box-shadow: 0 0 10px #6a5194;
+	}
+	50% {
+		border-color: white;
+		box-shadow: 0 0 20px #58457c;
+	}
+	100% {
+		border-color: white;
+		box-shadow: 0 0 10px #503d6e;
+	}
+}
+
+.magicCalendarTd.hovered {
+	animation: glowing-border 1s infinite;
 	transform: scale(1.12);
 }
 
-.icalEventBox {
+.magicCalendarShiftedCell {
+	position: relative;
+	transform: translateX(-50%);
+	min-width: 2rem!important;
+	max-width: 2rem!important;
+	overflow: visible!important;
+	white-space: nowrap;
+	font-size: 12px!important;
+}
+
+.magicCalendarEventBox {
 	box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);
 }
 
@@ -231,4 +373,3 @@ ul.icalNavUL span:hover .icalHoverBubble {
 .palette-19 {background-color: #521852;}
 .palette-20 {background-color: #4F1549;}
 .palette-21 {background-color: #4C1340;}
-
