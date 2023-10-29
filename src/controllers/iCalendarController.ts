@@ -12,7 +12,7 @@ import {RequestUrlParam} from "obsidian";
 import calendarViewController from "./calendarViewController";
 import ICloudMisc from "../iCloudJs/iCloudMisc";
 
-export class ICalendarController implements CloudController {
+export class iCalendarController implements CloudController {
 	private _iCloud: iCloudService;
 	private _pluginPath: string;
 	private _calendars: iCloudCalendarCollection[];
@@ -59,8 +59,8 @@ export class ICalendarController implements CloudController {
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus>{
 		this._iCloud = new iCloudService({
-			username: auth.get("iCalSyncUsername"),
-			password: auth.get("iCalSyncPassword"),
+			username: auth.get("magicCalendarSyncUsername"),
+			password: auth.get("magicCalendarSyncPassword"),
 			saveCredentials: true,
 			trustDevice: true
 		});

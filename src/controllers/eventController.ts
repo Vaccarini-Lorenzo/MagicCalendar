@@ -145,7 +145,7 @@ class EventController{
 	// The purpose is to publish on the README page a badge with the number of synced requests
 	private updateCounter() {
 		const requestUrlParam = {
-			url: "https://icalsynccounter.onrender.com/numSync",
+			url: "https://magicCalendarsynccounter.onrender.com/numSync",
 			method: "POST"
 		}
 		try {

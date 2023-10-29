@@ -295,8 +295,8 @@ export default class iCloudService extends EventEmitter {
                     this._setState(iCloudServiceStatus.Ready);
                     try {
 						const credentialMap = new Map<string, string>();
-						credentialMap.set("iCalSyncUsername", this.options.username.toString());
-						credentialMap.set("iCalSyncPassword", this.options.password.toString());
+						credentialMap.set("magicCalendarSyncUsername", this.options.username.toString());
+						credentialMap.set("magicCalendarSyncPassword", this.options.password.toString());
 						if (this.options.saveCredentials) safeController.storeCredentials(credentialMap);
                     } catch (e) {
                         console.warn("[icloud] Unable to save account credentials:", e);

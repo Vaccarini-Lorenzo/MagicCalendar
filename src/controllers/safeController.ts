@@ -36,11 +36,11 @@ class SafeController {
 	checkSafe(): boolean{
 		if (this._calendarProvider == CalendarProvider.NOT_SELECTED) return false;
 		if (this._calendarProvider == CalendarProvider.APPLE){
-			const username = localStorage.getItem("iCalSyncUsername");
-			const password = localStorage.getItem("iCalSyncPassword");
+			const username = localStorage.getItem("magicCalendarSyncUsername");
+			const password = localStorage.getItem("magicCalendarSyncPassword");
 			if (username == undefined || password == undefined) return false;
-			this._credentialsMap.set("iCalSyncUsername", username);
-			this._credentialsMap.set("iCalSyncPassword", password);
+			this._credentialsMap.set("magicCalendarSyncUsername", username);
+			this._credentialsMap.set("magicCalendarSyncPassword", password);
 			return true;
 		}
 

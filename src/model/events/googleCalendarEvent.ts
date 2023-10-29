@@ -13,7 +13,7 @@ export class GoogleCalendarEvent extends CloudEvent {
 	organizer: { email: string, self: boolean };
 	start: { dateTime: string, timeZone: string };
 	end: { dateTime: string, timeZone: string };
-	iCalUID: string;
+	magicCalendarUID: string;
 	sequence: number;
 	reminders: { useDefault: boolean };
 	eventType: string;

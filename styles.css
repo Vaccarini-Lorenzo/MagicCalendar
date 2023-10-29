@@ -1,6 +1,6 @@
 /* SETTINGS */
 
-.icalServiceProviderRow {
+.magicCalendarServiceProviderRow {
 	width: 500px;
 	/*border:10px solid white;*/
 	display: grid;
@@ -9,11 +9,11 @@
 	align-self: auto;
 }
 
-.icalServiceIcon {
+.magicCalendarServiceIcon {
 	margin: 30px;
 }
 
-.icalServiceProviderButton {
+.magicCalendarServiceProviderButton {
 	position: relative;
 	align-self: center;
 	height: 150px;
@@ -26,11 +26,11 @@
 	transition: transform .5s ease;
 }
 
-.icalServiceProviderButton:hover {
+.magicCalendarServiceProviderButton:hover {
 	transform: scale(1.05);
 }
 
-.icalModalSize {
+.magicCalendarModalSize {
 	/*border:10px solid white;*/
 	width: 600px;
 	height: 300px;
@@ -49,7 +49,7 @@
 	text-align: center;
 }
 
-.icalTitleFlexBox{
+.magicCalendarTitleFlexBox{
 	align-items: center;
 	display: flex;
 	justify-content: space-between;
@@ -57,7 +57,7 @@
 	width: 100%;
 }
 
-.icalGoBackButton {
+.magicCalendarGoBackButton {
 	justify-content: flex-start;
 	align-self: flex-start;
 	margin: 0;
@@ -65,17 +65,17 @@
 	transform: translate(-5%, 35%);
 }
 
-.icalSettingTitle {
+.magicCalendarSettingTitle {
 	margin: 10px 0 50px 0;
 }
 
-.icalSetting {
+.magicCalendarSetting {
 	width: 100%;
 	align-self: flex-start;
 	padding: 5px;
 }
 
-.icalLoggedInSummaryRow {
+.magicCalendarLoggedInSummaryRow {
 	width: 70%;
 	display: grid;
 	grid-template-columns: auto auto;
@@ -166,19 +166,19 @@
 
 
 /* TEXT HOVER BUBBLE */
-ul.icalNavUL {
+ul.magicCalendarNavUL {
 	margin: 0;
 	padding: 0;
 	display: inline-block;
 }
 
-ul.icalNavUL span {
+ul.magicCalendarNavUL span {
 	display: block;
 	position: relative;
 	text-decoration: none;
 }
 
-.icalHoverBubble {
+.magicCalendarHoverBubble {
 	font-size: 70%;
 	width: max-content;
 	background: #d5d5d5;
@@ -195,28 +195,28 @@ ul.icalNavUL span {
 	justify-content: center;
 }
 
-.icalHoverBubble p {
+.magicCalendarHoverBubble p {
 	text-align: center;
 	display: flex;
 	flex-direction: column;
 	padding: 5px;
 }
 
-.icalHoverBubble button {
+.magicCalendarHoverBubble button {
 	display: block;
 	margin: 0 auto;
 	text-align: center;
 }
 
-.icalBubblePosition {
+.magicCalendarBubblePosition {
 	top: 100%;
 	height: inherit;
 	left: 0;
 	bottom: auto;
 }
 
-.icalHoverBubble:after,
-.icalBubblePosition:after {
+.magicCalendarHoverBubble:after,
+.magicCalendarBubblePosition:after {
 	border: 9px solid transparent;
 	border-top-color: #d5d5d5;
 	top: -15px;
@@ -230,7 +230,7 @@ ul.icalNavUL span {
 	rotate: 180deg;
 }
 
-.icalGridContainer {
+.magicCalendarGridContainer {
 	/*border:1px solid #000;*/
 	display: grid;
 	grid-template-columns: auto auto;
@@ -238,21 +238,21 @@ ul.icalNavUL span {
 }
 
 /* Bubble hover */
-ul.icalNavUL span:hover .icalHoverBubble {
+ul.magicCalendarNavUL span:hover .magicCalendarHoverBubble {
 	opacity: 1;
 	visibility: visible;
 	transition: all 0.25s;
 	z-index: 5;
 }
 
-.icalGridRow {
+.magicCalendarGridRow {
 	/*	border:1px solid #000; */
 	display: grid;
 	grid-template-columns: auto auto;
 	padding: 10px 0 0 0;
 }
 
-.icalSyncButton.icalSyncButton {
+.magicCalendarSyncButton.magicCalendarSyncButton {
 	padding: 0;
 	text-align: center;
 	background-color: #1c1c1c;
@@ -260,14 +260,14 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	margin: 5%;
 }
 
-.icalIconBar {
+.magicCalendarIconBar {
 	/*border:1px solid #000;*/
 	font-size: 170%;
 	margin: -5px;
 	align-self: center;
 }
 
-.icalEventDataBar {
+.magicCalendarEventDataBar {
 	font-size: 85%;
 	align-self: center;
 	white-space: initial;
@@ -277,13 +277,13 @@ ul.icalNavUL span:hover .icalHoverBubble {
 
 /* INLINE EVENT VIEW */
 
-.icalTableWrapper {
+.magicCalendarTableWrapper {
 	width: 100rem;
 	overflow: auto;
 }
 
 
-.icalTable {
+.magicCalendarTable {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent;
@@ -292,7 +292,7 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	max-width: 100px;
 }
 
-.icalTh {
+.magicCalendarTh {
 	border-top: transparent;
 	border-bottom: white;
 	border-left: transparent!important;
@@ -301,7 +301,7 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	font-size: 10px!important;
 }
 
-.icalTd {
+.magicCalendarTd {
 	border-top: transparent!important;
 	border-bottom: white;
 	border-left: transparent!important;
@@ -313,7 +313,7 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	transition: transform .5s ease;
 }
 
-.icalTd.dottedBorder {
+.magicCalendarTd.dottedBorder {
 	border-left: 1px dotted white!important;
 }
 
@@ -332,12 +332,12 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	}
 }
 
-.icalTd.hovered {
+.magicCalendarTd.hovered {
 	animation: glowing-border 1s infinite;
 	transform: scale(1.12);
 }
 
-.icalShiftedCell {
+.magicCalendarShiftedCell {
 	position: relative;
 	transform: translateX(-50%);
 	min-width: 2rem!important;
@@ -347,7 +347,7 @@ ul.icalNavUL span:hover .icalHoverBubble {
 	font-size: 12px!important;
 }
 
-.icalEventBox {
+.magicCalendarEventBox {
 	box-shadow: 0 2.5rem 2rem -2rem hsl(200 50% 20% / 40%);
 }
 

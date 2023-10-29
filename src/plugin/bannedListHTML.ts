@@ -18,10 +18,8 @@ export class BannedListHTML extends Setting {
 	build(){
 		this.listContainer.empty();
 
-		console.log("bsnnedP", this.bannedPatterns);
-		this.bannedPatterns.forEach(bannedPattern => {
-			console.log("here")
-			this.createListElement(bannedPattern)
+				this.bannedPatterns.forEach(bannedPattern => {
+						this.createListElement(bannedPattern)
 		});
 	}
 
@@ -32,8 +30,7 @@ export class BannedListHTML extends Setting {
 		const trashIcon = listItem.createEl("img", { cls: "magicCalendarSettingListDeleteIcon" });
 		trashIcon.setAttribute("src", Misc.getBase64DeleteIcon());
 		trashIcon.onClickEvent(click => {
-			console.log("removing", bannedPattern);
-			this.bannedPatterns.remove(bannedPattern);
+						this.bannedPatterns.remove(bannedPattern);
 			this.build();
 			this.deleteCallback(bannedPattern);
 		})

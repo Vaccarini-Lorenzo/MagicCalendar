@@ -8,7 +8,7 @@ import http from "http";
 export class Misc {
 	static app: App;
 	static base64Media: {appleIcon, googleIcon, deleteIcon};
-	static credentialKeyList = ["iCalSyncUsername", "iCalSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
+	static credentialKeyList = ["magicCalendarSyncUsername", "magicCalendarSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
 	static credentials: {client_id: string, client_secret: string};

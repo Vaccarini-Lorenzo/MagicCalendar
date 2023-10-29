@@ -35,7 +35,7 @@ class CalendarViewController {
 		if (codeBlocks.length == 0) return codeComponents;
 		codeBlocks.forEach(codeBlock => {
 			const codeText = codeBlock.innerText.replaceAll(" ", "");
-			const isCal = codeText.substring(0, 6) == "<ical>";
+			const isCal = codeText.substring(0, 7) == "<magic>";
 			if (!isCal) return null;
 			let from = calendarViewController.matchRegex("from:", codeText);
 			if(from == undefined) return null;
@@ -52,18 +52,18 @@ class CalendarViewController {
 	async postProcessorUpdate() {
 		const markdownLeaves = app.workspace.getLeavesOfType("markdown")
 			.filter(leaf => (leaf.view as MarkdownView).previewMode.renderer.sections
-				.filter(s => s.el.querySelector('table.icalTable')));
+				.filter(s => s.el.querySelector('table.magicCalendarTable')));
 		if (markdownLeaves.length == 0) return;
 		const leaf = markdownLeaves[0];
 		const view = <MarkdownView>leaf.view;
-		const sections = view.previewMode.renderer.sections.filter(s => s.el.querySelector('table.icalTable'));
+		const sections = view.previewMode.renderer.sections.filter(s => s.el.querySelector('table.magicCalendarTable'));
 		if (sections.length == 0) return;
 		sections[0].rendered = false;
 		view.previewMode.renderer.queueRender();
 	}
 
 	private removeOldNodes(element) {
-		const oldNodes = Array.from(element.querySelectorAll('p').values()).filter(p => (p as HTMLElement).querySelectorAll("table.icalTable").length > 0) as HTMLElement[];
+		const oldNodes = Array.from(element.querySelectorAll('p').values()).filter(p => (p as HTMLElement).querySelectorAll("table.magicCalendarTable").length > 0) as HTMLElement[];
 		oldNodes.forEach(oldNode => oldNode.parentNode.removeChild(oldNode));
 	}
 

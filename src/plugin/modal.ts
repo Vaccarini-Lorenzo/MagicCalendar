@@ -50,19 +50,19 @@ export class StatusModal extends Modal {
 	loadServiceProviderSelection(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.addClass("icalModalSize");
-		contentEl.createEl("h1", {text: "Select your service provider"}).addClass("icalSettingTitle");
+		contentEl.addClass("magicCalendarModalSize");
+		contentEl.createEl("h1", {text: "Select your service provider"}).addClass("magicCalendarSettingTitle");
 		const serviceProviderRow = contentEl.createEl("div");
-		serviceProviderRow.addClass("icalServiceProviderRow");
+		serviceProviderRow.addClass("magicCalendarServiceProviderRow");
 		const appleButton = serviceProviderRow.createEl("div");
-		appleButton.addClass("icalServiceProviderButton");
+		appleButton.addClass("magicCalendarServiceProviderButton");
 		const appleIcon = appleButton.createEl("img");
-		appleIcon.addClass("icalServiceIcon");
+		appleIcon.addClass("magicCalendarServiceIcon");
 		appleIcon.setAttribute("src", Misc.getBase64AppleIcon());
 		const googleButton = serviceProviderRow.createEl("div");
-		googleButton.addClass("icalServiceProviderButton");
+		googleButton.addClass("magicCalendarServiceProviderButton");
 		const googleIcon = googleButton.createEl("img");
-		googleIcon.addClass("icalServiceIcon");
+		googleIcon.addClass("magicCalendarServiceIcon");
 		googleIcon.setAttribute("src", Misc.getBase64GoogleIcon());
 
 		appleButton.onClickEvent(() => {
@@ -82,7 +82,7 @@ export class StatusModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		const flexBox = contentEl.createEl("div");
-		flexBox.addClass("icalTitleFlexBox");
+		flexBox.addClass("magicCalendarTitleFlexBox");
 		const goBackButton = new Setting(flexBox).addButton((btn) =>
 			btn
 				.setIcon("arrow-big-left")
@@ -92,22 +92,22 @@ export class StatusModal extends Modal {
 					this.selectProviderCallback(this.selectedProvider, this.ref);
 					this.loadServiceProviderSelection();
 				}));
-		goBackButton.settingEl.addClass("icalGoBackButton");
+		goBackButton.settingEl.addClass("magicCalendarGoBackButton");
 		const title = flexBox.createEl("h1", {text: "Insert your iCloud credentials"});
-		title.addClass("icalSettingTitle");
+		title.addClass("magicCalendarSettingTitle");
 		flexBox.createEl("div");
 
 		const usernameSetting = new Setting(contentEl)
 			.setName("iCloud username")
 			.addText((text) => text.onChange((newText) => username = newText));
-		usernameSetting.settingEl.addClass("icalSetting")
+		usernameSetting.settingEl.addClass("magicCalendarSetting")
 		const passwordSetting = new Setting(contentEl)
 			.setName("iCloud password")
 			.addText((text) => text.onChange((newText) => {
 				pw = newText;
 				text.inputEl.type = "password";
 			}))
-		passwordSetting.settingEl.addClass("icalSetting")
+		passwordSetting.settingEl.addClass("magicCalendarSetting")
 		const submitButton = new Setting(contentEl)
 			.addButton((btn) =>
 				btn
@@ -115,23 +115,23 @@ export class StatusModal extends Modal {
 					.setCta()
 					.onClick(() => {
 						const auth = new Map<string, string>();
-						auth.set("iCalSyncUsername", username);
-						auth.set("iCalSyncPassword", pw);
+						auth.set("magicCalendarSyncUsername", username);
+						auth.set("magicCalendarSyncPassword", pw);
 						this.submitCredentialsCallback(auth, this.ref).then(success => {
 							if (!success) this.error();
 						})
 						this.loading();
 					}));
-		submitButton.settingEl.addClass("icalSetting")
+		submitButton.settingEl.addClass("magicCalendarSetting")
 	}
 
 	loadGoogleTemporaryScreen(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "This is still a beta!"}).addClass("icalSettingTitle");
-		contentEl.createEl("b", {text: `At the moment this is still a beta!`}).addClass("icalSetting");
-		contentEl.createEl("b", {text: `The developer is waiting for Google Trust & Safety team's review.`}).addClass("icalSetting");
-		contentEl.createEl("b", {text: `If you want you can still continue`}).addClass("icalSetting");
+		contentEl.createEl("h1", {text: "This is still a beta!"}).addClass("magicCalendarSettingTitle");
+		contentEl.createEl("b", {text: `At the moment this is still a beta!`}).addClass("magicCalendarSetting");
+		contentEl.createEl("b", {text: `The developer is waiting for Google Trust & Safety team's review.`}).addClass("magicCalendarSetting");
+		contentEl.createEl("b", {text: `If you want you can still continue`}).addClass("magicCalendarSetting");
 		new Setting(contentEl).addButton((btn) =>
 			btn
 				.setButtonText("Continue")
@@ -151,25 +151,25 @@ export class StatusModal extends Modal {
 	loading(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Logging in..."}).addClass("icalSettingTitle");
+		contentEl.createEl("h1", {text: "Logging in..."}).addClass("magicCalendarSettingTitle");
 	}
 
 	error(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "There has been an error logging in..."}).addClass("icalSettingTitle");
-		contentEl.createEl("b", {text: `For more information check the console [cmd + alt + I]`}).addClass("icalSetting");
+		contentEl.createEl("h1", {text: "There has been an error logging in..."}).addClass("magicCalendarSettingTitle");
+		contentEl.createEl("b", {text: `For more information check the console [cmd + alt + I]`}).addClass("magicCalendarSetting");
 	}
 
 	loadMFA(){
 		let mfa: string;
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Insert the 2FA code"}).addClass("icalSettingTitle");
+		contentEl.createEl("h1", {text: "Insert the 2FA code"}).addClass("magicCalendarSettingTitle");
 		const codeSetting = new Setting(contentEl)
 			.setName("code")
 			.addText((text) => text.onChange((newText) => mfa = newText));
-		codeSetting.settingEl.addClass("icalSetting");
+		codeSetting.settingEl.addClass("magicCalendarSetting");
 		const submitButton = new Setting(contentEl)
 			.addButton((btn) =>
 				btn
@@ -179,25 +179,25 @@ export class StatusModal extends Modal {
 						if (!success) this.error();
 						else this.loadLoggedIn();
 					})));
-		submitButton.settingEl.addClass("icalSetting");
+		submitButton.settingEl.addClass("magicCalendarSetting");
 	}
 
 	loadLoggingIn(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "Logging in..."}).addClass("icalSettingTitle");
+		contentEl.createEl("h1", {text: "Logging in..."}).addClass("magicCalendarSettingTitle");
 	}
 
 	loadLoggedIn(){
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl("h1", {text: "All set!"}).addClass("icalSettingTitle");
+		contentEl.createEl("h1", {text: "All set!"}).addClass("magicCalendarSettingTitle");
 		const loginStatusRow = contentEl.createEl("div");
-		loginStatusRow.addClass("icalLoggedInSummaryRow");
+		loginStatusRow.addClass("magicCalendarLoggedInSummaryRow");
 		loginStatusRow.createEl("h5", {text: "Status: "});
 		loginStatusRow.createEl("h5", {text: " Logged in 🟢"})
 		const calendarProviderRow = contentEl.createEl("div");
-		calendarProviderRow.addClass("icalLoggedInSummaryRow");
+		calendarProviderRow.addClass("magicCalendarLoggedInSummaryRow");
 		calendarProviderRow.createEl("h5", {text: `Calendar provider:`});
 		if (this.selectedProvider == undefined) return;
 		let calendarProviderString = CalendarProvider[this.selectedProvider].toLowerCase();

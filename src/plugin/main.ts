@@ -16,7 +16,7 @@ import {CloudController} from "../controllers/cloudController";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {GoogleCalendarController} from "../controllers/googleCalendarController";
 import nlpPlugin from "./nlpExtension";
-import {ICalendarController} from "../controllers/iCalendarController";
+import {iCalendarController} from "../controllers/iCalendarController";
 
 export default class MagicCalendar extends Plugin implements PluginValue{
 	private _cloudController: CloudController;
@@ -73,7 +73,7 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	private manageRegistrations(){
 		this.registerEditorExtension(nlpPlugin)
 		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
-		this.addRibbonIcon("calendar-clock", "iCalSync", () => {
+		this.addRibbonIcon("calendar-clock", "magicCalendarSync", () => {
 			this._statusModal.open();
 		});
 	}
@@ -90,7 +90,7 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	private inferCalendar(auth: Map<string, string>) {
 		if (this._cloudController != undefined) return;
 		if (auth.get("tokenType") != undefined) this._cloudController = new GoogleCalendarController();
-		else if (auth.get("iCalSyncUsername") != undefined) this._cloudController = new ICalendarController();
+		else if (auth.get("magicCalendarSyncUsername") != undefined) this._cloudController = new iCalendarController();
 	}
 
 	async onunload() {
@@ -171,7 +171,7 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	}
 
 	private getCloudController(calendarProvider: CalendarProvider) {
-		if (calendarProvider == CalendarProvider.APPLE) return new ICalendarController();
+		if (calendarProvider == CalendarProvider.APPLE) return new iCalendarController();
 		else if (calendarProvider == CalendarProvider.GOOGLE) return new GoogleCalendarController();
 	}
 

@@ -19,7 +19,6 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	key: "none",
 	iv: "none",
 	calendarProvider: CalendarProvider.NOT_SELECTED,
-	bannedPatterns: []
 };
 
 export class AppSetting extends PluginSettingTab {

@@ -43,9 +43,9 @@ export class CalendarViewHTML {
 
 	private getHTML(containerEl: HTMLElement): HTMLElement{
 		const wrapper = containerEl.createEl("div");
-		wrapper.addClass("icalTableWrapper")
+		wrapper.addClass("magicCalendarTableWrapper")
 		const table = wrapper.createEl("table");
-		table.addClass("icalTable");
+		table.addClass("magicCalendarTable");
 		this.generateHeaders(table, true);
 		this.generateRows(table)
 		this.generateHeaders(table);
@@ -53,15 +53,15 @@ export class CalendarViewHTML {
 	}
 
 	private generateHeaders(table: HTMLTableElement, needLabel?: boolean){
-		table.createEl("th").addClass("icalTh");
+		table.createEl("th").addClass("magicCalendarTh");
 		let headerHours = 0;
 		let headerMinutes = 0;
 		let labelIndex = 1;
 		for (let column = 0; column < this.calendarViewData.numOfCols; column++){
 			labelIndex ++;
 			const header = table.createEl("th");
-			header.addClass("icalTh");
-			header.addClass("icalShiftedCell");
+			header.addClass("magicCalendarTh");
+			header.addClass("magicCalendarShiftedCell");
 			if (labelIndex % 2 == 0 && needLabel) {
 				header.innerText = `${Misc.fromSingleToDoubleDigit(headerHours)}:${Misc.fromSingleToDoubleDigit(headerMinutes)}`;
 			}
@@ -85,7 +85,7 @@ export class CalendarViewHTML {
 	private initRow(table: HTMLElement, date: Date, needsLabel: boolean): HTMLElement {
 		const row = table.createEl("tr");
 		const leftLabel = row.createEl("td");
-		leftLabel.addClass("icalTd");
+		leftLabel.addClass("magicCalendarTd");
 		row.id = date.toISOString();
 		if (!needsLabel) {
 			const previousDate = new Date(date);
@@ -123,7 +123,7 @@ export class CalendarViewHTML {
 	private createEmptyCell(row: HTMLElement, index: number): HTMLElement{
 		const emptyCell = row.createEl("td");
 		emptyCell.id = Misc.generateCellID(row.id, index);
-		emptyCell.addClass("icalTd");
+		emptyCell.addClass("magicCalendarTd");
 		if (index % 2 == 0) emptyCell.addClass("dottedBorder");
 		emptyCell.setAttr("colspan", 1);
 		this.makeCellDraggable(emptyCell);
@@ -136,8 +136,8 @@ export class CalendarViewHTML {
 		eventCell.id = Misc.generateCellID(row.id, calendarViewDetail.fromCol);
 		eventCell.innerText = calendarViewDetail.title;
 		eventCell.addClass(this.getPaletteClass());
-		eventCell.addClass("icalEventBox");
-		eventCell.addClass("icalTd");
+		eventCell.addClass("magicCalendarEventBox");
+		eventCell.addClass("magicCalendarTd");
 		eventCell.setAttr("colspan", colSpan);
 		eventCell.setAttr("cloudEventUUID", cloudEventUUID);
 		this.makeCellDraggable(eventCell);
