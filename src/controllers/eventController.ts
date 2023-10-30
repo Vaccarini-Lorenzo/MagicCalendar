@@ -125,7 +125,7 @@ class EventController{
 			if (status) new Notice("📅 The event has been synchronized!")
 			else new Notice("🤷 There has been an error synchronizing the event...")
 		}));
-		//this.updateCounter();
+		this.updateCounter();
 	}
 
 	private syncLocalStorageEventLog(eventFilePath: string, event: Event) {

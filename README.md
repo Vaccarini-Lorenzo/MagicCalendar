@@ -1,5 +1,5 @@
 # MagicCalendar
-This Obsidian plugin allows to synchronize your calendar of choice with Obsidian.<br>
+AI-Powered Obsidian plugin that leverages natural language processing techniques to find calendar events in Markdown notes, seamlessly synchronizing them with a calendar of choice. <br>
 The plugin is still in beta and at the moment the supported calendars are:
 - Apple Calendar
 - Google Calendar
@@ -44,7 +44,7 @@ Your credentials will be stored <ins>exclusively</ins> in your local device (enc
 </p>
 
 Google, on the other hand, supports OAuth2 authentication.
-At the moment, the application is being reviewed by Google Trust & Safety team, therefore a security banned will be presented.
+At the moment, the application is being reviewed by Google Trust & Safety team, therefore a security page will be presented.
 
 <p align="center">
   <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/GoogleLogin.gif">
