@@ -35,8 +35,8 @@ class CalendarViewController {
 		if (codeBlocks.length == 0) return codeComponents;
 		codeBlocks.forEach(codeBlock => {
 			const codeText = codeBlock.innerText.replaceAll(" ", "");
-			const isCal = codeText.substring(0, 7) == "<magic>";
-			if (!isCal) return null;
+			const isMagicCalendar = codeText.substring(0, 7) == "<magic>";
+			if (!isMagicCalendar) return null;
 			let from = calendarViewController.matchRegex("from:", codeText);
 			if(from == undefined) return null;
 			from = from.replaceAll("from:", "");

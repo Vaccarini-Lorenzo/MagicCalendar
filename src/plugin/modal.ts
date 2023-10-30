@@ -10,6 +10,7 @@ export class StatusModal extends Modal {
 	cloudStatus: CloudStatus;
 	selectedProvider: CalendarProvider;
 	ref: any;
+	processing: boolean;
 
     constructor(app: App,
 				selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void,
@@ -22,6 +23,7 @@ export class StatusModal extends Modal {
 		this.submitMfaCallback = submitMfaCallback;
 		this.cloudStatus = CloudStatus.NOT_STARTED;
 		this.ref = ref;
+		this.processing = false;
     }
 
     onOpen() {
@@ -128,6 +130,18 @@ export class StatusModal extends Modal {
 	loadGoogleTemporaryScreen(){
 		const { contentEl } = this;
 		contentEl.empty();
+		const flexBox = contentEl.createEl("div");
+		flexBox.addClass("magicCalendarTitleFlexBox");
+		const goBackButton = new Setting(flexBox).addButton((btn) =>
+			btn
+				.setIcon("arrow-big-left")
+				.setCta()
+				.onClick(() => {
+					this.selectedProvider = CalendarProvider.NOT_SELECTED;
+					this.selectProviderCallback(this.selectedProvider, this.ref);
+					this.loadServiceProviderSelection();
+				}));
+		goBackButton.settingEl.addClass("magicCalendarGoBackButton");
 		contentEl.createEl("h1", {text: "This is still a beta!"}).addClass("magicCalendarSettingTitle");
 		contentEl.createEl("b", {text: `At the moment this is still a beta!`}).addClass("magicCalendarSetting");
 		contentEl.createEl("b", {text: `The developer is waiting for Google Trust & Safety team's review.`}).addClass("magicCalendarSetting");
@@ -175,10 +189,15 @@ export class StatusModal extends Modal {
 				btn
 					.setButtonText("Submit")
 					.setCta()
-					.onClick(() => this.submitMfaCallback(mfa, this.ref).then(success => {
-						if (!success) this.error();
-						else this.loadLoggedIn();
-					})));
+					.onClick(() => {
+						if (this.processing) return;
+						this.processing = true;
+						this.submitMfaCallback(mfa, this.ref).then(success => {
+							this.processing = false;
+							if (!success) this.error();
+							else this.loadLoggedIn();
+						})
+					}));
 		submitButton.settingEl.addClass("magicCalendarSetting");
 	}
 

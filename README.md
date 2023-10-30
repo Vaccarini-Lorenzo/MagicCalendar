@@ -1,11 +1,28 @@
 # MagicCalendar
-This Obsidian plugin allows to synchronize your calendar of choice with Obsidian.
+This Obsidian plugin allows to synchronize your calendar of choice with Obsidian.<br>
 The plugin is still in beta and at the moment the supported calendars are:
 - Apple Calendar
 - Google Calendar
 
+# Functionalities
+## NLP calendar events recognition
+Just write your events and seamlessly synchronize them with your calendar
 <p align="center">
-  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/magicCalendarDemo.gif">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/MagicCalendarNLPDemo.gif">
+</p>
+
+It might happen that some patterns are incorrectly recognized as calendar events. **Just ban them!**
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/MagicCalendarNLPBanDemo.gif">
+</p>
+
+## Inline event view
+Embed your events in your notes with a simple syntax. <br>
+The Inline event view is two-way synchronized *(at the moment supported only by Apple Calendar. Google Calendar push notification need an HTTPS server)*.
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/InlineEventViewDemo.gif">
 </p>
 
 # Getting started
@@ -18,12 +35,26 @@ To install it:
 - Enable the plugin from your Obsidian settings.
 
 ### Log-in
-To interact with Apple Calendar you'll need to log-in into your iCloud account.
+To log-in just click on the calendar ribbon icon to select your calendar provider.
+Unfortunately, Apple doesn't provide an OAuth2 authentication and to interact with Apple Calendar you'll need to log-in into your iCloud account.
 Your credentials will be stored <ins>exclusively</ins> in your local device (encrypted).<br> Check the **How it works** section for more informations.<br>
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/AppleLogin.gif">
+</p>
+
 Google, on the other hand, supports OAuth2 authentication.
-Just click on the calendar ribbon icon to select your calendar provider and log-in.
-### Just sync it
-That's it. Just write an event and the plugin will try its best to identify it.
+At the moment, the application is being reviewed by Google Trust & Safety team, therefore a security banned will be presented.
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/GoogleLogin.gif">
+</p>
+
+### Enjoy
+That's it. Just write an event and the plugin will try its best to identify it. </br>
+To embed your calendar in your notes just use the following syntax **in a code block**: <br>
+```<magic> from:YYYY/MM/DD to:YYYY/MM/DD```
+
 
 # How it works
 ### NLP module
@@ -36,6 +67,10 @@ Since Apple doesn't support OAuth, it's necessary to login with email and passwo
 
 
 # What's new?
+### v.1.1.6
+- Major project refactor
+- Google Calendar integration
+- Inline event view features development 
 ### v.1.1.3
 - Inline event view beta
 - Bugfix: non-editable widget bug
@@ -53,10 +88,3 @@ Since Apple doesn't support OAuth, it's necessary to login with email and passwo
 	2) Event purpose recognition
 	3) Bugfix: entity overlap
 
-# Currently in development phase
-- **Event inline view**: From version v.1.2.0 will be possible to embed calendar events in your notes. The user will be able to interact with the events directly and automatically synchronize the event with their calendar
-<p align="center">
-  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/inlineViewDemo.gif">
-</p>
-
-- **Google calendar integration**: Project refactor to support multiple calendars

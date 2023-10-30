@@ -24,7 +24,7 @@ jobs:
 
             - name: Create Zip
               run: |
-                zip -r ical-obsidian-sync.zip \
+                zip -r magic-calendar.zip \
                 main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt
 
             - name: Create release
@@ -34,4 +34,4 @@ jobs:
                   tag="${GITHUB_REF#refs/tags/}"
                   gh release create "$tag" \
                     --title="$tag" \
-                    main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt ical-obsidian-sync.zip
+                    main.js manifest.json styles.css .proper_name_patterns.txt .noun_patterns.txt magic-calendar.zip
