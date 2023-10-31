@@ -1,7 +1,7 @@
 {
 	"id": "magic-calendar",
 	"name": "MagicCalendar",
-	"version": "1.1.5",
+	"version": "1.1.6",
 	"minAppVersion": "0.15.0",
 	"description": "Al-Powered Obsidian Plugin that leverage Natural Language Processing techniques to find calendar events in Markdown notes, seamlessly synchronizing them with a calendar of choice.",
 	"author": "Vaccarini Lorenzo",

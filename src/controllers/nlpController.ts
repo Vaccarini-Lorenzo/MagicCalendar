@@ -471,6 +471,7 @@ class NlpController {
 		// Consider giving the possibility to specify some patterns that the user dont want to match
 		// e.g. [something](...%20The...)
 		// Forbid %20th
+		if(!this._setting.bannedPatterns) return false;
 		return this._setting.bannedPatterns.some(bannedPattern => sentence.value.indexOf(bannedPattern) > -1);
 	}
 }
