@@ -4,6 +4,7 @@ import iCloudMisc from "../iCloudJs/iCloudMisc";
 import {readFileSync} from "fs";
 import * as net from "net";
 import http from "http";
+import {Media} from "./media";
 
 export class Misc {
 	static app: App;
@@ -12,7 +13,6 @@ export class Misc {
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
 	static credentials: {client_id: string, client_secret: string};
-	private static notificationPort: number;
 
 	static sleep(ms) {
 		return new Promise((resolve) => {
@@ -61,23 +61,6 @@ export class Misc {
 		const maxIntEightNibbles = 4294967295;
 		const firstUUID = iCloudMisc.getRandomHex(maxIntEightNibbles);
 		return `${firstUUID}`
-	}
-
-	static loadMedia(mediaPath: string){
-		const jsonBase64Media = readFileSync(mediaPath).toString();
-		Misc.base64Media = JSON.parse(jsonBase64Media);
-	}
-
-	static getBase64AppleIcon(): string {
-		return Misc.base64Media.appleIcon;
-	}
-
-	static getBase64GoogleIcon(): string {
-		return Misc.base64Media.googleIcon;
-	}
-
-	static getBase64DeleteIcon(): string {
-		return Misc.base64Media.deleteIcon;
 	}
 
 	static generateCellID(dateString: string, i: number): string {

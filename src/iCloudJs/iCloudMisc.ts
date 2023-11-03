@@ -2,9 +2,9 @@ import {RequestInfo, RequestInit, Response} from "node-fetch";
 import {requestUrl, RequestUrlParam} from "obsidian";
 
 class ICloudMisc {
-	private _refreshCallback: (requestUrlParam: RequestUrlParam) => void;
+	private _refreshCallback: (requestUrlParam: RequestUrlParam) => Promise<void>;
 
-	injectRefreshCallback(refreshCallback:  (requestUrlParam: RequestUrlParam) => void){
+	injectRefreshCallback(refreshCallback:  (requestUrlParam: RequestUrlParam) => Promise<void>){
 		this._refreshCallback = refreshCallback;
 	}
 
@@ -86,7 +86,7 @@ class ICloudMisc {
 			}
 
 			if (requestUrlResponse.status == 421){
-				this._refreshCallback(requestUrlParam);
+				await this._refreshCallback(requestUrlParam);
 				requestUrlResponse = await requestUrl(requestUrlParam as RequestUrlParam);
 				console.warn("Refreshing token...");
 			}

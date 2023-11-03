@@ -9,6 +9,7 @@ import {Sentence} from "../model/sentence";
 import Event from "../model/event";
 import {DateRange} from "../model/dateRange";
 import {SettingInterface} from "../plugin/appSetting";
+import {Media} from "../misc/media";
 
 class NlpController {
 	private readonly _customPatterns: {name, patterns}[];
@@ -45,14 +46,6 @@ class NlpController {
 	}
 
 	loadPatterns(){
-		const nounPatternPath = `${this._pluginPath}/.noun_patterns.txt`
-		const properNamePatternPath = `${this._pluginPath}/.proper_name_patterns.txt`
-
-		const nounData = readFileSync(nounPatternPath);
-		const parsedNouns = JSON.parse(nounData.toString());
-		const properNameData = readFileSync(properNamePatternPath);
-		const parsedProperNames = JSON.parse(properNameData.toString());
-
 		this._customPatterns.push(
 			{name: "date", patterns: ["DATE", "on DATE"]},
 			// 12th of Jan 2023, second of may
@@ -68,8 +61,8 @@ class NlpController {
 		this._customPatterns.push({name: "purpose", patterns: ["[about|regarding|concerning|for] [|DET] [|PRON] [|ADJ] [NOUN] [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]",
 				"to VERB [|PRON|DET] [|ADJ] NOUN [|NOUN|ADJ|CCONJ] [|NOUN|CCONJ|PRON] [|NOUN|ADJ]"]});
 		// The secondaryCustomPatterns exist to manage possible overlap between entities
-		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: parsedNouns});
-		this._secondaryCustomPatterns.push({name: "properName", patterns: parsedProperNames});
+		this._secondaryCustomPatterns.push({name: "eventNoun", patterns: Media.nounPatters});
+		this._secondaryCustomPatterns.push({name: "properName", patterns: Media.properNamePatterns});
 	}
 
 	process(sentence: Sentence): {selection: {value, index, type}[], event: Event} | null{

@@ -1,5 +1,6 @@
 import {Setting} from "obsidian";
 import {Misc} from "../misc/misc";
+import {Media} from "../misc/media";
 
 export class BannedListHTML extends Setting {
 	containerEl: HTMLElement;
@@ -28,7 +29,7 @@ export class BannedListHTML extends Setting {
 		const itemText = listItem.createEl("span", { cls: "magicCalendarSettingListText" });
 		itemText.setText(bannedPattern);
 		const trashIcon = listItem.createEl("img", { cls: "magicCalendarSettingListDeleteIcon" });
-		trashIcon.setAttribute("src", Misc.getBase64DeleteIcon());
+		trashIcon.setAttribute("src", Media.getBase64DeleteIcon());
 		trashIcon.onClickEvent(click => {
 						this.bannedPatterns.remove(bannedPattern);
 			this.build();

@@ -62,7 +62,6 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 
 	private initState() {
 		Misc.app = this.app;
-		Misc.loadMedia(join(this._pluginPath, ".base64Media.json"));
 		Misc.fetchCred();
 		nplController.init();
 		eventController.init();

@@ -2,6 +2,7 @@ import {App, Modal, Setting} from "obsidian";
 import {Misc} from "src/misc/misc";
 import {CloudStatus} from "../model/cloudCalendar/cloudStatus";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
+import {Media} from "../misc/media";
 
 export class StatusModal extends Modal {
 	selectProviderCallback: (calendarProvider: CalendarProvider, ref: any) => void;
@@ -60,12 +61,12 @@ export class StatusModal extends Modal {
 		appleButton.addClass("magicCalendarServiceProviderButton");
 		const appleIcon = appleButton.createEl("img");
 		appleIcon.addClass("magicCalendarServiceIcon");
-		appleIcon.setAttribute("src", Misc.getBase64AppleIcon());
+		appleIcon.setAttribute("src", Media.getBase64AppleIcon());
 		const googleButton = serviceProviderRow.createEl("div");
 		googleButton.addClass("magicCalendarServiceProviderButton");
 		const googleIcon = googleButton.createEl("img");
 		googleIcon.addClass("magicCalendarServiceIcon");
-		googleIcon.setAttribute("src", Misc.getBase64GoogleIcon());
+		googleIcon.setAttribute("src", Media.getBase64GoogleIcon());
 
 		appleButton.onClickEvent(() => {
 			this.selectedProvider = CalendarProvider.APPLE;
