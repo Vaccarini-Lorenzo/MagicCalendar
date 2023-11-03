@@ -26,9 +26,9 @@ The Inline event view is two-way synchronized *(at the moment supported only by 
 </p>
 
 # Getting started
-### Installation
-Currently, this plugin is not registered as a standard community plugin for downloading or updating within Obsidian. <br>
-To install it:
+### Automatic installation
+Browse the community plugins and look for "MagicCalendar".
+### Manual installation
 - Check the [latest release](https://github.com/Vaccarini-Lorenzo/MagicCalendar/releases/latest)
 - Download ```magic-calendar.zip```
 - Unzip the file and move the ```magic-calendar``` folder into your Obsidian plugin folder
