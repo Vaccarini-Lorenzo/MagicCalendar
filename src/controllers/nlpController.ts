@@ -492,14 +492,15 @@ class NlpController {
 		const chars = sentence.value.split("");
 		let startIndex;
 		let endIndex;
-		chars.forEach((char, index) => {
-			if (char != this._setting.customSymbol) return;
-			if (!startIndex) startIndex = index;
-			else endIndex = index;
-		})
-		if (!startIndex || !endIndex) return;
+		for (let i=0; i<sentence.value.length - this._setting.customSymbol.length; i++){
+			const substring = sentence.value.slice(i, i + this._setting.customSymbol.length);
+			if (substring != this._setting.customSymbol) continue;
+			if (startIndex == undefined) startIndex = i;
+			else endIndex = i;
+		}
+		if (!endIndex) return;
 		return {
-			value: sentence.value.slice(startIndex + 1, endIndex),
+			value: sentence.value.slice(startIndex + this._setting.customSymbol.length, endIndex),
 			index: startIndex,
 			type: "customEvent"
 		}

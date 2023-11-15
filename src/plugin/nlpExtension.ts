@@ -26,22 +26,15 @@ class NLPPlugin implements PluginValue {
 		const documentLines = view.state.doc.slice(view.viewport.from, view.viewport.to).toJSON();
 		documentLines.some((line, i) => {
 			const matches = nplController.process(new Sentence(filePath, line));
-			if(matches == null) return false;
+			if(!matches) return false;
 			const eventDetailString = this.getEventDetail(matches.event);
 			matches.selection.forEach(match => {
 				const matchMetadata = this.getMatchTextMetadata(documentLines, view.viewport.from, i, line, match);
-				if(matchMetadata == null) return;
+				if(!matchMetadata) return;
 				const decoration = this.getDecoration(matches.selection, match, matchMetadata, (sync) => {
-					/*
-					if (!iCloudController.isLoggedIn()){
-						new Notice("You're not logged in! 🥲\nLook for iCalSync in the command palette to log in")
-						return;
-					}
-					 */
 					eventController.processEvent(filePath, sync);
 					view.setState(view.state);
 				}, eventDetailString);
-
 				try{
 					builder.add(
 						matchMetadata.startsFrom,
@@ -66,7 +59,7 @@ class NLPPlugin implements PluginValue {
 		for (let j=0; j < currentIndex; j++){
 			previousChars += documentLines[j].length + 1;
 		}
-		const indexOfMatch = line.toLowerCase().indexOf(match.value);
+		const indexOfMatch = line.toLowerCase().indexOf(match.value.toLowerCase());
 		if(indexOfMatch == -1) return null;
 		const capitalizedMatch = line.substring(indexOfMatch, indexOfMatch + match.value.length)
 		const startsFrom = previousChars + indexOfMatch;
