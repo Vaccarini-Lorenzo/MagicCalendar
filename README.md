@@ -17,6 +17,12 @@ It might happen that some patterns are incorrectly recognized as calendar events
   <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/MagicCalendarNLPBanDemo.gif">
 </p>
 
+On the other hand, it could be possible that some patterns are not recognized. You can use your custom delimitators to define an event:
+
+<p align="center">
+  <img width="650" src="https://raw.githubusercontent.com/Vaccarini-Lorenzo/MagicCalendar/main/materials/CustomEventDemo.gif">
+</p>
+
 ## Inline event view
 Embed your events in your notes with a simple syntax. <br>
 The Inline event view is two-way synchronized *(at the moment supported only by Apple Calendar. Google Calendar push notification need an HTTPS server)*.

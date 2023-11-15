@@ -80,7 +80,7 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	injectSettings(settings: SettingInterface) {
-				this._settings = settings;
+		this._settings = settings;
 		if (this._calendars.length == 0){
 			this._currentCalendarName = this._settings.calendar;
 			return;
@@ -88,7 +88,9 @@ export class GoogleCalendarController implements CloudController {
 		this._currentCalendarName = this._calendars.filter(calendar => {
 			return calendar.summary == this._settings.calendar;
 		}).first().summary;
-		this._currentCalendarId = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first().id;
+		const currentCalendar = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first();
+		if (currentCalendar) this._currentCalendarId = currentCalendar.id;
+		else console.warn("Could not inject settings: Current calendar not found");
 	}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
@@ -117,7 +119,9 @@ export class GoogleCalendarController implements CloudController {
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
 		if (!this._currentCalendarName) return;
-		this._currentCalendarId = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first().id;
+		const currentCalendar = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first();
+		if (currentCalendar) this._currentCalendarId = currentCalendar.id;
+		else console.warn("Couldn't find current calendar");
 	}
 
 	getCalendarNames() {

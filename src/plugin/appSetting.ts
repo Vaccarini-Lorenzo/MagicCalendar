@@ -2,7 +2,7 @@ import {App, PluginSettingTab, Setting, TextAreaComponent, TextComponent} from "
 import MagicCalendar from "./main";
 import moment, {tz} from "moment-timezone";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
-import {BannedListHTML} from "./bannedListHTML";
+import {settingListHTML} from "./settingListHTML";
 
 export interface SettingInterface {
 	tz: string;
@@ -11,6 +11,7 @@ export interface SettingInterface {
 	iv: string;
 	calendarProvider: CalendarProvider;
 	bannedPatterns: string[];
+	customSymbol: string;
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
@@ -19,6 +20,8 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	key: "none",
 	iv: "none",
 	calendarProvider: CalendarProvider.NOT_SELECTED,
+	bannedPatterns: [],
+	customSymbol: ""
 };
 
 export class AppSetting extends PluginSettingTab {
@@ -28,7 +31,9 @@ export class AppSetting extends PluginSettingTab {
 	key: string;
 	iv: string;
 	bannedPatternText: TextComponent;
-	bannedListHTML: BannedListHTML;
+	bannedListHTML: settingListHTML;
+	customPatternText: TextComponent;
+	customSymbolHTML: settingListHTML;
 
 
 	constructor(app: App, plugin: MagicCalendar) {
@@ -77,8 +82,6 @@ export class AppSetting extends PluginSettingTab {
 				})
 			})
 
-		containerEl.createEl("h3", {text: "Advanced"});
-
 		new Setting(containerEl)
 			.setName("Encryption key")
 			.addText(key => {
@@ -100,6 +103,17 @@ export class AppSetting extends PluginSettingTab {
 			})
 
 		new Setting(containerEl)
+			.setName("Custom symbol")
+			.addText(async text => {
+				text.setPlaceholder("N/A")
+				text.setValue(this.plugin.settings.customSymbol)
+				text.onChange(async value => {
+					this.plugin.settings.customSymbol = value;
+					await this.plugin.updateSettings();
+				})
+			})
+
+		new Setting(containerEl)
 			.setName("Ban pattern")
 			.addText(text => {
 				this.bannedPatternText = text;
@@ -114,7 +128,7 @@ export class AppSetting extends PluginSettingTab {
 				})
 			})
 
-		this.bannedListHTML = new BannedListHTML(containerEl, this.updateBannedPatterns.bind(this), this.plugin.settings.bannedPatterns)
+		this.bannedListHTML = new settingListHTML(containerEl, this.updateBannedPatterns.bind(this), this.plugin.settings.bannedPatterns)
 		this.bannedListHTML
 			.build()
 	}
