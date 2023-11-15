@@ -89,6 +89,9 @@
 	border-radius: 5px;
 	float: right; /* This aligns the container to the right */
 	border: none; /* This removes the border */
+	width: 100%;
+	display: block;
+	flex-direction: column;
 }
 
 .magicCalendarSettingListContainer::-webkit-scrollbar {
@@ -107,7 +110,9 @@
 }
 
 .magicCalendarSettingListText {
-	flex-grow: 1;
+	text-align: right;
+	display: block;
+	width: 100%;
 }
 
 .magicCalendarSettingListDeleteIcon {

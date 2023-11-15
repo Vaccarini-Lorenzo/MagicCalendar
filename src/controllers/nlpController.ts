@@ -108,6 +108,26 @@ class NlpController {
 		const selectedDate = dates[0];
 		const selectedDateIndex = caseInsensitiveText.indexOf(selectedDate.value);
 
+		if (this._setting.customSymbol != "" ){
+			const customEvent = this.getCustomEvent(sentence);
+			if (customEvent){
+				const cleanDates = this.cleanJunkDates(dates);
+				const dateRange = this.parseDates(cleanDates);
+				if (!dateRange) return;
+				sentence.injectSemanticFields(dateRange.start, dateRange.end, customEvent.value)
+				matchedEvent = eventController.semanticCheck(sentence);
+				// Matched semantic check;
+				if (matchedEvent) return null;
+				const selection = this.getSelectionArray(sentence.value, cleanDates, customEvent);
+				const event = eventController.createNewEvent(sentence);
+
+				return {
+					selection,
+					event
+				}
+			}
+		}
+
 		// Find purpose in text
 		// e.g. "to discuss finances"
 		const purpose = this.filterPurpose(caseInsensitiveText, mainCustomEntities, tokens);
@@ -391,8 +411,8 @@ class NlpController {
 		return selectedProperName;
 	}
 
-	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, backwardsAdjAttributes: {value, index, type}[],
-								forwardAdjAttributes: {value, index, type}[],  selectedProperName: {value, index, type}, purpose: {value, index, type}): {value, index, type}[] {
+	private getSelectionArray(text: string, dates: {value, index, type}[], selectedEventNoun: {value, index, type}, backwardsAdjAttributes?: {value, index, type}[],
+								forwardAdjAttributes?: {value, index, type}[],  selectedProperName?: {value, index, type}, purpose?: {value, index, type}): {value, index, type}[] {
 		const selection = []
 
 		dates.forEach(date => {
@@ -400,19 +420,19 @@ class NlpController {
 			selection.push({value: date.value, index: dateIndex, type: date.type});
 		})
 
-		if (selectedEventNoun!= null) selection.push(selectedEventNoun);
-		if (selectedProperName!= null) selection.push(selectedProperName);
-		if (backwardsAdjAttributes != null){
+		if (selectedEventNoun) selection.push(selectedEventNoun);
+		if (selectedProperName) selection.push(selectedProperName);
+		if (backwardsAdjAttributes){
 			backwardsAdjAttributes.forEach(backwardsAdjAttribute => {
 				selection.push(backwardsAdjAttribute);
 			})
 		}
-		if (forwardAdjAttributes != null){
+		if (forwardAdjAttributes){
 			forwardAdjAttributes.forEach(forwardAdjAttribute => {
 				selection.push(forwardAdjAttribute);
 			})
 		}
-		if (purpose != null) selection.push(purpose);
+		if (purpose) selection.push(purpose);
 
 		// Order by index (builder.add needs to be called with increasing values)
 		return selection.sort((a, b) => a.index - b.index);
@@ -466,6 +486,24 @@ class NlpController {
 		// Forbid %20th
 		if(!this._setting.bannedPatterns) return false;
 		return this._setting.bannedPatterns.some(bannedPattern => sentence.value.indexOf(bannedPattern) > -1);
+	}
+
+	private getCustomEvent(sentence: Sentence) {
+		const chars = sentence.value.split("");
+		let startIndex;
+		let endIndex;
+		chars.forEach((char, index) => {
+			if (char != this._setting.customSymbol) return;
+			if (!startIndex) startIndex = index;
+			else endIndex = index;
+		})
+		if (!startIndex || !endIndex) return;
+		return {
+			value: sentence.value.slice(startIndex + 1, endIndex),
+			index: startIndex,
+			type: "customEvent"
+		}
+
 	}
 }
 
