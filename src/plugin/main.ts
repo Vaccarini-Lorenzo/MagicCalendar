@@ -72,7 +72,7 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	private manageRegistrations(){
 		this.registerEditorExtension(nlpPlugin)
 		this.registerMarkdownPostProcessor(calendarViewController.getMarkdownPostProcessor);
-		this.addRibbonIcon("calendar-clock", "magicCalendarSync", () => {
+		this.addRibbonIcon("calendar-clock", "MagicCalendar", () => {
 			this._statusModal.open();
 		});
 	}

@@ -12,6 +12,7 @@ import {SettingInterface} from "../plugin/appSetting";
 import {GoogleAuthenticator} from "./googleAuthenticator";
 import {Misc} from "../misc/misc";
 import calendarViewController from "./calendarViewController";
+import {calendar} from "googleapis/build/src/apis/calendar";
 
 export class GoogleCalendarController implements CloudController {
 	private _pluginPath: string;
@@ -19,6 +20,7 @@ export class GoogleCalendarController implements CloudController {
 	private _calendarEndpoint: APIEndpoint;
 	private _calendars: GoogleCalendar[];
 	private _currentCalendarName: string;
+	private _currentCalendarId: string;
 	private _settings: SettingInterface;
 	private _channelId: string;
 
@@ -40,7 +42,7 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async updateEvent(cloudEvent: CloudEvent): Promise<boolean>{
-				const googleEventInsertResponse = await this._calendarEndpoint.events.patch({
+		const googleEventInsertResponse = await this._calendarEndpoint.events.patch({
 			calendarId: this._currentCalendarName,
 			eventId: (cloudEvent as GoogleCalendarEvent).id,
 			resource: cloudEvent as GoogleCalendarEvent
@@ -50,8 +52,8 @@ export class GoogleCalendarController implements CloudController {
 	}
 
 	async getEvents(missedDateRange: DateRange): Promise<CloudEvent[]> {
-						const googleEventResponse = await this._calendarEndpoint.events.list({
-			calendarId: this._currentCalendarName,
+		const googleEventResponse = await this._calendarEndpoint.events.list({
+			calendarId: this._currentCalendarId,
 			orderBy: "startTime",
 			singleEvents: true,
 			timeMax: missedDateRange.end.toISOString(),
@@ -61,10 +63,13 @@ export class GoogleCalendarController implements CloudController {
 		const googleEvents = googleEventResponse.data.items as GoogleCalendarEvent[];
 
 		googleEvents.forEach(googleEvent => {
+			const cloudEventStartDate = googleEvent.start.dateTime ? new Date(googleEvent.start.dateTime) : new Date(googleEvent.start.date + " 00:00");
+			const cloudEventEndDate = googleEvent.end.dateTime ? new Date(googleEvent.end.dateTime) : new Date(googleEvent.end.date + " 23:59");
+
 			googleEvent.cloudEventUUID = googleEvent.id;
 			googleEvent.cloudEventTitle = googleEvent.summary;
-			googleEvent.cloudEventStartDate = new Date(googleEvent.start.dateTime);
-			googleEvent.cloudEventEndDate = new Date(googleEvent.end.dateTime);
+			googleEvent.cloudEventStartDate = cloudEventStartDate
+			googleEvent.cloudEventEndDate = cloudEventEndDate
 		})
 
 		return googleEvents;
@@ -78,11 +83,12 @@ export class GoogleCalendarController implements CloudController {
 				this._settings = settings;
 		if (this._calendars.length == 0){
 			this._currentCalendarName = this._settings.calendar;
-						return;
+			return;
 		}
 		this._currentCalendarName = this._calendars.filter(calendar => {
 			return calendar.summary == this._settings.calendar;
 		}).first().summary;
+		this._currentCalendarId = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first().id;
 	}
 
 	async tryAuthentication(auth: Map<string,string>): Promise<CloudStatus> {
@@ -90,12 +96,6 @@ export class GoogleCalendarController implements CloudController {
 		if (auth){
 			return await this.manageTokenValidity(auth);
 		}
-		/*
-		const oAuth2Client = await authenticate({
-			scopes: this._scopes,
-			keyfilePath: this._credentialsPath,
-		});
-		*/
 		const googleAuthenticator = new GoogleAuthenticator(this._scopes);
 		const oAuth2Client = await googleAuthenticator.authenticate();
 		if (oAuth2Client.credentials) {
@@ -116,6 +116,8 @@ export class GoogleCalendarController implements CloudController {
 	async preloadData() {
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
+		if (!this._currentCalendarName) return;
+		this._currentCalendarId = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first().id;
 	}
 
 	getCalendarNames() {

@@ -17,6 +17,7 @@ class CalendarViewController {
 		for (let i=0; i<codeComponents.length; i++){
 			const codeComponent = codeComponents[i];
 			const eventList = await calendarViewController.getEventList(codeComponent);
+			if (!eventList) return;
 			eventList.forEach((cloudEvent) => calendarViewController.cloudEventUUIDMap.set(cloudEvent.cloudEventUUID, cloudEvent));
 			const calendarViewData = new CalendarViewData(new DateRange(new Date(codeComponent.from), new Date(codeComponent.to)), eventList);
 			if (!codeComponent.codeBlock) return null;

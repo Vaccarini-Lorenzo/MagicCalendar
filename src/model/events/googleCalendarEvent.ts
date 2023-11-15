@@ -11,8 +11,8 @@ export class GoogleCalendarEvent extends CloudEvent {
 	summary: string
 	creator: { email: string, self: boolean };
 	organizer: { email: string, self: boolean };
-	start: { dateTime: string, timeZone: string };
-	end: { dateTime: string, timeZone: string };
+	start: { date?: string, dateTime?: string, timeZone: string };
+	end: { date?:string, dateTime?: string, timeZone: string };
 	magicCalendarUID: string;
 	sequence: number;
 	reminders: { useDefault: boolean };
