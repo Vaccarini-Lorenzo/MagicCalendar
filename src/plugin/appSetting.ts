@@ -1,8 +1,9 @@
-import {App, PluginSettingTab, Setting, TextAreaComponent, TextComponent} from "obsidian";
+import {App, PluginSettingTab, Setting, TextComponent} from "obsidian";
 import MagicCalendar from "./main";
-import moment, {tz} from "moment-timezone";
+import moment from "moment-timezone";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 import {settingListHTML} from "./settingListHTML";
+import {LogLevel} from "../misc/logLevel";
 
 export interface SettingInterface {
 	tz: string;
@@ -12,6 +13,7 @@ export interface SettingInterface {
 	calendarProvider: CalendarProvider;
 	bannedPatterns: string[];
 	customSymbol: string;
+	logLevel: LogLevel;
 }
 
 export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
@@ -21,7 +23,8 @@ export const DEFAULT_SETTINGS: Partial<SettingInterface> = {
 	iv: "none",
 	calendarProvider: CalendarProvider.NOT_SELECTED,
 	bannedPatterns: [],
-	customSymbol: ""
+	customSymbol: "",
+	logLevel: LogLevel.error
 };
 
 export class AppSetting extends PluginSettingTab {
@@ -32,8 +35,6 @@ export class AppSetting extends PluginSettingTab {
 	iv: string;
 	bannedPatternText: TextComponent;
 	bannedListHTML: settingListHTML;
-	customPatternText: TextComponent;
-	customSymbolHTML: settingListHTML;
 
 
 	constructor(app: App, plugin: MagicCalendar) {
@@ -98,6 +99,18 @@ export class AppSetting extends PluginSettingTab {
 				iv.setValue(this.plugin.settings.iv ?? "none");
 				iv.onChange(async value => {
 					this.plugin.settings.iv = value;
+					await this.plugin.updateSettings();
+				})
+			})
+
+	new Setting(containerEl)
+			.setName("Log level")
+			.addDropdown(dropdown => {
+				const logLevelList = Object.keys(LogLevel).map(key => LogLevel[key]).filter(logLevel => isNaN(logLevel));
+				logLevelList.forEach((logLevel) => dropdown.addOption(logLevel, logLevel));
+				dropdown.setValue(logLevelList[this.plugin.settings.logLevel]);
+				dropdown.onChange(async value => {
+					this.plugin.settings.logLevel = LogLevel[value];
 					await this.plugin.updateSettings();
 				})
 			})

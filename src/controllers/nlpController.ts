@@ -15,7 +15,6 @@ class NlpController {
 	private readonly _customPatterns: {name, patterns}[];
 	private readonly _secondaryCustomPatterns: {name, patterns}[];
 	private _setting: SettingInterface;
-	private _pluginPath: string;
 	private _mainNLP;
 	// Secondary NLP to avoid overlap between custom entities
 	// e.g. John is both a noun and a proper noun
@@ -28,10 +27,6 @@ class NlpController {
 		this._secondaryNLP = wink (model);
 		this._customPatterns = [];
 		this._secondaryCustomPatterns = []
-	}
-
-	injectPath(pluginPath: string){
-		this._pluginPath = pluginPath;
 	}
 
 	injectSettings?(setting: SettingInterface){

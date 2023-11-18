@@ -51,18 +51,22 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 		const basePath = (this.app.vault.adapter as any).basePath
 		this._pluginPath = join(basePath, this.manifest.dir)
 		this._cloudEventFactory = new CloudEventFactory(this.settings);
-		nlpController.injectPath(this._pluginPath);
+		//Misc.logInfo("[injectDependencies]: new CloudEventFactory")
 		nlpController.injectSettings(this.settings);
-		safeController.injectPath(this._pluginPath);
+		//Misc.logInfo("[injectDependencies]: nlpController OK")
 		safeController.injectSettings(this.settings);
 		safeController.injectCalendarProvider(this.settings.calendarProvider);
+		//Misc.logInfo("[injectDependencies]: safeController OK")
 		eventController.injectPath(this._pluginPath);
 		eventController.injectCloudControllerFactory(this._cloudEventFactory);
+		//Misc.logInfo("[injectDependencies]: eventController OK")
+		Misc.injectSettings(this.settings);
 	}
 
 	private initState() {
 		Misc.app = this.app;
 		Misc.fetchCred();
+		Misc.initLogger(this._pluginPath);
 		nplController.init();
 		eventController.init();
 		this._statusModal = new StatusModal(this.app, this.selectProviderCallback, this.submitCredentialsCallback, this.submitMfaCallback, this);
@@ -79,17 +83,29 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 
 	async checkLogin() {
 		if(safeController.checkSafe()){
+			Misc.logInfo("[checkLogin] SafeController found something");
 			const auth = safeController.getCredentials();
 			this.inferCalendar(auth);
 			const cloudStatus = await this._cloudController.tryAuthentication(auth);
 			this.updateStatus(cloudStatus);
+		} else {
+			Misc.logInfo("[checkLogin] Nothing found");
 		}
 	}
 
 	private inferCalendar(auth: Map<string, string>) {
-		if (this._cloudController != undefined) return;
-		if (auth.get("tokenType") != undefined) this._cloudController = new GoogleCalendarController();
-		else if (auth.get("magicCalendarSyncUsername") != undefined) this._cloudController = new iCalendarController();
+		if (this._cloudController != undefined) {
+			Misc.logInfo("[inferCalendar]: Cloud controller already defined");
+			return;
+		}
+		if (auth.get("tokenType") != undefined) {
+			this._cloudController = new GoogleCalendarController();
+			Misc.logInfo("[inferCalendar]: Inferring Google Calendar");
+		}
+		else if (auth.get("magicCalendarSyncUsername") != undefined) {
+			this._cloudController = new iCalendarController();
+			Misc.logInfo("[inferCalendar]: Inferring Apple Calendar");
+		}
 	}
 
 	async onunload() {
@@ -107,6 +123,7 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	}
 
 	private updateStatus(status: CloudStatus){
+		Misc.logInfo(`[updateStatus]: ${status}`);
 		this._statusModal.updateModal(status);
 		if (status == CloudStatus.PROVIDER_SELECTED || status == CloudStatus.LOGGED){
 			eventController.injectCloudController(this._cloudController);
@@ -164,14 +181,32 @@ export default class MagicCalendar extends Plugin implements PluginValue{
 	public async updateSettings(){
 		safeController.injectSettings(this.settings);
 		nlpController.injectSettings(this.settings);
+		Misc.injectSettings(this.settings);
+		if (!this._cloudController){
+			Misc.logError("[updateSettings]: CloudController is undefined");
+			await this.saveSettings();
+			return;
+		}
 		this._cloudController.injectSettings(this.settings);
+		if (!this._cloudEventFactory){
+			Misc.logError("[updateSettings]: CloudEventFactory is undefined");
+			await this.saveSettings();
+			return;
+		}
 		this._cloudEventFactory.injectSettings(this.settings);
 		await this.saveSettings();
 	}
 
 	private getCloudController(calendarProvider: CalendarProvider) {
-		if (calendarProvider == CalendarProvider.APPLE) return new iCalendarController();
-		else if (calendarProvider == CalendarProvider.GOOGLE) return new GoogleCalendarController();
+		if (calendarProvider == CalendarProvider.APPLE) {
+			Misc.logInfo("Calendar Provider selected: APPLE");
+			return new iCalendarController();
+		}
+		else if (calendarProvider == CalendarProvider.GOOGLE) {
+			Misc.logInfo("Calendar Provider selected: GOOGLE");
+			return new GoogleCalendarController();
+		}
+		Misc.logError(`[getCloudController]: ${calendarProvider.toString()}`);
 	}
 
 	private deleteCredentials(){

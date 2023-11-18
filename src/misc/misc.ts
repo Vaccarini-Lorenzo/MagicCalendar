@@ -1,18 +1,19 @@
 import {App, requestUrl} from "obsidian";
 import {CloudEvent} from "../model/events/cloudEvent";
 import iCloudMisc from "../iCloudJs/iCloudMisc";
-import {readFileSync} from "fs";
 import * as net from "net";
-import http from "http";
-import {Media} from "./media";
+import {createLogger, format, Logger, transports} from "winston";
+import {LogLevel} from "./logLevel";
+import {SettingInterface} from "../plugin/appSetting";
 
 export class Misc {
 	static app: App;
-	static base64Media: {appleIcon, googleIcon, deleteIcon};
 	static credentialKeyList = ["magicCalendarSyncUsername", "magicCalendarSyncPassword", "trustToken", "clientId", "clientSecret", "refreshToken", "tokenType", "accessToken"];
 	static dragEvent: any;
 	static bindListeners: {type:string, doc: Document, eventCallback: (event) => void}[] = [];
 	static credentials: {client_id: string, client_secret: string};
+	private static logger: Logger;
+	private static settings: SettingInterface;
 
 	static sleep(ms) {
 		return new Promise((resolve) => {
@@ -71,13 +72,6 @@ export class Misc {
 		return cellDate.toISOString();
 	}
 
-	static cellIndexFromID(id: string, offset?: number): number{
-		const cellDate = new Date(id);
-		let minutes = cellDate.getMinutes() + cellDate.getHours() * 60;
-		if (offset) minutes += offset * 30;
-				return Math.round(minutes / 30);
-	}
-
 	static getStartDateFromCellID(id: string) {
 		return new Date(id);
 	}
@@ -103,5 +97,33 @@ export class Misc {
 	}
 
 
+	static initLogger(pluginPath: string) {
+		const logFileName = "magicCalendar.log";
+		Misc.logger = createLogger({
+			transports: [new transports.File({
+				dirname: pluginPath,
+				filename: logFileName,
+			})],
+			format: format.combine(
+				format.colorize(),
+				format.timestamp(),
+				format.printf(({ timestamp, level, message }) => {
+					return `[${timestamp}] ${level}: ${message}`;
+				})
+			),
+		});
+	}
 
+	static logInfo(info: string) {
+		if (!Misc.settings.logLevel || Misc.settings.logLevel.toString() != LogLevel.info.toString()) return;
+		Misc.logger.info(info);
+	}
+
+	static logError(error: string) {
+		Misc.logger.error(error);
+	}
+
+	static injectSettings(settings: SettingInterface) {
+		Misc.settings = settings;
+	}
 }

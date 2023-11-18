@@ -118,10 +118,14 @@ export class GoogleCalendarController implements CloudController {
 	async preloadData() {
 		const calendarResponse = await this._calendarEndpoint.calendarList.list();
 		this._calendars = calendarResponse.data.items as GoogleCalendar[];
-		if (!this._currentCalendarName) return;
+		Misc.logInfo(`[preloadData]: Number of calendars found: ${this._calendars.length}`);
+		if (!this._currentCalendarName) {
+			Misc.logInfo(`[preloadData]: currentCalendarName is undefined`);
+			return;
+		}
 		const currentCalendar = this._calendars.filter(calendar => calendar.summary == this._currentCalendarName).first();
 		if (currentCalendar) this._currentCalendarId = currentCalendar.id;
-		else console.warn("Couldn't find current calendar");
+		else Misc.logError("[preloadData]: Couldn't find current calendar");
 	}
 
 	getCalendarNames() {

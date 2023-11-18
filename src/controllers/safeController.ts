@@ -3,8 +3,6 @@ import {SettingInterface} from "../plugin/appSetting";
 import {CalendarProvider} from "../model/cloudCalendar/calendarProvider";
 
 class SafeController {
-	_pluginPath: string;
-	_path: string;
 	settings: SettingInterface;
 	_credentialsMap: Map<string, string>;
 	_key: Buffer;
@@ -15,11 +13,6 @@ class SafeController {
 
 	constructor() {
 		this._credentialsMap = new Map<string, string>();
-	}
-
-	injectPath(pluginPath: string){
-		this._pluginPath = pluginPath;
-		this._path = `${pluginPath}/.c.txt`;
 	}
 
 	injectSettings(settings: SettingInterface){

@@ -30,7 +30,8 @@
 		"typedoc": "^0.23.21",
 		"typescript": "4.7.4",
 		"wink-eng-lite-web-model": "latest",
-		"wink-nlp": "latest"
+		"wink-nlp": "latest",
+		"winston": "^3.11.0"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.6",

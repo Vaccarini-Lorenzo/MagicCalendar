@@ -7,6 +7,7 @@ import cacheController from "./cacheController";
 import {CloudController} from "./cloudController";
 import {CloudEvent} from "../model/events/cloudEvent";
 import {CloudEventFactory} from "../model/events/cloudEventFactory";
+import {Misc} from "../misc/misc";
 
 class EventController{
 	// Map that connects the file path to the list of events
@@ -40,6 +41,7 @@ class EventController{
 		const uuidEventMapFilePath = this._pluginPath + "/.uuidEventMap.txt"
 		this.loadMapData(pathEventMapFilePath, this._pathEventMap, true);
 		this.loadMapData(uuidEventMapFilePath, this._uuidEventMap, false);
+		Misc.logInfo("[eventController]: Init");
 	}
 
 	private loadMapData(path: string, map: Map<string, any>, isValueList: boolean){
